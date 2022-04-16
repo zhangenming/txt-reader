@@ -2,11 +2,11 @@ import { useState, MouseEvent } from 'react'
 import './App.css'
 import TXTa from '../txt/2'
 import TXTb from '../txt/诡秘之主.js'
-import TXTc from '../txt/jy/sd'
+import TXTc from '../txt/sg'
 const flag = '111'.length % 2
 const txt = (() => {
   if (flag) {
-    return TXTc.replaceAll('\n', '\n\n').slice(0, 111)
+    return TXTc.replaceAll('\n', '\n\n').slice(0, 11111)
   } else {
     return TXTb.slice(0, 1e6).replaceAll('\n', '    ')
   }
@@ -82,7 +82,8 @@ export default function App() {
           value={select}
           onChange={e => setSelect(e.target.value)}
         />
-        -- {txtForSearch.split(select).length - 1} --
+        -- {txtForSearch.split(select).length - 1}(
+        {txt.split(select).length - 1})--
         <input type='text' value={s} onChange={e => ss(e.target.value)} />
       </div>
 
@@ -90,7 +91,7 @@ export default function App() {
         <div>样赞叹这座二百五十年前的建筑物</div>
         <div>样赞叹这座二百五十年前的建筑物</div>
         <div
-          onClick={e => nextDom(e, setSelect, select)}
+          onClick={nextDom}
           onDoubleClick={e => {
             e.stopPropagation()
             e.preventDefault()
@@ -106,41 +107,45 @@ export default function App() {
 
   // console.timeEnd('app')
   return render
-}
-function nextDom(
-  { target, nativeEvent }: React.MouseEvent,
-  setSelect: React.Dispatch<React.SetStateAction<string>>,
-  select: string
-) {
-  const selectionObj = getSelection()
-  if (!selectionObj) return
 
-  const selectionStr = selectionObj.toString()
-  if (selectionStr) {
-    setSelect(selectionStr)
-    // selectionObj.removeAllRanges()
-    return
+  function nextDom({ target, nativeEvent }: React.MouseEvent) {
+    const selectionObj = getSelection()
+    if (!selectionObj) return
+
+    const selectionStr = selectionObj.toString()
+    if (selectionStr) {
+      setSelect(selectionStr)
+      // selectionObj.removeAllRanges()
+      return
+    }
+
+    if (!(target instanceof HTMLElement)) return
+
+    const wordPosition = getWordPosition(select)
+    if (wordPosition.length === 1) return
+
+    const wordAllPosition = wordPosition.flatMap(n =>
+      Array(select.length)
+        .fill(0)
+        .map((_, i) => n + i)
+    )
+
+    const clickIdx = wordAllPosition.indexOf(Number(target.dataset.i))
+    if (clickIdx === -1) return
+
+    let nextIdx = clickIdx + select.length * (nativeEvent.metaKey ? -1 : 1)
+    if (nextIdx > wordAllPosition.length - 1) {
+      //处理从数组尾到头
+      nextIdx = nextIdx - wordAllPosition.length
+    }
+    const targetDomIdx = wordAllPosition.at(nextIdx) //处理头到尾
+    const targetDom = document.querySelector<HTMLElement>(
+      `[data-i='${targetDomIdx}']`
+    )
+    if (!targetDom) return
+
+    document.documentElement.scrollTop = targetDom.offsetTop - 440
   }
-
-  if (!(target instanceof HTMLElement)) return
-
-  const wordAllPosition = getWordAllPosition(select)
-
-  const clickIdx = wordAllPosition.indexOf(Number(target.dataset.i))
-  if (clickIdx === -1) return
-
-  let nextIdx = clickIdx + select.length * (nativeEvent.metaKey ? -1 : 1)
-  if (nextIdx > wordAllPosition.length - 1) {
-    //处理从数组尾到头
-    nextIdx = nextIdx - wordAllPosition.length
-  }
-  const targetDomIdx = wordAllPosition.at(nextIdx) //处理头到尾
-  const targetDom = document.querySelector<HTMLElement>(
-    `[data-i='${targetDomIdx}']`
-  )
-  if (!targetDom) return
-
-  document.documentElement.scrollTop = targetDom.offsetTop - 440
 }
 
 // 查找一个字符串中的所有子串的位置
@@ -152,13 +157,6 @@ function getWordPosition(word: string) {
     pos = txt.indexOf(word, pos + word.length)
   }
   return positions
-}
-function getWordAllPosition(word: string) {
-  return getWordPosition(word).flatMap(n =>
-    Array(word.length)
-      .fill(0)
-      .map((_, i) => n + i)
-  )
 }
 
 function getCssSelectorL(select: string) {
@@ -204,9 +202,4 @@ function getCss(arr: string[]) {
       <style key={idx}>{getCssSelectorL(word) + getCssStyleR(word, idx)}</style>
     )
   })
-  return arr.reduce((all, item, n) => {
-    const result = getCssSelectorL(item)
-    if (!result) return all
-    return all + result + `{color:${colors[n] || 'black'}}\n`
-  }, '')
 }

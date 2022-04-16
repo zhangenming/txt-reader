@@ -19,6 +19,9 @@ body {
   white-space: break-spaces;
   word-break: break-all;
 }
+.isSpeaking {
+  background: #6666ee;
+}
 i {
   font-style: normal;
 }

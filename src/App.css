@@ -1,0 +1,43 @@
+body {
+  margin: 0;
+}
+.control {
+  display: flex;
+  justify-content: center;
+  padding: 10px;
+  position: fixed;
+  width: 100%;
+  background: yellowgreen;
+}
+.wrap {
+  padding: 10px;
+  box-sizing: border-box;
+  background: cornflowerblue;
+  color: aliceblue;
+  font-size: 25px;
+  font-family: cursive;
+  white-space: break-spaces;
+  word-break: break-all;
+}
+i {
+  font-style: normal;
+}
+
+/* // const [R, setR] = useState(txt)
+// useEffect(() => {
+//   setTimeout(() => {
+//     setR((r) => r.flatMap((e) => setColor(e, '想要翻身')))
+//     setTimeout(() => {
+//       setR((r) => r.flatMap((e) => setColor(e, '，')))
+//       setTimeout(() => {
+//         setR((r) => r.flatMap((e) => setColor(e, '？')))
+//         setTimeout(() => {
+//           setR((r) => r.flatMap((e) => setColor(e, '的')))
+//           setTimeout(() => {
+//             setR((r) => r.flatMap((e) => setColor(e, '试试')))
+//           }, 100)
+//         }, 100)
+//       }, 100)
+//     }, 100)
+//   }, 100)
+// }, []) */

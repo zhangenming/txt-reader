@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+  </head>
+  <body>
+    <div id="dom1" style="white-space: pre-wrap"></div>
+    <div id="dom2" style="white-space: pre-wrap"></div>
+  </body>
+  <script type="module">
+    import TXTb from '../txt/1.js'
+    const txt = TXTb
+    const len = txt.length
+    const x = parseInt(len / 2)
+    const q = txt.slice(0, x)
+    const w = txt.slice(x)
+    // dom.innerHTML = TXTb
+    // dom1.innerHTML = q
+    // dom2.innerHTML = w
+    dom1.innerHTML = txt
+  </script>
+</html>

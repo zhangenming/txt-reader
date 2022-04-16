@@ -6,7 +6,6 @@ const TXT2 = (() => {
   console.log(TXTa.length)
   if ('111111111'.length % 2) {
     return TXTa.replaceAll('\n\n', '\n    ').slice(0, 2e4)
-    return TXTa.replaceAll('\n', '\n\n').repeat(1)
   } else {
     return TXTb.slice(0, 300).replaceAll('\n', '    ')
   }
@@ -56,7 +55,7 @@ const txt = (() => {
 const colors = ['red', 'blueviolet', 'gainsboro', 'magenta']
 const items = ['M102', 'M103', '丁仪']
 
-function App() {
+export default function App() {
   // console.time('app')
 
   // console.time('hook')
@@ -66,36 +65,6 @@ function App() {
   const [selectArr, setSelectArr] = useState(items)
 
   const css = getCss(1 ? [select] : [select, ...selectArr])
-
-  function next({ target, nativeEvent }: MouseEvent) {
-    const selectionObj = getSelection()
-    if (!selectionObj) return
-
-    const selectionStr = selectionObj.toString()
-    if (selectionStr) {
-      setSelect(selectionStr)
-      selectionObj.removeAllRanges()
-      return
-    }
-
-    if (!(target instanceof HTMLElement)) return
-    const itemIdx = searchSubStr(select).flatMap(n =>
-      Array(select.length)
-        .fill(0)
-        .map((_, i) => n + i)
-    )
-    const currentIdx = itemIdx.indexOf(Number(target.dataset.i))
-    if (currentIdx === -1) return
-
-    const distance = select.length * (nativeEvent.metaKey ? -1 : 1)
-    const targetDomIdx = itemIdx[currentIdx + distance]
-    const targetDom = document.querySelector<HTMLElement>(
-      `[data-i='${targetDomIdx}']`
-    )
-    if (!targetDom) return
-
-    document.documentElement.scrollTop = targetDom.offsetTop - 440
-  }
   // console.timeEnd('hook')
 
   // console.time('render')
@@ -114,12 +83,11 @@ function App() {
         <input type='text' value={s} onChange={e => ss(e.target.value)} />
       </div>
 
-      <div className='wrap' onClick={next}>
+      <div className='wrap' onClick={e => nextDom(e, setSelect, select)}>
         <div>年</div>
         <div>年</div>
         <div>年</div>
         <div>年</div>
-        <div>年轻人</div>
         <div>样赞叹这座二百五十年前的建筑物</div>
         {txt}
       </div>
@@ -130,22 +98,54 @@ function App() {
   // console.timeEnd('app')
   return render
 }
+function nextDom(
+  { target, nativeEvent }: React.MouseEvent,
+  setSelect: React.Dispatch<React.SetStateAction<string>>,
+  select: string
+) {
+  const selectionObj = getSelection()
+  if (!selectionObj) return
 
-export default App
+  const selectionStr = selectionObj.toString()
+  if (selectionStr) {
+    setSelect(selectionStr)
+    selectionObj.removeAllRanges()
+    return
+  }
+
+  if (!(target instanceof HTMLElement)) return
+  const itemIdx = searchWordCount(select).flatMap(n =>
+    Array(select.length)
+      .fill(0)
+      .map((_, i) => n + i)
+  )
+
+  const currentIdx = itemIdx.indexOf(Number(target.dataset.i))
+  if (currentIdx === -1) return
+
+  const distance = select.length * (nativeEvent.metaKey ? -1 : 1)
+  const targetDomIdx = itemIdx[currentIdx + distance]
+  const targetDom = document.querySelector<HTMLElement>(
+    `[data-i='${targetDomIdx}']`
+  )
+  if (!targetDom) return
+
+  document.documentElement.scrollTop = targetDom.offsetTop - 440
+}
 
 // 查找一个字符串中的所有子串的位置
-function searchSubStr(subStr: string) {
-  // if (subStr === '') return [] //
+function searchWordCount(word: string) {
+  // if (word === '') return [] //
   const positions = []
-  let pos = TXT2.indexOf(subStr)
+  let pos = TXT2.indexOf(word)
   while (pos > -1) {
     positions.push(pos)
-    pos = TXT2.indexOf(subStr, pos + subStr.length)
+    pos = TXT2.indexOf(word, pos + word.length)
   }
   return positions
 }
 
-function getCssItem(select: string) {
+function getCssSelectorL(select: string) {
   const len = select.length
   const count = TXT2.split(select).length - 1
   if (count === 0) return
@@ -167,14 +167,29 @@ function getCssItem(select: string) {
       .slice(0, -1) + '\n'
   )
 }
+function getCssStyleR(word: string, idx: number) {
+  const css1 =
+    searchWordCount(word).length === 1
+      ? 'text-decoration: line-through red'
+      : 'cursor:se-resize'
+  const css2 = `color:${colors[idx] || 'black'}`
+
+  return (
+    '{' +
+    [css1, css2].reduce((all, now) => {
+      return `${all} ${now};\n`
+    }, '\n') +
+    '}'
+  )
+}
 function getCss(arr: string[]) {
-  return arr.map((item, n) => (
-    <style key={n}>
-      {getCssItem(item) + `{cursor:se-resize; color:${colors[n] || 'black'}}`}
-    </style>
-  ))
+  return arr.map((word, idx) => {
+    return (
+      <style key={idx}>{getCssSelectorL(word) + getCssStyleR(word, idx)}</style>
+    )
+  })
   return arr.reduce((all, item, n) => {
-    const result = getCssItem(item)
+    const result = getCssSelectorL(item)
     if (!result) return all
     return all + result + `{color:${colors[n] || 'black'}}\n`
   }, '')

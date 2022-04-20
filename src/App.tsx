@@ -1,30 +1,26 @@
-import { useState, MouseEvent } from 'react'
+import { useState, memo } from 'react'
 import './App.css'
-import TXTa from '../txt/2'
-import TXTb from '../txt/诡秘之主.js'
-import TXTc from '../txt/sg'
-const flag = '111'.length % 2
-const txt = (() => {
-    if (flag) {
-        return TXTc.replaceAll('\n', '\n\n').slice(0, 11111)
-    } else {
-        return TXTb.slice(0, 1e6).replaceAll('\n', '    ')
-    }
-})()
-const txtForSearch = (() => {
-    if (flag) {
-        console.log(TXTc.length)
-        return TXTc
-    } else {
-        console.log(TXTb.length)
-        return TXTb
-    }
-})()
+// import TXTa from '../txt/2'
+// import TXTb from '../txt/诡秘之主.js'
+import TXTc from '../txt/mc'
+
+const txtAll = TXTc
+
+const txtHalf = txtAll
+    .slice(0, 11111)
+    .replaceAll('\n', '\n\n')
+    .replaceAll(/[0-9]{4}年/gi, x => {
+        return x + `(${Number(x.slice(0, -1)) - 1328}岁)`
+    })
+    .replaceAll(/（[0-9]{4}）/gi, e => {
+        return `${e}(${Number(e.slice(1, -1)) - 1328}岁)`
+    })
+    .replaceAll('的', '')
 
 const txtDom = (() => {
     // console.time('txtDom')
     let isSpeaking: boolean
-    const txtDom = [...txt].map((e, i, arr) => {
+    const txtDom = [...txtHalf].map((e, i, arr) => {
         if (e === '”') isSpeaking = false
         const dom = (
             <i
@@ -65,25 +61,120 @@ const txtDom = (() => {
     return txtDom
 })()
 
-const colors = ['red', 'blueviolet', 'gainsboro', 'magenta']
-const items = ['M102', 'M103', '丁仪']
-
+type roules = string[]
+type color = string
+type Item = [roules, color]
+const items: Item[] = [
+    [
+        [
+            '孙德崖',
+            '张士诚',
+            '陈友谅',
+            '徐寿辉',
+            '郭子兴',
+            '刘福通',
+            '张定边',
+            '',
+            '',
+            '',
+            '红巾军',
+        ],
+        'black',
+    ],
+    [
+        [
+            '朱重八',
+            '朱元璋',
+            '李善长',
+            '常遇春',
+            '徐达',
+            '刘基',
+            '冯胜',
+            '朱文正',
+            '邓愈',
+            '张子明',
+            '李文忠',
+            '',
+            '',
+        ],
+        'firebrick',
+    ],
+    [
+        [
+            '年',
+            '州',
+            '凤阳',
+            '南京',
+            '集庆',
+            '应天',
+            '镇江',
+            '太平',
+            '洪都',
+            '安丰',
+            '',
+            '',
+            '',
+            '',
+        ],
+        'yellow',
+    ],
+]
+const XX = memo(function X() {
+    return <div>{txtDom}</div>
+})
 export default function App() {
+    // const [q, qq] = useState('年4')
+    // const dom = useMemo(() => txtDom, [''])
+    // return (
+    //     <div>
+    //     <ul className='toc'>
+    //     <li>Intro</li>
+    //     <li>
+    //         Topic
+    //         <ul>
+    //             <li>Subtopic</li>
+    //             <li>Subtopic</li>
+    //             <li>Subtopic</li>
+    //         </ul>
+    //     </li>
+    //     <li>
+    //         Topic
+    //         <ul>
+    //             <li>Subtopic</li>
+    //             <li>Subtopic</li>
+    //             <li>Subtopic</li>
+    //         </ul>
+    //     </li>
+    //     <li>Closing</li>
+    // </ul>
+    //         <div>
+    //             <style>{q + '{color:black}'}</style>
+    //             <input
+    //                 type='text'
+    //                 value={q}
+    //                 onChange={e => qq(e.target.value)}
+    //             />
+    //         </div>
+    //         <div className='wrap'>
+    //             <XX />
+    //         </div>
+    //     </div>
+    // )
     // console.time('app')
 
     // console.time('hook')
-    const [select, setSelect] = useState('年4')
-    const [q, qq] = useState('年4')
+    const [select, setSelect] = useState('我')
     const [s, ss] = useState('年4')
     const [selectArr, setSelectArr] = useState(items)
-
-    const css = getCss(1 ? [select] : [select, ...selectArr])
+    const styles = [...items, [[select], 'red'] as Item].map(
+        ([roules, color]) => getCss(roules, color)
+    )
     // console.timeEnd('hook')
 
     // console.time('render')
     const render = (
         <>
-            {css}
+            {styles}
             <style>{s + '{color:red}'}</style>
 
             <div className='control'>
@@ -92,8 +183,8 @@ export default function App() {
                     value={select}
                     onChange={e => setSelect(e.target.value)}
                 />
-                -- {txtForSearch.split(select).length - 1}(
-                {txt.split(select).length - 1})--
+                -- {txtAll.split(select).length - 1}(
+                {txtHalf.split(select).length - 1})--
                 <input
                     type='text'
                     value={s}
@@ -105,7 +196,7 @@ export default function App() {
                 <div>样赞叹这座二百五十年前的建筑物</div>
                 <div>样赞叹这座二百五十年前的建筑物</div>
                 <div
-                    onClick={nextDom}
+                    onClick={whenClickThenFindNextDom}
                     onDoubleClick={e => {
                         e.stopPropagation()
                         e.preventDefault()
@@ -122,7 +213,11 @@ export default function App() {
     // console.timeEnd('app')
     return render
 
-    function nextDom({ target, nativeEvent }: React.MouseEvent) {
+    function whenClickThenFindNextDom({
+        target,
+        metaKey,
+        altKey,
+    }: React.MouseEvent) {
         const selectionObj = getSelection()
         if (!selectionObj) return
 
@@ -138,44 +233,60 @@ export default function App() {
         const wordPosition = getWordPosition(select)
         if (wordPosition.length === 1) return
 
-        const wordAllPosition = wordPosition.flatMap(n =>
-            Array(select.length)
-                .fill(0)
-                .map((_, i) => n + i)
-        )
+        const wordAllPosition = getAllWordPosition(wordPosition, select.length)
 
         const clickIdx = wordAllPosition.indexOf(Number(target.dataset.i))
         if (clickIdx === -1) return
 
-        let nextIdx = clickIdx + select.length * (nativeEvent.metaKey ? -1 : 1)
-        if (nextIdx > wordAllPosition.length - 1) {
-            //处理从数组尾到头
-            nextIdx = nextIdx - wordAllPosition.length
+        let nextIdx
+        if (altKey) {
+            if (metaKey) {
+                nextIdx = wordAllPosition.length - 1 // 直接跳到最后一个
+            } else {
+                nextIdx = 0 // 直接跳到第一个
+            }
+        } else {
+            nextIdx = clickIdx + select.length * (metaKey ? -1 : 1) // meta 相反方向
+            if (nextIdx > wordAllPosition.length - 1) {
+                //处理从数组尾到头
+                nextIdx = nextIdx - wordAllPosition.length
+            }
         }
-        const targetDomIdx = wordAllPosition.at(nextIdx) //处理头到尾
-        const targetDom = document.querySelector<HTMLElement>(
-            `[data-i='${targetDomIdx}']`
-        )
-        if (!targetDom) return
 
-        document.documentElement.scrollTop = targetDom.offsetTop - 440
+        const nextDomIdx = wordAllPosition.at(nextIdx) //从头到尾
+        const nextDom = document.querySelector<HTMLElement>(
+            `[data-i='${nextDomIdx}']`
+        )
+        if (!nextDom) return
+
+        document.documentElement.scrollTop = nextDom.offsetTop - 440
     }
 }
 
 // 查找一个字符串中的所有子串的位置
 function getWordPosition(word: string) {
     const positions = []
-    let pos = txt.indexOf(word)
+    let pos = txtHalf.indexOf(word)
     while (pos > -1) {
         positions.push(pos)
-        pos = txt.indexOf(word, pos + word.length)
+        pos = txtHalf.indexOf(word, pos + word.length)
     }
     return positions
+}
+function getAllWordPosition(wordPosition: number[] | string, len: number) {
+    if (typeof wordPosition === 'string') {
+        wordPosition = getWordPosition(wordPosition) // when add cache can delete
+    }
+    return wordPosition.flatMap(n =>
+        Array(len)
+            .fill(0)
+            .map((_, i) => n + i)
+    )
 }
 
 function getCssSelectorL(select: string) {
     const len = select.length
-    const count = txt.split(select).length - 1
+    const count = txtHalf.split(select).length - 1
     if (count === 0) return
 
     return (
@@ -195,12 +306,12 @@ function getCssSelectorL(select: string) {
             .slice(0, -1) + '\n'
     )
 }
-function getCssStyleR(word: string, idx: number) {
+function getCssStyleR(word: string, color: string) {
     const css1 =
-        txtForSearch.split(word).length - 1 === 1
+        txtAll.split(word).length - 1 === 1
             ? 'text-decoration: line-through red'
             : 'cursor:se-resize'
-    const css2 = `color:${colors[idx] || 'black'}`
+    const css2 = `color:${color}`
 
     return (
         '{' +
@@ -210,12 +321,54 @@ function getCssStyleR(word: string, idx: number) {
         '}'
     )
 }
-function getCss(arr: string[]) {
-    return arr.map((word, idx) => {
-        return (
-            <style key={idx}>
-                {getCssSelectorL(word) + getCssStyleR(word, idx)}
-            </style>
-        )
-    })
+function getCss(arr: string[], color: string) {
+    return arr
+        .filter(e => e)
+        .map((word, idx) => {
+            return (
+                <style key={idx}>
+                    {getCssSelectorL(word) + getCssStyleR(word, color)}
+                    {getCss2(word)}
+                </style>
+            )
+        })
+}
+function getCss2(word: string) {
+    const len = word.length
+    const wordPosition = getAllWordPosition(word, len)
+    if (!wordPosition.length) return
+    const first = [wordPosition[0]]
+    const last = wordPosition.slice(-1)
+    const last2 = [wordPosition.at(0)]
+
+    return [
+        setCss(
+            first,
+            {
+                'border-left': '1px solid red',
+            },
+            len
+        ),
+        setCss(
+            last,
+            {
+                'border-right': '1px solid red',
+            },
+            len
+        ),
+    ]
+}
+
+function setCss(item: number[], _style: object, len: number) {
+    const selector = item
+        .reduce((all, now) => {
+            return all + `[data-i='${now}'],` //hack for css-specificity
+            return all + `[data-i='${now}']${'[data-i]'.repeat(len)},` //hack for css-specificity
+        }, '')
+        .slice(0, -1)
+
+    const style = JSON.stringify(_style)
+        .replaceAll('"', '')
+        .replaceAll(',', ';')
+    return selector + style
 }

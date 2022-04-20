@@ -1,31 +1,48 @@
 body {
-  margin: 0;
+    margin: 0;
 }
 .control {
-  display: flex;
-  justify-content: center;
-  padding: 10px;
-  position: fixed;
-  width: 100%;
-  background: yellowgreen;
+    display: flex;
+    justify-content: center;
+    padding: 10px;
+    position: fixed;
+    width: 100%;
+    background: yellowgreen;
 }
 .wrap {
-  padding: 10px;
-  box-sizing: border-box;
-  background: cornflowerblue;
-  color: aliceblue;
-  font-size: 25px;
-  font-family: cursive;
-  white-space: break-spaces;
-  word-break: break-all;
+    padding: 10px;
+    box-sizing: border-box;
+    background: cornflowerblue;
+    color: aliceblue;
+    font-size: 25px;
+    font-family: cursive;
+    white-space: break-spaces;
+    word-break: break-all;
 }
 .isSpeaking {
-  background: #6666ee;
+    background: #6666ee;
 }
 i {
-  font-style: normal;
+    font-style: normal;
+}
+ul.toc,
+ul.toc ul {
+    counter-reset: toc;
+}
+ul li {
+    counter-increment: toc;
+}
+.toc li:hover:before {
+    content: counters(toc, '.');
 }
 
+.scrollBar {
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 0;
+    height: 2px;
+}
 /* // const [R, setR] = useState(txt)
 // useEffect(() => {
 //   setTimeout(() => {

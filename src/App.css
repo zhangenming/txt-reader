@@ -16,12 +16,26 @@ body {
     color: aliceblue;
     font-size: 25px;
     font-family: cursive;
-    white-space: break-spaces;
-    word-break: break-all;
+    /* white-space: break-spaces;
+    word-break: break-all; */
+}
+.wrap i {
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
 }
 .isSpeaking {
     background: #6666ee;
 }
+.select_just-one {
+    text-decoration: line-through red;
+    color: red;
+}
+.select_many {
+    cursor: se-resize;
+    color: red;
+}
+
 i {
     font-style: normal;
 }

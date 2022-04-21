@@ -1,14 +1,14 @@
-import { useState, memo } from 'react'
+import { useState, createRef } from 'react'
+import { FixedSizeGrid as Grid } from 'react-window'
+import items, { Item } from './data'
+
 import './App.css'
-// import TXTa from '../txt/2'
-// import TXTb from '../txt/诡秘之主.js'
-import TXTc from '../txt/mc'
+import TXT from '../txt/mc'
+import { getWordPosition, getAllWordPosition, getClasses } from './utils'
 
-const txtAll = TXTc
+const columnCount = 32
 
-const txtHalf = txtAll
-    .slice(0, 11111)
-    .replaceAll('\n', '\n\n')
+export const TXTdone = TXT.replaceAll('\n', '\n\n')
     .replaceAll(/[0-9]{4}年/gi, x => {
         return x + `(${Number(x.slice(0, -1)) - 1328}岁)`
     })
@@ -16,154 +16,148 @@ const txtHalf = txtAll
         return `${e}(${Number(e.slice(1, -1)) - 1328}岁)`
     })
     .replaceAll('的', '')
-
-const txtDom = (() => {
-    // console.time('txtDom')
-    let isSpeaking: boolean
-    const txtDom = [...txtHalf].map((e, i, arr) => {
-        if (e === '”') isSpeaking = false
-        const dom = (
-            <i
-                key={i}
-                data-e={e}
-                data-i={i}
-                className={isSpeaking && e != '　' ? 'isSpeaking' : ''}
-            >
-                {e}
-            </i>
-        )
-        if (e === '“') isSpeaking = true
-        return dom
-        if (i < arr.length / 2) {
-            return (
-                <i
-                    key={i}
-                    data-el={e}
-                    data-i={i}
-                    className={i as unknown as string}
-                >
-                    {e}
-                </i>
-            )
-        }
-        return (
-            <i
-                key={i}
-                data-er={e}
-                data-i={i}
-                className={i as unknown as string}
-            >
-                {e}
-            </i>
-        )
+    .split('\n')
+    .filter(e => e)
+    .map(e => {
+        return e + ' '.repeat(columnCount * 2 - (e.length % columnCount))
     })
-    // console.timeEnd('txtDom')
-    return txtDom
+    .join('')
+
+const isSpkArr = (() => {
+    let isSpeaking: boolean = false
+    return [...TXTdone].map(e => {
+        if (e === '“') {
+            isSpeaking = true
+            return false
+        }
+        if (e === '”') {
+            isSpeaking = false
+            return false
+        }
+        return isSpeaking
+    })
+    return [...TXTdone].map(e => {
+        if (e === '“') {
+            const old = isSpeaking
+            isSpeaking = true
+            return old
+        }
+        if (e === '”') {
+            isSpeaking = false
+        }
+        return isSpeaking
+    })
+    return [...TXTdone].map(e => {
+        let rt = isSpeaking
+        if (e === '“') isSpeaking = true
+        if (e === '”') rt = isSpeaking = false
+        return rt
+    })
 })()
 
-type roules = string[]
-type color = string
-type Item = [roules, color]
-const items: Item[] = [
-    [
-        [
-            '孙德崖',
-            '张士诚',
-            '陈友谅',
-            '徐寿辉',
-            '郭子兴',
-            '刘福通',
-            '张定边',
-            '',
-            '',
-            '',
-            '红巾军',
-        ],
-        'black',
-    ],
-    [
-        [
-            '朱重八',
-            '朱元璋',
-            '李善长',
-            '常遇春',
-            '徐达',
-            '刘基',
-            '冯胜',
-            '朱文正',
-            '邓愈',
-            '张子明',
-            '李文忠',
-            '',
-            '',
-        ],
-        'firebrick',
-    ],
-    [
-        [
-            '年',
-            '州',
-            '凤阳',
-            '南京',
-            '集庆',
-            '应天',
-            '镇江',
-            '太平',
-            '洪都',
-            '安丰',
-            '',
-            '',
-            '',
-            '',
-        ],
-        'yellow',
-    ],
-]
-const XX = memo(function X() {
-    return <div>{txtDom}</div>
-})
+const Cell = (
+    {
+        columnIndex,
+        rowIndex,
+        style,
+    }: {
+        columnIndex: number
+        rowIndex: number
+        style: object
+    },
+    select: string
+) => {
+    const idx = rowIndex * columnCount + columnIndex
+    const word = TXTdone[idx]
+
+    const classes = getClasses({
+        isSpeaking: isSpkArr[idx],
+        [getWordPosition(select).length === 1
+            ? 'select_just-one'
+            : 'select_many']: getAllWordPosition(select).has(idx),
+    })
+
+    return (
+        <i
+            {...{
+                ...classes,
+
+                style: { ...style, ...getStyles(word) } as any,
+
+                children: word,
+
+                'data-e': word,
+                'data-i': idx,
+            }}
+        />
+    )
+
+    function getStyles(word: string) {
+        const style1 = word === '“' || word === '('
+        const style2 = word === '”' || word === ')'
+        const style3 = word === ' ' || word === '　'
+
+        return {
+            ...(style1 && {
+                'text-align': 'right',
+            }),
+            ...(style2 && {
+                'text-align': 'left',
+            }),
+            ...(style3 &&
+                {
+                    // fontSize: '0',
+                    // 'user-select': 'none',
+                }),
+        }
+    }
+}
+
 export default function App() {
-    // const [q, qq] = useState('年4')
-    // const dom = useMemo(() => txtDom, [''])
-    // return (
-    //     <div>
-    //     <ul className='toc'>
-    //     <li>Intro</li>
-    //     <li>
-    //         Topic
-    //         <ul>
-    //             <li>Subtopic</li>
-    //             <li>Subtopic</li>
-    //             <li>Subtopic</li>
-    //         </ul>
-    //     </li>
-    //     <li>
-    //         Topic
-    //         <ul>
-    //             <li>Subtopic</li>
-    //             <li>Subtopic</li>
-    //             <li>Subtopic</li>
-    //         </ul>
-    //     </li>
-    //     <li>Closing</li>
-    // </ul>
-    //         <div>
-    //             <style>{q + '{color:black}'}</style>
-    //             <input
-    //                 type='text'
-    //                 value={q}
-    //                 onChange={e => qq(e.target.value)}
-    //             />
-    //         </div>
-    //         <div className='wrap'>
-    //             <XX />
-    //         </div>
-    //     </div>
-    // )
+    const [select, setSelect] = useState('我')
+    const gridRef = createRef<Grid>()
+    const win = (
+        <>
+            <div className='control'>
+                <input
+                    type='text'
+                    value={select}
+                    onChange={e => setSelect(e.target.value)}
+                />
+                {TXT.split(select).length - 1}
+            </div>
+
+            <div className='wrap' onClick={whenClickThenFindNextDom}>
+                <style>
+                    {`
+                    .isSpeaking {
+                        background:#6666ee
+                    }
+                    .isSelect {
+                        color:red
+                    }
+                    `}
+                </style>
+                <Grid
+                    ref={gridRef}
+                    columnCount={columnCount}
+                    rowCount={111113}
+                    //
+                    columnWidth={30}
+                    rowHeight={30}
+                    //
+                    height={750}
+                    width={columnCount * 30 + 33}
+                >
+                    {renderProps => Cell(renderProps, select)}
+                </Grid>
+            </div>
+        </>
+    )
+    return win
     // console.time('app')
 
     // console.time('hook')
-    const [select, setSelect] = useState('我')
     const [s, ss] = useState('年4')
     const [selectArr, setSelectArr] = useState(items)
     const styles = [...items, [[select], 'red'] as Item].map(
@@ -176,36 +170,6 @@ export default function App() {
         <>
             {styles}
             <style>{s + '{color:red}'}</style>
-
-            <div className='control'>
-                <input
-                    type='text'
-                    value={select}
-                    onChange={e => setSelect(e.target.value)}
-                />
-                -- {txtAll.split(select).length - 1}(
-                {txtHalf.split(select).length - 1})--
-                <input
-                    type='text'
-                    value={s}
-                    onChange={e => ss(e.target.value)}
-                />
-            </div>
-
-            <div className='wrap'>
-                <div>样赞叹这座二百五十年前的建筑物</div>
-                <div>样赞叹这座二百五十年前的建筑物</div>
-                <div
-                    onClick={whenClickThenFindNextDom}
-                    onDoubleClick={e => {
-                        e.stopPropagation()
-                        e.preventDefault()
-                        return false
-                    }}
-                >
-                    {txtDom}
-                </div>
-            </div>
         </>
     )
     // console.timeEnd('render')
@@ -222,71 +186,54 @@ export default function App() {
         if (!selectionObj) return
 
         const selectionStr = selectionObj.toString()
-        if (selectionStr) {
-            setSelect(selectionStr)
-            // selectionObj.removeAllRanges()
+
+        // selectionObj.removeAllRanges()
+        if (selectionStr.length > 0 && selectionStr.length < 210) {
+            if (selectionStr.includes('\n')) return
+            setSelect(selectionStr.replaceAll(' ', ''))
             return
         }
 
-        if (!(target instanceof HTMLElement)) return
+        if (!(target instanceof HTMLElement)) return alert(1)
 
         const wordPosition = getWordPosition(select)
         if (wordPosition.length === 1) return
 
-        const wordAllPosition = getAllWordPosition(wordPosition, select.length)
+        const wordAllPosition = [...getAllWordPosition(select)]
 
         const clickIdx = wordAllPosition.indexOf(Number(target.dataset.i))
         if (clickIdx === -1) return
 
-        let nextIdx
-        if (altKey) {
-            if (metaKey) {
-                nextIdx = wordAllPosition.length - 1 // 直接跳到最后一个
-            } else {
-                nextIdx = 0 // 直接跳到第一个
-            }
-        } else {
-            nextIdx = clickIdx + select.length * (metaKey ? -1 : 1) // meta 相反方向
+        const nextIdx = (() => {
+            if (altKey && metaKey) return wordAllPosition.length - 1 // 直接跳到最后一个 {
+            if (altKey) return 0 // 直接跳到第一个
+
+            let nextIdx = clickIdx + select.length * (metaKey ? -1 : 1) // meta 相反方向
             if (nextIdx > wordAllPosition.length - 1) {
-                //处理从数组尾到头
-                nextIdx = nextIdx - wordAllPosition.length
+                return nextIdx - wordAllPosition.length //处理从数组尾到头
             }
-        }
+            return nextIdx
+        })()
 
         const nextDomIdx = wordAllPosition.at(nextIdx) //从头到尾
-        const nextDom = document.querySelector<HTMLElement>(
-            `[data-i='${nextDomIdx}']`
-        )
-        if (!nextDom) return
 
-        document.documentElement.scrollTop = nextDom.offsetTop - 440
-    }
-}
+        gridRef.current?.scrollToItem({
+            align: 'center',
+            columnIndex: nextDomIdx % columnCount,
+            rowIndex: Math.floor(nextDomIdx / columnCount),
+        })
+        // const nextDom = document.querySelector<HTMLElement>(
+        //     `[data-i='${nextDomIdx}']`
+        // )
+        // if (!nextDom) return
 
-// 查找一个字符串中的所有子串的位置
-function getWordPosition(word: string) {
-    const positions = []
-    let pos = txtHalf.indexOf(word)
-    while (pos > -1) {
-        positions.push(pos)
-        pos = txtHalf.indexOf(word, pos + word.length)
+        // document.documentElement.scrollTop = nextDom.offsetTop - 440
     }
-    return positions
-}
-function getAllWordPosition(wordPosition: number[] | string, len: number) {
-    if (typeof wordPosition === 'string') {
-        wordPosition = getWordPosition(wordPosition) // when add cache can delete
-    }
-    return wordPosition.flatMap(n =>
-        Array(len)
-            .fill(0)
-            .map((_, i) => n + i)
-    )
 }
 
 function getCssSelectorL(select: string) {
     const len = select.length
-    const count = txtHalf.split(select).length - 1
+    const count = TXTdone.split(select).length - 1
     if (count === 0) return
 
     return (
@@ -308,7 +255,7 @@ function getCssSelectorL(select: string) {
 }
 function getCssStyleR(word: string, color: string) {
     const css1 =
-        txtAll.split(word).length - 1 === 1
+        TXT.split(word).length - 1 === 1
             ? 'text-decoration: line-through red'
             : 'cursor:se-resize'
     const css2 = `color:${color}`
@@ -335,7 +282,7 @@ function getCss(arr: string[], color: string) {
 }
 function getCss2(word: string) {
     const len = word.length
-    const wordPosition = getAllWordPosition(word, len)
+    const wordPosition = getAllWordPosition(word)
     if (!wordPosition.length) return
     const first = [wordPosition[0]]
     const last = wordPosition.slice(-1)

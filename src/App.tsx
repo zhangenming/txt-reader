@@ -4,7 +4,12 @@ import items, { Item } from './data'
 
 import './App.css'
 import TXT from '../txt/mc'
-import { getWordPosition, getAllWordPosition, getClasses } from './utils'
+import {
+    getWordPosition,
+    getAllWordPosition,
+    getAllWordPosition2,
+    getClasses,
+} from './utils'
 
 const columnCount = 32
 
@@ -15,7 +20,7 @@ export const TXTdone = TXT.replaceAll('\n', '\n\n')
     .replaceAll(/（[0-9]{4}）/gi, e => {
         return `${e}(${Number(e.slice(1, -1)) - 1328}岁)`
     })
-    .replaceAll('的', '')
+    // .replaceAll('的', '') // 会对搜索结果造成影响
     .split('\n')
     .filter(e => e)
     .map(e => {
@@ -37,17 +42,6 @@ const isSpkArr = (() => {
         return isSpeaking
     })
     return [...TXTdone].map(e => {
-        if (e === '“') {
-            const old = isSpeaking
-            isSpeaking = true
-            return old
-        }
-        if (e === '”') {
-            isSpeaking = false
-        }
-        return isSpeaking
-    })
-    return [...TXTdone].map(e => {
         let rt = isSpeaking
         if (e === '“') isSpeaking = true
         if (e === '”') rt = isSpeaking = false
@@ -60,31 +54,48 @@ const Cell = (
         columnIndex,
         rowIndex,
         style,
+        isScrolling,
     }: {
         columnIndex: number
         rowIndex: number
         style: object
+        isScrolling?: boolean
     },
     select: string
 ) => {
     const idx = rowIndex * columnCount + columnIndex
+    // idx < 100 && console.time() // devtools记录模式快很多
     const word = TXTdone[idx]
 
+    const wordPst = getWordPosition(select)
+    const allWordPst = getAllWordPosition2(select)
+    // const allWordPstArr = [...allWordPst]
+
     const classes = getClasses({
-        isSpeaking: isSpkArr[idx],
-        [getWordPosition(select).length === 1
-            ? 'select_just-one'
-            : 'select_many']: getAllWordPosition(select).has(idx),
+        speaking: isSpkArr[idx],
+
+        [wordPst.length === 1 ? 'select_just-one' : 'select_many']:
+            allWordPst[idx],
+
+        'select_first-item': idx === allWordPst.first,
+        'select_last-item': idx === allWordPst.last,
     })
 
+    // idx < 100 && console.timeEnd()
     return (
         <i
             {...{
                 ...classes,
 
-                style: { ...style, ...getStyles(word) } as any,
+                style: {
+                    ...style,
+                    ...getStyles(word),
+                    'user-select': isScrolling ? 'none' : 'text',
+                    // 'user-select': 'text',
+                } as any,
 
                 children: word,
+                key: idx, // ?
 
                 'data-e': word,
                 'data-i': idx,
@@ -140,6 +151,8 @@ export default function App() {
                 </style>
                 <Grid
                     ref={gridRef}
+                    useIsScrolling
+                    //
                     columnCount={columnCount}
                     rowCount={111113}
                     //

@@ -23,18 +23,29 @@ body {
     display: flex;
     justify-content: space-evenly;
     align-items: center;
+    user-select: none;
 }
-.isSpeaking {
+/* ITEM class */
+.speaking {
     background: #6666ee;
 }
+[class*='select'] {
+    color: red;
+}
+
 .select_just-one {
     text-decoration: line-through red;
-    color: red;
 }
 .select_many {
     cursor: se-resize;
-    color: red;
 }
+.select_first-item {
+    border-left: 1px solid red;
+}
+.select_last-item {
+    border-right: 1px solid red;
+}
+/* ITEM class */
 
 i {
     font-style: normal;

@@ -67,41 +67,42 @@ const Cell = (
     // idx < 100 && console.time() // devtools记录模式快很多
     const word = TXTdone[idx]
 
-    const wordPst = getWordPosition(select)
-    const allWordPst = getAllWordPosition2(select)
-    // const allWordPstArr = [...allWordPst]
+    const {
+        [idx]: isTarget,
+        wordType,
+        firstIdx,
+        lastIdx,
+    } = getAllWordPosition2(select)
 
     const classes = getClasses({
         speaking: isSpkArr[idx],
 
-        [wordPst.length === 1 ? 'select_just-one' : 'select_many']:
-            allWordPst[idx],
+        [wordType]: isTarget,
 
-        'select_first-item': idx === allWordPst.first,
-        'select_last-item': idx === allWordPst.last,
+        'select_first-item': idx === firstIdx,
+        'select_last-item': idx === lastIdx,
     })
 
+    const props = (function gene() {
+        return {
+            ...classes,
+
+            style: {
+                ...style,
+                ...getStyles(word),
+                'user-select': isScrolling ? 'none' : 'text',
+                // 'user-select': 'text',
+            } as any,
+
+            children: word,
+            key: idx, // ?
+
+            'data-e': word,
+            'data-i': idx,
+        }
+    })()
     // idx < 100 && console.timeEnd()
-    return (
-        <i
-            {...{
-                ...classes,
-
-                style: {
-                    ...style,
-                    ...getStyles(word),
-                    'user-select': isScrolling ? 'none' : 'text',
-                    // 'user-select': 'text',
-                } as any,
-
-                children: word,
-                key: idx, // ?
-
-                'data-e': word,
-                'data-i': idx,
-            }}
-        />
-    )
+    return <i {...props} />
 
     function getStyles(word: string) {
         const style1 = word === '“' || word === '('

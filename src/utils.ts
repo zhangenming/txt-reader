@@ -44,8 +44,10 @@ export function getAllWordPosition2(word: string) {
             all[v] = v
             return all
         }, {})
-        getAllWordPosition2Cache[word].first = tmp[0][1]
-        getAllWordPosition2Cache[word].last = tmp.at(-1)[1]
+        getAllWordPosition2Cache[word].firstIdx = tmp[0][1]
+        getAllWordPosition2Cache[word].lastIdx = tmp.at(-1)[1]
+        getAllWordPosition2Cache[word].wordType =
+            tmp.length / word.length === 1 ? 'select_just-one' : 'select_many'
     }
 
     return getAllWordPosition2Cache[word]

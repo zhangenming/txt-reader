@@ -30,9 +30,8 @@ body {
     background: #6666ee;
 }
 [class*='select'] {
-    color: red;
+    background-color: var(--var-color);
 }
-
 .select_just-one {
     text-decoration: line-through red;
 }

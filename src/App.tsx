@@ -92,6 +92,8 @@ const Cell = (
                 ...getStyles(word),
                 'user-select': isScrolling ? 'none' : 'text',
                 // 'user-select': 'text',
+
+                '--var-color': 'black',
             } as any,
 
             children: word,
@@ -140,13 +142,12 @@ export default function App() {
             </div>
 
             <div className='wrap' onClick={whenClickThenFindNextDom}>
+                <script>{`console.log(3)`}</script>
+
                 <style>
                     {`
                     .isSpeaking {
                         background:#6666ee
-                    }
-                    .isSelect {
-                        color:red
                     }
                     `}
                 </style>

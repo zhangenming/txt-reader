@@ -1,7 +1,8 @@
 type roules = string[]
 type color = string
 export type Item = [roules, color]
-export default  [
+
+const sg = [
     [
         [
             '孙德崖',
@@ -11,7 +12,7 @@ export default  [
             '郭子兴',
             '刘福通',
             '张定边',
-            '',
+            '很精彩，历史可以写',
             '',
             '',
             '红巾军',
@@ -56,3 +57,12 @@ export default  [
         'yellow',
     ],
 ]
+
+const bly = [
+    [['白鹿'], 'black'],
+    [['秉德', '老汉', '鹿三', '长工', '白赵氏'], 'firebrick'],
+    [['他', '嘉轩'], 'indigo'],
+    [['她', '', '', ''], 'yellow'],
+]
+
+export default bly as [string[], string][]

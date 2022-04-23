@@ -59,10 +59,13 @@ const sg = [
 ]
 
 const bly = [
-    [['白鹿'], 'black'],
-    [['秉德', '老汉', '鹿三', '长工', '白赵氏'], 'firebrick'],
-    [['他', '嘉轩'], 'indigo'],
-    [['她', '', '', ''], 'yellow'],
+    ['black', '白鹿 滋水'],
+    ['firebrick', '秉德 老汉 鹿三 长工 白赵氏 朱先生 鹿子霖'],
+    ['indigo', '他 嘉轩'],
+    ['yellow', '她 '],
 ]
 
-export default bly as [string[], string][]
+export default bly.map((e: any) => {
+    e[1] = e[1].split(' ')
+    return e
+}) as [string, string[]][]

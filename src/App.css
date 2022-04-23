@@ -10,21 +10,22 @@ body {
     background: yellowgreen;
 }
 .wrap {
-    padding: 10px;
+    padding-top: 40px;
+}
+.wrap > div {
     box-sizing: border-box;
     background: cornflowerblue;
     color: aliceblue;
     font-size: 25px;
     font-family: cursive;
-    /* white-space: break-spaces;
-    word-break: break-all; */
 }
-.wrap i {
+.wrap span {
     display: flex;
     justify-content: space-evenly;
     align-items: center;
-    user-select: none;
+    box-sizing: border-box; /*否则last会在speak状态下失效*/
 }
+
 /* ITEM class */
 .speaking {
     background: #6666ee;
@@ -45,43 +46,3 @@ body {
     border-right: 1px solid red;
 }
 /* ITEM class */
-
-i {
-    font-style: normal;
-}
-ul.toc,
-ul.toc ul {
-    counter-reset: toc;
-}
-ul li {
-    counter-increment: toc;
-}
-.toc li:hover:before {
-    content: counters(toc, '.');
-}
-
-.scrollBar {
-    position: absolute;
-    left: 0;
-    bottom: 0;
-    width: 0;
-    height: 2px;
-}
-/* // const [R, setR] = useState(txt)
-// useEffect(() => {
-//   setTimeout(() => {
-//     setR((r) => r.flatMap((e) => setColor(e, '想要翻身')))
-//     setTimeout(() => {
-//       setR((r) => r.flatMap((e) => setColor(e, '，')))
-//       setTimeout(() => {
-//         setR((r) => r.flatMap((e) => setColor(e, '？')))
-//         setTimeout(() => {
-//           setR((r) => r.flatMap((e) => setColor(e, '的')))
-//           setTimeout(() => {
-//             setR((r) => r.flatMap((e) => setColor(e, '试试')))
-//           }, 100)
-//         }, 100)
-//       }, 100)
-//     }, 100)
-//   }, 100)
-// }, []) */

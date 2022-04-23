@@ -53,7 +53,7 @@ const isSpkArr = (() => {
     })
 })()
 
-const Cell = (
+const Cells = (
     {
         columnIndex,
         rowIndex,
@@ -149,7 +149,7 @@ export default function App() {
                 {TXT.split(select).length - 1}
             </div>
 
-            <div className='wrap' onClick={whenClickThenFindNextDom}>
+            <div className='wrap' onClick={GoToNextItem}>
                 <script>{`console.log(3)`}</script>
 
                 <style>
@@ -174,7 +174,7 @@ export default function App() {
                     width={columnCount * 30 + 33}
                 >
                     {/* {renderProps => Cell(renderProps, select)} */}
-                    {Cell}
+                    {Cells}
                 </Grid>
 
                 {(() => {
@@ -208,11 +208,7 @@ export default function App() {
     // console.timeEnd('app')
     return render
 
-    function whenClickThenFindNextDom({
-        target,
-        metaKey,
-        altKey,
-    }: React.MouseEvent) {
+    function GoToNextItem({ target, metaKey, altKey }: React.MouseEvent) {
         const selectionObj = getSelection()
         if (!selectionObj) return
 
@@ -227,12 +223,18 @@ export default function App() {
 
         if (!(target instanceof HTMLElement)) return alert(1)
 
-        const wordPosition = getWordPosition(select)
+        const { i } = target.dataset
+
+        const _content = getComputedStyle(target).content
+        if (_content === 'normal') return
+        const content = _content.slice(1, -1) //去掉引号
+
+        const wordPosition = getWordPosition(content)
         if (wordPosition.length === 1) return
 
-        const wordAllPosition = [...getAllWordPosition(select)]
+        const wordAllPosition = [...getAllWordPosition(content)]
 
-        const clickIdx = wordAllPosition.indexOf(Number(target.dataset.i))
+        const clickIdx = wordAllPosition.indexOf(Number(i))
         if (clickIdx === -1) return
 
         const nextIdx = (() => {
@@ -240,7 +242,7 @@ export default function App() {
             if (altKey && metaKey) return len - 1 // 直接跳到最后一个 {
             if (altKey) return 0 // 直接跳到第一个
 
-            let nextIdx = clickIdx + select.length * (metaKey ? -1 : 1) // meta 相反方向
+            let nextIdx = clickIdx + content.length * (metaKey ? -1 : 1) // meta 相反方向
             if (nextIdx > len - 1) {
                 return nextIdx - len //处理从数组尾到头
             }
@@ -257,40 +259,6 @@ export default function App() {
     }
 }
 
-function getCssSelectorL(select: string) {
-    const len = select.length
-    const count = TXT.split(select).length - 1
-    if (count === 0) return
-
-    return Array.from(select)
-        .map(word => `[data-e='${word}']`)
-        .map((_, i, arr) =>
-            arr.reduce((all, item, j) => {
-                const last = j === len - 1 ? ')'.repeat(len - 1 - i) : ''
-                const L = all + `:has(+` + item + last
-                const R = all + `+` + item
-                return i < j ? L : R
-            })
-        )
-        .join(',\n')
-}
-function getCssStyleR(word: string, color: string) {
-    const css1 =
-        TXT.split(word).length - 1 === 1
-            ? 'text-decoration: line-through red'
-            : 'cursor:se-resize'
-    const css2 = `color:${color}`
-    const css3 = `content:'${word}'`
-
-    return (
-        '\n{\n' +
-        [css1, css2, css3].reduce((all, now) => {
-            return `${all} ${now};\n`
-        }, '') +
-        '}'
-    )
-}
-
 function getStyle(word: string, color: string) {
     /* return后 有个空格 必要 不然\n失效; */
     return ` 
@@ -299,48 +267,84 @@ ${getCss1(word, color)}
 ${getCss2(word)}
 /* ${word} */
 `
-}
-function getCss1(word: string, color: string) {
-    return getCssSelectorL(word) + getCssStyleR(word, color)
-}
-function getCss2(word: string) {
-    const len = word.length
-    const wordPosition = [...getAllWordPosition(word)]
-    if (!wordPosition.length) return
-    const first = [wordPosition[0]]
-    const last = wordPosition.slice(-1)
-    const last2 = [wordPosition.at(0)]
 
-    return [
-        setCss(
-            first,
-            {
-                'border-left': '1px solid red',
-            },
-            len
-        ),
-        setCss(
-            last,
-            {
-                'border-right': '1px solid red',
-            },
-            len
-        ),
-    ]
-}
+    function getCss1(word: string, color: string) {
+        return getCssSelectorL(word) + getCssStyleR(word, color)
 
-function setCss(item: number[], _style: object, len: number) {
-    const selector = item
-        .reduce((all, now) => {
-            return all + `[data-i='${now}'],`
-            return all + `[data-i='${now}']${'[data-i]'.repeat(len)},` //hack for css-specificity
-        }, '')
-        .slice(0, -1)
+        function getCssSelectorL(select: string) {
+            const len = select.length
+            const count = TXT.split(select).length - 1
+            if (count === 0) return
 
-    const style = JSON.stringify(_style)
-        .replaceAll('"', '')
-        .replaceAll(',', ';')
-        .replace('{', '{ ')
-        .replace('}', ' }')
-    return selector + style
+            return Array.from(select)
+                .map(word => `[data-e='${word}']`)
+                .map((_, i, arr) =>
+                    arr.reduce((all, item, j) => {
+                        const last =
+                            j === len - 1 ? ')'.repeat(len - 1 - i) : ''
+                        const L = all + `:has(+` + item + last
+                        const R = all + `+` + item
+                        return i < j ? L : R
+                    })
+                )
+                .join(',\n')
+        }
+        function getCssStyleR(word: string, color: string) {
+            const css1 =
+                TXT.split(word).length - 1 === 1
+                    ? 'text-decoration: line-through red'
+                    : 'cursor:se-resize'
+            const css2 = `color:${color}`
+            const css3 = `content:"${word}"`
+
+            return (
+                '\n{\n' +
+                [css1, css2, css3].reduce((all, now) => {
+                    return `${all} ${now};\n`
+                }, '') +
+                '}'
+            )
+        }
+    }
+    function getCss2(word: string) {
+        const len = word.length
+        const wordPosition = [...getAllWordPosition(word)]
+        if (!wordPosition.length) return
+        const first = [wordPosition[0]]
+        const last = wordPosition.slice(-1)
+        const last2 = [wordPosition.at(0)]
+
+        return [
+            setCss(
+                first,
+                {
+                    'border-left': '1px solid red',
+                },
+                len
+            ),
+            setCss(
+                last,
+                {
+                    'border-right': '1px solid red',
+                },
+                len
+            ),
+        ].join('\n')
+
+        function setCss(item: number[], _style: object, len: number) {
+            const selector = item
+                .reduce((all, now) => {
+                    return all + `[data-i='${now}'],`
+                    return all + `[data-i='${now}']${'[data-i]'.repeat(len)},` //hack for css-specificity
+                }, '')
+                .slice(0, -1)
+
+            const style = JSON.stringify(_style)
+                .replaceAll('"', '')
+                .replaceAll(',', ';')
+                .replace('{', '{ ')
+                .replace('}', ' }')
+            return selector + style
+        }
+    }
 }

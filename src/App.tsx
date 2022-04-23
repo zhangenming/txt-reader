@@ -1,36 +1,40 @@
-import { useState, createRef } from 'react'
-import { FixedSizeGrid as Grid } from 'react-window'
-import items, { Item } from './data'
-
 import './App.css'
-import TXT from '../txt/mc'
+
+import { useState, createRef, Key } from 'react'
+import { FixedSizeGrid as Grid } from 'react-window'
+
 import {
     getWordPosition,
     getAllWordPosition,
     getAllWordPosition2,
     getClasses,
 } from './utils'
+import items from './data'
+
+import _TXT from '../txt/mc'
 
 const columnCount = 32
 
-export const TXTdone = TXT.replaceAll('\n', '\n\n')
-    .replaceAll(/[0-9]{4}年/gi, x => {
-        return x + `(${Number(x.slice(0, -1)) - 1328}岁)`
-    })
-    .replaceAll(/（[0-9]{4}）/gi, e => {
-        return `${e}(${Number(e.slice(1, -1)) - 1328}岁)`
-    })
-    // .replaceAll('的', '') // 会对搜索结果造成影响
-    .split('\n')
-    .filter(e => e)
-    .map(e => {
-        return e + ' '.repeat(columnCount * 2 - (e.length % columnCount))
-    })
-    .join('')
+export const TXT = (() =>
+    _TXT
+        .replaceAll('\n', '\n\n')
+        .replaceAll(/[0-9]{4}年/gi, x => {
+            return x + `(${Number(x.slice(0, -1)) - 1328}岁)`
+        })
+        .replaceAll(/（[0-9]{4}）/gi, e => {
+            return `${e}(${Number(e.slice(1, -1)) - 1328}岁)`
+        })
+        // .replaceAll('的', '') // 会对搜索结果造成影响
+        .split('\n')
+        .filter(e => e)
+        .map(e => {
+            return e + ' '.repeat(columnCount * 2 - (e.length % columnCount))
+        })
+        .join(''))()
 
 const isSpkArr = (() => {
-    let isSpeaking: boolean = false
-    return [...TXTdone].map(e => {
+    let isSpeaking = false
+    return [...TXT].map(e => {
         if (e === '“') {
             isSpeaking = true
             return false
@@ -41,7 +45,7 @@ const isSpkArr = (() => {
         }
         return isSpeaking
     })
-    return [...TXTdone].map(e => {
+    return [...TXT].map(e => {
         let rt = isSpeaking
         if (e === '“') isSpeaking = true
         if (e === '”') rt = isSpeaking = false
@@ -61,26 +65,26 @@ const Cell = (
         style: object
         isScrolling?: boolean
     },
-    select: string
+    select?: string
 ) => {
     const idx = rowIndex * columnCount + columnIndex
     // idx < 100 && console.time() // devtools记录模式快很多
-    const word = TXTdone[idx]
+    const word = TXT[idx]
 
-    const {
-        [idx]: isTarget,
-        wordType,
-        firstIdx,
-        lastIdx,
-    } = getAllWordPosition2(select)
+    // const {
+    //     [idx]: [index, targetNextIdx] = [],
+    //     wordType,
+    //     firstIdx,
+    //     lastIdx,
+    // } = getAllWordPosition2(select)
 
     const classes = getClasses({
         speaking: isSpkArr[idx],
 
-        [wordType]: isTarget,
+        // [wordType]: targetNextIdx, // IDX 0是0  不能用此判断
 
-        'select_first-item': idx === firstIdx,
-        'select_last-item': idx === lastIdx,
+        // 'select_first-item': idx === firstIdx,
+        // 'select_last-item': idx === lastIdx,
     })
 
     const props = (function gene() {
@@ -90,17 +94,21 @@ const Cell = (
             style: {
                 ...style,
                 ...getStyles(word),
-                'user-select': isScrolling ? 'none' : 'text',
-                // 'user-select': 'text',
+                // userSelect: isScrolling ? 'none' : 'text',
+                userSelect: 'text',
 
                 '--var-color': 'black',
             } as any,
 
             children: word,
-            key: idx, // ?
+            // key: idx, // ?
 
             'data-e': word,
             'data-i': idx,
+            // 'data-next': targetNextIdx,
+            'data-rowindex': rowIndex,
+            'data-columnindex': columnIndex,
+            // 'data-index': index,
         }
     })()
     // idx < 100 && console.timeEnd()
@@ -113,10 +121,10 @@ const Cell = (
 
         return {
             ...(style1 && {
-                'text-align': 'right',
+                textAlign: 'right',
             }),
             ...(style2 && {
-                'text-align': 'left',
+                textAlign: 'left',
             }),
             ...(style3 &&
                 {
@@ -128,9 +136,9 @@ const Cell = (
 }
 
 export default function App() {
-    const [select, setSelect] = useState('我')
+    const [select, setSelect] = useState('版权归')
     const gridRef = createRef<Grid>()
-    const win = (
+    return (
         <>
             <div className='control'>
                 <input
@@ -151,39 +159,47 @@ export default function App() {
                     }
                     `}
                 </style>
+
                 <Grid
                     ref={gridRef}
                     useIsScrolling
-                    //
+                    // item counts
                     columnCount={columnCount}
                     rowCount={111113}
-                    //
+                    // item style
                     columnWidth={30}
                     rowHeight={30}
-                    //
+                    // wrap style
                     height={750}
                     width={columnCount * 30 + 33}
                 >
-                    {renderProps => Cell(renderProps, select)}
+                    {/* {renderProps => Cell(renderProps, select)} */}
+                    {Cell}
                 </Grid>
+
+                {(() => {
+                    return items.map(([roles, color], key) => (
+                        <style key={key}>
+                            {roles
+                                .filter(e => e)
+                                .map(word => getStyle(word, color))}
+                        </style>
+                    ))
+                })()}
+                <style>{getStyle(select, 'red')}</style>
             </div>
         </>
     )
-    return win
     // console.time('app')
 
     // console.time('hook')
     const [s, ss] = useState('年4')
-    const [selectArr, setSelectArr] = useState(items)
-    const styles = [...items, [[select], 'red'] as Item].map(
-        ([roules, color]) => getCss(roules, color)
-    )
+
     // console.timeEnd('hook')
 
     // console.time('render')
     const render = (
         <>
-            {styles}
             <style>{s + '{color:red}'}</style>
         </>
     )
@@ -220,53 +236,43 @@ export default function App() {
         if (clickIdx === -1) return
 
         const nextIdx = (() => {
-            if (altKey && metaKey) return wordAllPosition.length - 1 // 直接跳到最后一个 {
+            const len = wordAllPosition.length
+            if (altKey && metaKey) return len - 1 // 直接跳到最后一个 {
             if (altKey) return 0 // 直接跳到第一个
 
             let nextIdx = clickIdx + select.length * (metaKey ? -1 : 1) // meta 相反方向
-            if (nextIdx > wordAllPosition.length - 1) {
-                return nextIdx - wordAllPosition.length //处理从数组尾到头
+            if (nextIdx > len - 1) {
+                return nextIdx - len //处理从数组尾到头
             }
             return nextIdx
         })()
 
-        const nextDomIdx = wordAllPosition.at(nextIdx) //从头到尾
+        const nextIDX = wordAllPosition.at(nextIdx) //从头到尾
 
         gridRef.current?.scrollToItem({
             align: 'center',
-            columnIndex: nextDomIdx % columnCount,
-            rowIndex: Math.floor(nextDomIdx / columnCount),
+            columnIndex: nextIDX % columnCount,
+            rowIndex: Math.floor(nextIDX / columnCount),
         })
-        // const nextDom = document.querySelector<HTMLElement>(
-        //     `[data-i='${nextDomIdx}']`
-        // )
-        // if (!nextDom) return
-
-        // document.documentElement.scrollTop = nextDom.offsetTop - 440
     }
 }
 
 function getCssSelectorL(select: string) {
     const len = select.length
-    const count = TXTdone.split(select).length - 1
+    const count = TXT.split(select).length - 1
     if (count === 0) return
 
-    return (
-        Array.from(select)
-            .map(word => `[data-e='${word}']`)
-            .map((_, i, arr) =>
-                arr.reduce((all, item, j) => {
-                    const last = j === len - 1 ? ')'.repeat(len - 1 - i) : ''
-                    const L = all + `:has(+` + item + last
-                    const R = all + `+` + item
-                    return i < j ? L : R
-                })
-            )
-            .reduce((all, item) => {
-                return all + '\n' + item + ','
-            }, '')
-            .slice(0, -1) + '\n'
-    )
+    return Array.from(select)
+        .map(word => `[data-e='${word}']`)
+        .map((_, i, arr) =>
+            arr.reduce((all, item, j) => {
+                const last = j === len - 1 ? ')'.repeat(len - 1 - i) : ''
+                const L = all + `:has(+` + item + last
+                const R = all + `+` + item
+                return i < j ? L : R
+            })
+        )
+        .join(',\n')
 }
 function getCssStyleR(word: string, color: string) {
     const css1 =
@@ -274,30 +280,32 @@ function getCssStyleR(word: string, color: string) {
             ? 'text-decoration: line-through red'
             : 'cursor:se-resize'
     const css2 = `color:${color}`
+    const css3 = `content:'${word}'`
 
     return (
-        '{' +
-        [css1, css2].reduce((all, now) => {
+        '\n{\n' +
+        [css1, css2, css3].reduce((all, now) => {
             return `${all} ${now};\n`
-        }, '\n') +
+        }, '') +
         '}'
     )
 }
-function getCss(arr: string[], color: string) {
-    return arr
-        .filter(e => e)
-        .map((word, idx) => {
-            return (
-                <style key={idx}>
-                    {getCssSelectorL(word) + getCssStyleR(word, color)}
-                    {getCss2(word)}
-                </style>
-            )
-        })
+
+function getStyle(word: string, color: string) {
+    /* return后 有个空格 必要 不然\n失效; */
+    return ` 
+/* ${word} */
+${getCss1(word, color)}
+${getCss2(word)}
+/* ${word} */
+`
+}
+function getCss1(word: string, color: string) {
+    return getCssSelectorL(word) + getCssStyleR(word, color)
 }
 function getCss2(word: string) {
     const len = word.length
-    const wordPosition = getAllWordPosition(word)
+    const wordPosition = [...getAllWordPosition(word)]
     if (!wordPosition.length) return
     const first = [wordPosition[0]]
     const last = wordPosition.slice(-1)
@@ -324,7 +332,7 @@ function getCss2(word: string) {
 function setCss(item: number[], _style: object, len: number) {
     const selector = item
         .reduce((all, now) => {
-            return all + `[data-i='${now}'],` //hack for css-specificity
+            return all + `[data-i='${now}'],`
             return all + `[data-i='${now}']${'[data-i]'.repeat(len)},` //hack for css-specificity
         }, '')
         .slice(0, -1)
@@ -332,5 +340,7 @@ function setCss(item: number[], _style: object, len: number) {
     const style = JSON.stringify(_style)
         .replaceAll('"', '')
         .replaceAll(',', ';')
+        .replace('{', '{ ')
+        .replace('}', ' }')
     return selector + style
 }

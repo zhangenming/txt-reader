@@ -3,11 +3,30 @@ import ReactDOM from 'react-dom/client'
 import App from './App'
 import './index.css'
 
+// import { render } from 'react-dom'
+// render(<App />, document.getElementById('root'))
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
         <App />
     </React.StrictMode>
 )
+
+// console.log(screen.width, screen.availWidth)
+// console.log(outerWidth, innerWidth)
+// console.log(
+//     document.documentElement.offsetWidth,
+//     document.documentElement.clientWidth,
+//     document.documentElement.scrollWidth
+// )
+// console.log(
+//     document.body.offsetWidth,
+//     document.body.clientWidth,
+//     document.body.scrollWidth
+// )
+
+// [...$$('*')].map(e=>[e.clientWidth, e.offsetWidth, e.scrollWidth, e]).sort((q,w)=>w[2]-q[2]).slice(0,10)
+// console.log($0.clientWidth, $0.offsetWidth, $0.scrollWidth)
 
 // const xx = txtForSearch
 //     .replaceAll('\n', '')

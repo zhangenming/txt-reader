@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <span>1</span>
+        <span>1</span>
+        <span>1</span>
+        <span>1</span>
+        <span>1</span>
+        <span>1</span>
+        <span>1</span>
+        <span>1</span>
+        <span>1</span>
+    </body>
+    <style>
+        /* .wrap span:hover {
+    background: #000;
+} */
+        /* span:hover + span {
+    background: #000;
+} */
+        /* span + span:hover {
+    background: #000;
+} */
+
+        /* span:hover:has(+ span) {
+    background: #000;
+} */
+
+        /* span:hover:has(+(span)) {
+    background: #000;
+}
+span:hover:has(+ span:hover) {
+    background: #000;
+} */
+
+        body {
+            display: flex;
+            display: flex;
+            align-content: center;
+            justify-content: center;
+            align-items: center;
+        }
+        span {
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-content: center;
+            justify-content: center;
+            align-items: center;
+        }
+        /* hover */
+        span:hover {
+            background: #000;
+        }
+        /* right */
+        span + span + span:hover + span {
+            background: blue;
+        }
+        /* left */
+        /* h1:has(+ p) 紧跟着 <p> 的 <h1>  h1 p */
+        span:has(+ span:hover) {
+            background: yellow;
+        }
+
+        span:has(+ span:has(+ span:hover)) {
+            background: yellow;
+        }
+    </style>
+</html>

@@ -1,23 +1,35 @@
 body {
     margin: 0;
 }
+#root {
+    display: flex;
+    flex-direction: row;
+}
 .control {
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     padding: 10px;
-    position: fixed;
-    width: 100%;
+    width: 100px;
+    min-width: 100px;
+    max-width: 100px;
     background: yellowgreen;
+    box-sizing: border-box;
+}
+.control input {
+    width: 100%;
+    box-sizing: border-box;
 }
 .wrap {
-    padding-top: 40px;
 }
 .wrap > div {
-    box-sizing: border-box;
     background: cornflowerblue;
     color: aliceblue;
     font-size: 25px;
     font-family: cursive;
+}
+.wrap > div > div {
+    margin: 0 auto;
+    position: relative;
 }
 .wrap span {
     display: flex;
@@ -25,10 +37,16 @@ body {
     align-items: center;
     box-sizing: border-box; /*否则last会在speak状态下失效*/
 }
+::selection {
+    /* background-color: cyan; */
+}
 
 /* ITEM class */
 .speaking {
     background: #6666ee;
+}
+.isOdd {
+    background: yellowgreen;
 }
 [class*='select'] {
     background-color: var(--var-color);

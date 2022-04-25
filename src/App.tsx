@@ -11,7 +11,10 @@ import {
 } from './utils'
 import items from './data'
 
-export const columnCount = 44
+const itemSize = 30
+const readerWidth = innerWidth - 100
+const readerHeight = innerHeight
+export const columnCount = Math.floor(readerWidth / itemSize) - 1
 
 // import _TXT from '../txt/mc'
 // export const TXT = (() =>
@@ -32,14 +35,18 @@ export const columnCount = 44
 //         .join(''))()
 
 import _TXT from '../txt/白鹿原'
+
 export const TXT = (() =>
     _TXT
+        .replaceAll('    ', '  ')
         .split('\n')
         .filter(e => e)
         .map(e => {
             return e + ' '.repeat(columnCount * 2 - (e.length % columnCount))
         })
         .join(''))()
+
+console.log(_TXT.length, TXT.length)
 
 const isSpkArr = (() => {
     let isSpeaking = false
@@ -80,20 +87,9 @@ const Cells = (
     // idx < 100 && console.time() // devtools记录模式快很多
     const word = TXT[idx]
 
-    // const {
-    //     [idx]: [index, targetNextIdx] = [],
-    //     wordType,
-    //     firstIdx,
-    //     lastIdx,
-    // } = getAllWordPosition2(select)
-
     const classes = getClasses({
         speaking: isSpkArr[idx],
-
-        // [wordType]: targetNextIdx, // IDX 0是0  不能用此判断
-
-        // 'select_first-item': idx === firstIdx,
-        // 'select_last-item': idx === lastIdx,
+        // isOdd: rowIndex % 2,
     })
 
     const props = (function gene() {
@@ -103,7 +99,7 @@ const Cells = (
             style: {
                 ...style,
                 ...getStyles(word),
-                userSelect: isScrolling ? 'none' : 'text',
+                // userSelect: isScrolling ? 'none' : 'text',
 
                 '--var-color': 'black',
             } as any,
@@ -167,16 +163,30 @@ export default function App() {
                         }
                     `}
                 </style>
+                <style>
+                    {
+                        // Array(columnCount)
+                        //     .fill(null)
+                        //     .map((_, i) => `span:hover ${'+span '.repeat(i)}`)
+                        //     .join(',\n') + '{background:yellowgreen}'
+                        // // // // // // //
+                        // aot 卡, 使用jit
+                        // span:hover,
+                        // span:hover + span,
+                        // span:hover + span + span,
+                        // span:hover + span + span + span {
+                        //     background: yellowgreen;
+                        // }
+                    }
+                </style>
 
-                {(() => {
-                    return items.map(([color, roles], key) => (
-                        <style key={key}>
-                            {roles
-                                .filter(e => e)
-                                .map(word => getStyle(word, color))}
-                        </style>
-                    ))
-                })()}
+                {items.map(([color, roles], key) => (
+                    <style key={key}>
+                        {roles
+                            .filter(e => e)
+                            .map(word => getStyle(word, color))}
+                    </style>
+                ))}
                 <style>{getStyle(select, 'red')}</style>
             </div>
 
@@ -188,11 +198,11 @@ export default function App() {
                     columnCount={columnCount}
                     rowCount={TXT.length / columnCount}
                     // item style
-                    columnWidth={30}
-                    rowHeight={30}
+                    columnWidth={itemSize}
+                    rowHeight={itemSize}
                     // wrap style
-                    height={900}
-                    width={columnCount * 30 + 15} // 30是size; 15是滚轴
+                    height={readerHeight}
+                    width={readerWidth}
                 >
                     {/* {renderProps => Cell(renderProps, select)} */}
                     {Cells}
@@ -219,9 +229,6 @@ export default function App() {
         const _content = getComputedStyle(target).content
         if (_content === 'normal') return
         const content = _content.slice(1, -1) //去掉引号
-
-        const wordPosition = getWordPosition(content)
-        if (wordPosition.length === 1) return
 
         const wordAllPosition = getAllWordPosition(content)
 

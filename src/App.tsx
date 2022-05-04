@@ -1,75 +1,67 @@
 import './App.css'
-
-import { useState, createRef } from 'react'
+import { useState, createRef, useEffect, useCallback } from 'react'
 import { FixedSizeGrid as Grid } from 'react-window'
 
-import {
-    getWordPosition,
-    getAllWordPosition,
-    getClasses,
-    getStyle,
-} from './utils'
+// import txt from '../txt/三国演义'
+import txt from '../txt/循环'
+// import txt from '../txt/白鹿原'
 import items from './data'
+import { getAllWordPosition, getClasses, getStyle } from './utils'
 
-const itemSize = 30
-const readerWidth = innerWidth - 100
-const readerHeight = innerHeight
-export const columnCount = Math.floor(readerWidth / itemSize) - 1
+function useSize() {
+    const [Width, setWidth] = useState(innerWidth - 100)
+    const [Height, setHeight] = useState(innerHeight)
+    useEffect(() => {
+        window.onresize = function () {
+            setWidth(innerWidth - 100)
+            setHeight(innerHeight)
+        }
 
-// import _TXT from '../txt/mc'
-// export const TXT = (() =>
-//     _TXT
-//         .replaceAll('\n', '\n\n')
-//         .replaceAll(/[0-9]{4}年/gi, x => {
-//             return x + `(${Number(x.slice(0, -1)) - 1328}岁)`
-//         })
-//         .replaceAll(/（[0-9]{4}）/gi, e => {
-//             return `${e}(${Number(e.slice(1, -1)) - 1328}岁)`
-//         })
-//         // .replaceAll('的', '') // 会对搜索结果造成影响
-//         .split('\n')
-//         .filter(e => e)
-//         .map(e => {
-//             return e + ' '.repeat(columnCount * 2 - (e.length % columnCount))
-//         })
-//         .join(''))()
+        return () => {}
+    }, [])
 
-import _TXT from '../txt/白鹿原'
+    return [Width, Height]
+}
+function useTxt(n: number) {
+    const [TXT, setTXT] = useState(setFunc)
+    useEffect(() => {
+        setTXT(setFunc)
+    }, [n])
+    return TXT
 
-export const TXT = (() =>
-    _TXT
-        .replaceAll('    ', '  ')
-        .split('\n')
-        .filter(e => e)
-        .map(e => {
-            return e + ' '.repeat(columnCount * 2 - (e.length % columnCount))
+    function setFunc() {
+        return txt
+            .replaceAll('\n', '\n')
+            .split('\n')
+            .filter(e => e)
+            .map(e => e + ' '.repeat(n) + ' '.repeat(n - (e.length % n || n)))
+            .join('')
+    }
+}
+function useSpk(TXT: string) {
+    const [SPK, setSPK] = useState<boolean[]>([])
+
+    useEffect(() => {
+        let isSpeaking = false
+        const arr = [...TXT].map(e => {
+            if (e === '“') {
+                isSpeaking = true
+                return false
+            }
+            if (e === '”') {
+                isSpeaking = false
+                return false
+            }
+            return isSpeaking
         })
-        .join(''))()
-
-console.log(_TXT.length, TXT.length)
-
-const isSpkArr = (() => {
-    let isSpeaking = false
-    return [...TXT].map(e => {
-        if (e === '“') {
-            isSpeaking = true
-            return false
-        }
-        if (e === '”') {
-            isSpeaking = false
-            return false
-        }
-        return isSpeaking
-    })
-    return [...TXT].map(e => {
-        let rt = isSpeaking
-        if (e === '“') isSpeaking = true
-        if (e === '”') rt = isSpeaking = false
-        return rt
-    })
-})()
-
+        setSPK(arr)
+    }, [TXT])
+    return SPK
+}
 const Cells = (
+    columnCount: number,
+    TXT: string,
+    isSpkArr: boolean[],
     {
         columnIndex,
         rowIndex,
@@ -80,8 +72,7 @@ const Cells = (
         rowIndex: number
         style: object
         isScrolling?: boolean
-    },
-    select?: string
+    }
 ) => {
     const idx = rowIndex * columnCount + columnIndex
     // idx < 100 && console.time() // devtools记录模式快很多
@@ -140,21 +131,49 @@ const Cells = (
 }
 
 export default function App() {
+    const [readerWidth, readerHeight] = useSize()
+    const itemSize = 30
+    const columnCount = Math.floor(readerWidth / itemSize) - 1
+    const TXT = useTxt(columnCount) //299e81
+
+    const isSpkArr = useSpk(TXT)
+
     const [select, setSelect] = useState('版权归')
+
     const gridRef = createRef<Grid>()
+
+    useEffect(() => {
+        gridRef.current?.scrollToItem({
+            align: 'center',
+            rowIndex: Number(localStorage.getItem('idx')) + 17, // 33 适应屏幕高度行数
+        })
+        const timer = setInterval(() => {
+            const idx = document.querySelector<HTMLElement>(
+                '.wrap span:first-child'
+            )
+            localStorage.setItem('idx', idx!.dataset.rowindex!)
+        }, 1000)
+        return () => clearInterval(timer)
+    }, [])
+
+    const CELL = useCallback(Cells.bind(0, columnCount, TXT, isSpkArr), [
+        columnCount,
+        TXT,
+        isSpkArr,
+    ]) // 尝试使用对象引用传值{}
+
     return (
         <>
             <div className='control'>
+                <p>行长度:{columnCount}</p>
+
                 <input
                     type='text'
                     value={select}
                     onChange={e => setSelect(e.target.value)}
                 />
+                <button onClick={add}>add</button>
                 {TXT.split(select).length - 1}
-            </div>
-
-            <div className='resourse'>
-                <script>{`console.log(3)`}</script>
 
                 <style>
                     {`
@@ -163,13 +182,17 @@ export default function App() {
                         }
                     `}
                 </style>
-                <style>
+                <script>{`console.log(3)`}</script>
+            </div>
+
+            <div className='resourse'>
+                {/* <style>
                     {
-                        // Array(columnCount)
-                        //     .fill(null)
-                        //     .map((_, i) => `span:hover ${'+span '.repeat(i)}`)
-                        //     .join(',\n') + '{background:yellowgreen}'
-                        // // // // // // //
+                        Array(columnCount)
+                            .fill(null)
+                            .map((_, i) => `span:hover ${'+span '.repeat(i)}`)
+                            .join(',\n') + '{background:yellowgreen}'
+                        // // // // // //
                         // aot 卡, 使用jit
                         // span:hover,
                         // span:hover + span,
@@ -178,22 +201,25 @@ export default function App() {
                         //     background: yellowgreen;
                         // }
                     }
-                </style>
+                </style> */}
 
-                {items.map(([color, roles], key) => (
+                {/* {items.map(([color, roles], key) => (
                     <style key={key}>
                         {roles
                             .filter(e => e)
-                            .map(word => getStyle(word, color))}
+                            .map(word =>
+                                getStyle(TXT, columnCount, word, color)
+                            )}
                     </style>
-                ))}
-                <style>{getStyle(select, 'red')}</style>
+                ))} */}
+                <style>{getStyle(TXT, select, 'red')}</style>
             </div>
 
             <div className='wrap' onClick={GoToNextItem}>
                 <Grid
                     ref={gridRef}
                     useIsScrolling
+                    // onScroll={e => console.log(3)}
                     // item counts
                     columnCount={columnCount}
                     rowCount={TXT.length / columnCount}
@@ -204,12 +230,16 @@ export default function App() {
                     height={readerHeight}
                     width={readerWidth}
                 >
-                    {/* {renderProps => Cell(renderProps, select)} */}
-                    {Cells}
+                    {
+                        CELL
+                        // renderProps =>
+                        //     Cells(renderProps, columnCount, TXT, isSpkArr)
+                    }
                 </Grid>
             </div>
         </>
     )
+    function add() {}
 
     function GoToNextItem({ target, metaKey, altKey }: React.MouseEvent) {
         const selectionObj = getSelection()
@@ -224,48 +254,35 @@ export default function App() {
             return
         }
 
-        if (!(target instanceof HTMLElement)) return alert(1)
+        if (!(target instanceof HTMLElement)) return alert(1) // ?
 
-        const _content = getComputedStyle(target).content
-        if (_content === 'normal') return
-        const content = _content.slice(1, -1) //去掉引号
+        const content = getComputedStyle(target).content
+        if (content === 'normal') return
+        const word = content.slice(1, -1) //去掉引号
 
-        const wordAllPosition = getAllWordPosition(content)
+        const wordAllPosition = getAllWordPosition(TXT, word)
 
-        const clickIdx = wordAllPosition.indexOf(Number(target.dataset.i))
-        if (clickIdx === -1) return
+        const clickPos = wordAllPosition.indexOf(Number(target.dataset.i))
+        if (clickPos === -1) return
 
-        const nextIdx = (() => {
+        const nextPos = (() => {
             const len = wordAllPosition.length
-            if (altKey && metaKey) return len - 1 // 直接跳到最后一个 {
+            if (altKey && metaKey) return len - 1 // 直接跳到最后一个
             if (altKey) return 0 // 直接跳到第一个
 
-            let nextIdx = clickIdx + content.length * (metaKey ? -1 : 1) // meta 相反方向
-            if (nextIdx > len - 1) {
-                return nextIdx - len //处理从数组尾到头
+            let nextPos = clickPos + word.length * (metaKey ? -1 : 1) // meta 相反方向
+            if (nextPos > len - 1) {
+                return nextPos - len //处理从数组尾到头
             }
-            return nextIdx
+            return nextPos
         })()
 
-        const nextIDX = wordAllPosition.at(nextIdx) //从头到尾
+        const nextIdx = wordAllPosition.at(nextPos) //从头到尾
 
         gridRef.current?.scrollToItem({
             align: 'center',
-            columnIndex: nextIDX % columnCount,
-            rowIndex: Math.floor(nextIDX / columnCount),
+            // columnIndex: nextIdx! % columnCount,
+            rowIndex: Math.floor(nextIdx! / columnCount),
         })
     }
-
-    // console.time('app')
-
-    // console.time('hook')
-
-    // console.timeEnd('hook')
-
-    // console.time('render')
-    const render = <></>
-    // console.timeEnd('render')
-
-    // console.timeEnd('app')
-    return render
 }

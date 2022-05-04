@@ -1,63 +1,11 @@
 import './App.css'
-import { useState, createRef, useEffect, useCallback } from 'react'
-import { FixedSizeGrid as Grid } from 'react-window'
+import { useState, createRef, useEffect, useCallback, useMemo } from 'react'
+import Grid from './react-window'
+import { getAllWordPosition, getClasses, getStyle, getWordCount } from './utils'
+import { useSize, useSpk, useTxt } from './hook'
 
-// import txt from '../txt/三国演义'
-import txt from '../txt/循环'
-// import txt from '../txt/白鹿原'
-import items from './data'
-import { getAllWordPosition, getClasses, getStyle } from './utils'
+const selectionObj = getSelection()!
 
-function useSize() {
-    const [Width, setWidth] = useState(innerWidth - 100)
-    const [Height, setHeight] = useState(innerHeight)
-    useEffect(() => {
-        window.onresize = function () {
-            setWidth(innerWidth - 100)
-            setHeight(innerHeight)
-        }
-
-        return () => {}
-    }, [])
-
-    return [Width, Height]
-}
-function useTxt(n: number) {
-    const [TXT, setTXT] = useState(setFunc)
-    useEffect(() => {
-        setTXT(setFunc)
-    }, [n])
-    return TXT
-
-    function setFunc() {
-        return txt
-            .replaceAll('\n', '\n')
-            .split('\n')
-            .filter(e => e)
-            .map(e => e + ' '.repeat(n) + ' '.repeat(n - (e.length % n || n)))
-            .join('')
-    }
-}
-function useSpk(TXT: string) {
-    const [SPK, setSPK] = useState<boolean[]>([])
-
-    useEffect(() => {
-        let isSpeaking = false
-        const arr = [...TXT].map(e => {
-            if (e === '“') {
-                isSpeaking = true
-                return false
-            }
-            if (e === '”') {
-                isSpeaking = false
-                return false
-            }
-            return isSpeaking
-        })
-        setSPK(arr)
-    }, [TXT])
-    return SPK
-}
 const Cells = (
     columnCount: number,
     TXT: string,
@@ -138,12 +86,10 @@ export default function App() {
 
     const isSpkArr = useSpk(TXT)
 
-    const [select, setSelect] = useState('版权归')
-
-    const gridRef = createRef<Grid>()
+    const gridRef: any = createRef()
 
     useEffect(() => {
-        gridRef.current?.scrollToItem({
+        gridRef.current.scrollToItem({
             align: 'center',
             rowIndex: Number(localStorage.getItem('idx')) + 17, // 33 适应屏幕高度行数
         })
@@ -156,36 +102,72 @@ export default function App() {
         return () => clearInterval(timer)
     }, [])
 
+    const [select, setSelect] = useState('')
+    const [selectArr, setSelectArr] = useState<string[]>([])
+
+    function add() {
+        setSelect('')
+        setSelectArr([...selectArr, select])
+
+        selectionObj.removeAllRanges()
+    }
+
     const CELL = useCallback(Cells.bind(0, columnCount, TXT, isSpkArr), [
         columnCount,
         TXT,
         isSpkArr,
     ]) // 尝试使用对象引用传值{}
 
+    const G = useMemo(() => {
+        console.log(1)
+        return () => {
+            console.log(2)
+            return (
+                <Grid
+                    // onScroll={e => console.log(3)}
+                    // item counts
+                    columnCount={columnCount}
+                    rowCount={TXT.length / columnCount}
+                    // item style
+                    columnWidth={itemSize}
+                    rowHeight={itemSize}
+                    // wrap style
+                    height={readerHeight}
+                    width={readerWidth}
+                    // else
+                    ref={gridRef}
+                    useIsScrolling
+                    children={CELL}
+                />
+            )
+        }
+    }, [gridRef])
+
     return (
         <>
             <div className='control'>
-                <p>行长度:{columnCount}</p>
+                {/* <p>行长度:{columnCount}</p> */}
+
+                <div className='count'>
+                    <button onClick={add}>add</button>
+                    {getWordCount(TXT, select)}
+                </div>
 
                 <input
                     type='text'
                     value={select}
                     onChange={e => setSelect(e.target.value)}
                 />
-                <button onClick={add}>add</button>
-                {TXT.split(select).length - 1}
 
-                <style>
-                    {`
-                        .isSpeaking {
-                            background:#6666ee
-                        }
-                    `}
-                </style>
-                <script>{`console.log(3)`}</script>
+                {selectArr.join('\n')}
             </div>
 
-            <div className='resourse'>
+            <div className='wrap' onClick={GoToNextItem}>
+                {G()}
+                {/* <G /> */}
+            </div>
+
+            <div className='styles'>
                 {/* <style>
                     {
                         Array(columnCount)
@@ -203,51 +185,25 @@ export default function App() {
                     }
                 </style> */}
 
-                {/* {items.map(([color, roles], key) => (
-                    <style key={key}>
-                        {roles
-                            .filter(e => e)
-                            .map(word =>
-                                getStyle(TXT, columnCount, word, color)
-                            )}
-                    </style>
-                ))} */}
-                <style>{getStyle(TXT, select, 'red')}</style>
-            </div>
+                {[select, ...selectArr].map((select, key) => (
+                    <style key={key}>{getStyle(TXT, select, 'red')}</style>
+                ))}
 
-            <div className='wrap' onClick={GoToNextItem}>
-                <Grid
-                    ref={gridRef}
-                    useIsScrolling
-                    // onScroll={e => console.log(3)}
-                    // item counts
-                    columnCount={columnCount}
-                    rowCount={TXT.length / columnCount}
-                    // item style
-                    columnWidth={itemSize}
-                    rowHeight={itemSize}
-                    // wrap style
-                    height={readerHeight}
-                    width={readerWidth}
-                >
-                    {
-                        CELL
-                        // renderProps =>
-                        //     Cells(renderProps, columnCount, TXT, isSpkArr)
-                    }
-                </Grid>
+                <style>
+                    {`
+                        .isSpeaking {
+                            background:#6666ee
+                        }
+                    `}
+                </style>
+                <script>{`console.log(3)`}</script>
             </div>
         </>
     )
-    function add() {}
 
     function GoToNextItem({ target, metaKey, altKey }: React.MouseEvent) {
-        const selectionObj = getSelection()
-        if (!selectionObj) return
+        const selectionStr = selectionObj + ''
 
-        const selectionStr = selectionObj.toString()
-
-        // selectionObj.removeAllRanges()
         if (selectionStr.length > 0 && selectionStr.length < 210) {
             if (selectionStr.includes('\n')) return
             setSelect(selectionStr.replaceAll(' ', ''))
@@ -279,9 +235,8 @@ export default function App() {
 
         const nextIdx = wordAllPosition.at(nextPos) //从头到尾
 
-        gridRef.current?.scrollToItem({
+        gridRef.current.scrollToItem({
             align: 'center',
-            // columnIndex: nextIdx! % columnCount,
             rowIndex: Math.floor(nextIdx! / columnCount),
         })
     }

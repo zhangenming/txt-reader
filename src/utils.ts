@@ -1,21 +1,27 @@
 export function getAllWordPosition(TXT: string, word: string) {
-    return getWordPosition().flatMap((n: number) =>
+    return getWordPosition(TXT, word).flatMap((n: number) =>
         Array(word.length)
             .fill(0)
             .map((_, i) => n + i)
     )
 
     // 查找一个字符串中的所有子串的位置
-    function getWordPosition() {
+    function getWordPosition(TXT: string, word: string) {
+        if (word === '') return Array(TXT.length)
+
         const positions = []
         let pos = TXT.indexOf(word)
-        while (pos > -1) {
+        while (pos != -1) {
             positions.push(pos)
             pos = TXT.indexOf(word, pos + word.length)
         }
 
         return positions
     }
+}
+
+export function getWordCount(TXT: string, word: string) {
+    return word === '' ? TXT.length : TXT.split(word).length - 1
 }
 
 export function getClasses(classes: object) {
@@ -27,10 +33,8 @@ export function getClasses(classes: object) {
 }
 
 export function getStyle(TXT: string, word: string, color: string) {
-    const L = TXT.split(word).length - 1
-    if (L === 0) return
-
-    const len = word.length
+    const count = getWordCount(TXT, word)
+    if (count === 0 || word === '' || word === ' ') return
 
     /* return后 有个空格 必要 不然\n失效; */
     return ` 
@@ -48,8 +52,8 @@ ${getCss2()}
                 .map(word => `[data-e='${word}']`)
                 .map((_, i, arr) =>
                     arr.reduce((all, item, j) => {
-                        const last =
-                            j === len - 1 ? ')'.repeat(len - 1 - i) : ''
+                        const len = word.length - 1
+                        const last = j === len ? ')'.repeat(len - i) : ''
                         const L = all + `:has(+` + item + last
                         const R = all + `+` + item
                         return i < j ? L : R
@@ -59,7 +63,7 @@ ${getCss2()}
         }
         function getCssStyleR() {
             const css1 =
-                L === 1
+                count === 1
                     ? 'text-decoration: line-through red'
                     : 'cursor:se-resize'
             const css2 = `color:${color}`

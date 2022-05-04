@@ -8,7 +8,6 @@ body {
 .control {
     display: flex;
     flex-direction: column;
-    padding: 10px;
     width: 100px;
     min-width: 100px;
     max-width: 100px;
@@ -19,13 +18,22 @@ body {
     width: 100%;
     box-sizing: border-box;
 }
-.wrap {
+.control .count {
+    display: flex;
+    justify-content: flex-start;
 }
+
 .wrap > div {
     background: cornflowerblue;
     color: aliceblue;
     font-size: 25px;
     font-family: cursive;
+    /* react-window */
+    position: relative;
+    overflow: auto;
+    will-change: transform;
+    direction: ltr;
+    /* react-window */
 }
 .wrap > div > div {
     margin: 0 auto;
@@ -36,11 +44,12 @@ body {
     justify-content: space-evenly;
     align-items: center;
     box-sizing: border-box; /*否则last会在speak状态下失效*/
+    /* react-window */
+    position: absolute;
+    width: 30px;
+    height: 30px;
+    /* react-window */
 }
-::selection {
-    /* background-color: cyan; */
-}
-
 /* ITEM class */
 .speaking {
     background: #6666ee;
@@ -52,7 +61,8 @@ body {
     background-color: var(--var-color);
 }
 .select_just-one {
-    text-decoration: line-through red;
+    /* text-decoration: line-through red; */
+    background-color: #9999;
 }
 .select_many {
     cursor: se-resize;
@@ -64,3 +74,8 @@ body {
     border-right: 1px solid red;
 }
 /* ITEM class */
+
+::selection {
+    background-color: #6666ee99;
+    opacity: 0.3;
+}

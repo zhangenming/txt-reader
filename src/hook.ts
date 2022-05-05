@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import txt from '../txt/循环'
 // import txt from '../txt/白鹿原'
 
-export function useSize() {
+export function useSize(itemSize: number) {
     const [Width, setWidth] = useState(innerWidth - 100)
     const [Height, setHeight] = useState(innerHeight)
     useEffect(() => {
@@ -14,7 +14,7 @@ export function useSize() {
         }
     }, [])
 
-    return [Width, Height]
+    return [Width, Height, Math.floor(Width / itemSize) - 1]
 }
 export function useTxt(colCount: number) {
     const [TXT, setTXT] = useState(setFunc)

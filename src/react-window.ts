@@ -750,9 +750,9 @@ function createGridComponent(_ref2) {
                                 ref: innerRef,
                                 style: {
                                     height: estimatedTotalHeight,
-                                    pointerEvents: isScrolling
-                                        ? 'none'
-                                        : undefined,
+                                    // pointerEvents: isScrolling
+                                    //     ? 'none'
+                                    //     : undefined,
                                     width: estimatedTotalWidth,
                                 },
                             }
@@ -1058,7 +1058,7 @@ var validateSharedProps = function validateSharedProps(_ref5, _ref6) {
     }
 }
 
-var FixedSizeGrid =
+export const FixedSizeGrid =
     /*#__PURE__*/
     createGridComponent({
         getColumnOffset: function getColumnOffset(_ref, index) {
@@ -1330,4 +1330,25 @@ var FixedSizeGrid =
         },
     })
 
-export default FixedSizeGrid
+function shallowDiffers(prev: Object, next: Object): boolean {
+    for (let attribute in prev) {
+        if (!(attribute in next)) {
+            return true
+        }
+    }
+    for (let attribute in next) {
+        if (prev[attribute] !== next[attribute]) {
+            return true
+        }
+    }
+    return false
+}
+export function areEqual(prevProps: Object, nextProps: Object): boolean {
+    const { style: prevStyle, ...prevRest } = prevProps
+    const { style: nextStyle, ...nextRest } = nextProps
+
+    return (
+        !shallowDiffers(prevStyle, nextStyle) &&
+        !shallowDiffers(prevRest, nextRest)
+    )
+}

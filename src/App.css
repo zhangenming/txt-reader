@@ -57,6 +57,12 @@ body {
 .isOdd {
     background: yellowgreen;
 }
+span[data-e='“'] {
+    justify-content: end;
+}
+span[data-e='”'] {
+    justify-content: start;
+}
 [class*='select'] {
     background-color: var(--var-color);
 }
@@ -78,4 +84,14 @@ body {
 ::selection {
     background-color: #6666ee99;
     opacity: 0.3;
+}
+
+.selectItem {
+    display: flex;
+    justify-content: space-between;
+    height: 25px;
+    overflow: hidden;
+}
+.selectItem span {
+    min-width: 15px;
 }

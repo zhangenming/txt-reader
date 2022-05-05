@@ -1,4 +1,4 @@
-export function getAllWordPosition(TXT: string, word: string) {
+export function getAllWordPosition(word: string, TXT: string) {
     return getWordPosition(TXT, word).flatMap((n: number) =>
         Array(word.length)
             .fill(0)
@@ -20,7 +20,7 @@ export function getAllWordPosition(TXT: string, word: string) {
     }
 }
 
-export function getWordCount(TXT: string, word: string) {
+export function getWordCount(word: string, TXT: string) {
     return word === '' ? TXT.length : TXT.split(word).length - 1
 }
 
@@ -33,7 +33,7 @@ export function getClasses(classes: object) {
 }
 
 export function getStyle(TXT: string, word: string, color: string) {
-    const count = getWordCount(TXT, word)
+    const count = getWordCount(word, TXT)
     if (count === 0 || word === '' || word === ' ') return
 
     /* return后 有个空格 必要 不然\n失效; */
@@ -79,7 +79,7 @@ ${getCss2()}
         }
     }
     function getCss2() {
-        const wordPosition = getAllWordPosition(TXT, word)
+        const wordPosition = getAllWordPosition(word, TXT)
         const first = wordPosition[0]
         const last = wordPosition.at(-1)
 
@@ -103,4 +103,23 @@ ${getCss2()}
             return selector + style
         }
     }
+}
+
+export function rc2i(r: number, c: number, lineSize: number) {
+    return r * lineSize + c
+}
+export function i2rc(i: number | string, lineSize: number) {
+    return {
+        r: Math.floor(Number(i) / lineSize),
+        c: Number(i) % lineSize,
+    }
+}
+
+export function getColor() {
+    const [l, g, b] = [
+        Math.floor(Math.random() * 256),
+        Math.floor(Math.random() * 256),
+        Math.floor(Math.random() * 256),
+    ]
+    return `rgb(${l},${g},${b})`
 }

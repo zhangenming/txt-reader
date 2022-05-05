@@ -1,28 +1,46 @@
+import type { item } from './comp/control'
 import './App.css'
-import { useState, createRef, useEffect, useCallback, useMemo } from 'react'
-import Grid from './react-window'
-import { getAllWordPosition, getClasses, getStyle, getWordCount } from './utils'
+import {
+    useState,
+    createRef,
+    useEffect,
+    memo,
+    useMemo,
+    useCallback,
+} from 'react'
+import { areEqual, FixedSizeGrid as Grid } from 'react-window'
+import {
+    getAllWordPosition,
+    getClasses,
+    getStyle,
+    getWordCount,
+    i2rc,
+    rc2i,
+} from './utils'
 import { useSize, useSpk, useTxt } from './hook'
+import Control from './comp/control'
+
+const SIZE = 30
+const OVERSCAN = 15
+setInterval(() => {
+    // console.log(document.querySelector('.wrap>div>div').childElementCount)
+}, 1222)
 
 const selectionObj = getSelection()!
 
+type props = {
+    columnIndex: number
+    rowIndex: number
+    style: object
+    isScrolling?: boolean
+}
 const Cells = (
-    columnCount: number,
+    lineSize: number,
     TXT: string,
     isSpkArr: boolean[],
-    {
-        columnIndex,
-        rowIndex,
-        style,
-        isScrolling,
-    }: {
-        columnIndex: number
-        rowIndex: number
-        style: object
-        isScrolling?: boolean
-    }
+    { columnIndex, rowIndex, style, isScrolling }: props
 ) => {
-    const idx = rowIndex * columnCount + columnIndex
+    const idx = rc2i(rowIndex, columnIndex, lineSize)
     // idx < 100 && console.time() // devtools记录模式快很多
     const word = TXT[idx]
 
@@ -38,7 +56,7 @@ const Cells = (
             style: {
                 ...style,
                 ...getStyles(word),
-                // userSelect: isScrolling ? 'none' : 'text',
+                userSelect: isScrolling ? 'none' : 'text',
 
                 '--var-color': 'black',
             } as any,
@@ -46,12 +64,8 @@ const Cells = (
             children: word,
             // key: idx, // ?
 
-            'data-e': word,
-            'data-i': idx,
-            // 'data-next': targetNextIdx,
-            'data-rowindex': rowIndex,
-            'data-columnindex': columnIndex,
-            // 'data-index': index,
+            'data-e': word, //
+            'data-i': idx, //
         }
     })()
     // idx < 100 && console.timeEnd()
@@ -63,12 +77,12 @@ const Cells = (
         const style3 = word === ' ' || word === '　'
 
         return {
-            ...(style1 && {
-                textAlign: 'right',
-            }),
-            ...(style2 && {
-                textAlign: 'left',
-            }),
+            // ...(style1 && {
+            //     textAlign: 'right',
+            // }),
+            // ...(style2 && {
+            //     textAlign: 'left',
+            // }),
             ...(style3 &&
                 {
                     // fontSize: '0',
@@ -77,90 +91,84 @@ const Cells = (
         }
     }
 }
-
-export default function App() {
-    const [readerWidth, readerHeight] = useSize()
-    const itemSize = 30
-    const columnCount = Math.floor(readerWidth / itemSize) - 1
-    const TXT = useTxt(columnCount) //299e81
-
+function App() {
+    const [readerWidth, readerHeight, lineSize] = useSize(SIZE)
+    const TXT = useTxt(lineSize) //299e81
     const isSpkArr = useSpk(TXT)
 
-    const gridRef: any = createRef()
+    const [select, setSelect] = useState('')
+    const selectWrap = {
+        key: select,
+        color: 'red',
+        i: Date.now(),
+        count: getWordCount(select, TXT),
+    }
 
+    const [selectArr, setSelectArr] = useState<item[]>(
+        JSON.parse(sessionStorage.getItem('selectArr') || '[]')
+    )
+
+    const gridRef: any = createRef()
     useEffect(() => {
         gridRef.current.scrollToItem({
             align: 'center',
-            rowIndex: Number(localStorage.getItem('idx')) + 17, // 33 适应屏幕高度行数
+            rowIndex: Number(sessionStorage.getItem('idx')) + 17 + OVERSCAN - 1, // 33 适应屏幕高度行数
         })
         const timer = setInterval(() => {
             const idx = document.querySelector<HTMLElement>(
                 '.wrap span:first-child'
-            )
-            localStorage.setItem('idx', idx!.dataset.rowindex!)
+            )!.dataset.i!
+            sessionStorage.setItem('idx', i2rc(idx, lineSize).r + '')
+
+            sessionStorage.setItem('selectArr', JSON.stringify(selectArr))
         }, 1000)
         return () => clearInterval(timer)
-    }, [])
+    }, [selectArr])
 
-    const [select, setSelect] = useState('')
-    const [selectArr, setSelectArr] = useState<string[]>([])
+    const [X, setX] = useState(0)
 
-    function add() {
-        setSelect('')
-        setSelectArr([...selectArr, select])
-
-        selectionObj.removeAllRanges()
+    const _children = (props: props) => {
+        return Cells(lineSize, TXT, isSpkArr, props)
     }
-
-    const CELL = useCallback(Cells.bind(0, columnCount, TXT, isSpkArr), [
-        columnCount,
-        TXT,
-        isSpkArr,
-    ]) // 尝试使用对象引用传值{}
-
-    const G = useMemo(() => {
-        console.log(1)
-        return () => {
-            console.log(2)
-            return (
-                <Grid
-                    // onScroll={e => console.log(3)}
-                    // item counts
-                    columnCount={columnCount}
-                    rowCount={TXT.length / columnCount}
-                    // item style
-                    columnWidth={itemSize}
-                    rowHeight={itemSize}
-                    // wrap style
-                    height={readerHeight}
-                    width={readerWidth}
-                    // else
-                    ref={gridRef}
-                    useIsScrolling
-                    children={CELL}
-                />
-            )
-        }
-    }, [gridRef])
+    const children = useMemo(() => {
+        return memo(_children, areEqual)
+    }, [lineSize, isSpkArr])
+    const G = () => (
+        <Grid
+            // onScroll={e => console.log(3)}
+            // item counts
+            columnCount={lineSize}
+            rowCount={TXT.length / lineSize}
+            // item style
+            columnWidth={SIZE}
+            rowHeight={SIZE}
+            // wrap style
+            height={readerHeight}
+            width={readerWidth}
+            //
+            ref={gridRef}
+            children={children}
+            // overscanCount={6}
+            overscanRowCount={OVERSCAN}
+            // useIsScrolling
+        />
+    )
 
     return (
         <>
-            <div className='control'>
-                {/* <p>行长度:{columnCount}</p> */}
-
-                <div className='count'>
-                    <button onClick={add}>add</button>
-                    {getWordCount(TXT, select)}
-                </div>
-
-                <input
-                    type='text'
-                    value={select}
-                    onChange={e => setSelect(e.target.value)}
-                />
-
-                {selectArr.join('\n')}
-            </div>
+            <Control
+                {...{
+                    setSelect,
+                    setSelectArr,
+                    select,
+                    selectArr,
+                    selectWrap,
+                    selectionObj,
+                    gridRef,
+                    TXT,
+                    lineSize,
+                }}
+            />
 
             <div className='wrap' onClick={GoToNextItem}>
                 {G()}
@@ -185,8 +193,10 @@ export default function App() {
                     }
                 </style> */}
 
-                {[select, ...selectArr].map((select, key) => (
-                    <style key={key}>{getStyle(TXT, select, 'red')}</style>
+                {[selectWrap, ...selectArr].map(select => (
+                    <style key={select.key}>
+                        {getStyle(TXT, select.key, select.color)}
+                    </style>
                 ))}
 
                 <style>
@@ -216,7 +226,7 @@ export default function App() {
         if (content === 'normal') return
         const word = content.slice(1, -1) //去掉引号
 
-        const wordAllPosition = getAllWordPosition(TXT, word)
+        const wordAllPosition = getAllWordPosition(word, TXT)
 
         const clickPos = wordAllPosition.indexOf(Number(target.dataset.i))
         if (clickPos === -1) return
@@ -233,11 +243,13 @@ export default function App() {
             return nextPos
         })()
 
-        const nextIdx = wordAllPosition.at(nextPos) //从头到尾
+        const nextIdx = wordAllPosition.at(nextPos)! //从头到尾
 
         gridRef.current.scrollToItem({
             align: 'center',
-            rowIndex: Math.floor(nextIdx! / columnCount),
+            rowIndex: i2rc(nextIdx, lineSize).r,
         })
     }
 }
+
+export default App

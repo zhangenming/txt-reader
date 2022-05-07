@@ -36,31 +36,38 @@ export function getStyle(TXT: string, word: string, color: string) {
     const count = getWordCount(word, TXT)
     if (count === 0 || word === '' || word === ' ') return
 
+    const targets = Array.from(word)
+        .map(word => `[${word}]`)
+        .map((_, i, arr) =>
+            arr.reduce((all, item, j) => {
+                const q = j === i + 1 ? ':has(+' : '+'
+                const w = j === arr.length - 1 && i != arr.length - 1 ? ')' : ''
+                return all + q + item + w
+            })
+        )
+
     /* return后 有个空格 必要 不然\n失效; */
-    return ` 
-/* ${word} */
+    return `
+/* 高亮 常亮 所有*/
 ${getCss1()}
+
+/* 高亮 常亮 first/last */
 ${getCss2()}
-/* ${word} */
+
+/* 高亮 当hover */
+${getCss3()}
 `
 
     function getCss1() {
         return getCssSelectorL() + getCssStyleR()
 
         function getCssSelectorL() {
-            return Array.from(word)
-                .map(word => `[data-e='${word}']`)
-                .map((_, i, arr) =>
-                    arr.reduce((all, item, j) => {
-                        const len = word.length - 1
-                        const last = j === len ? ')'.repeat(len - i) : ''
-                        const L = all + `:has(+` + item + last
-                        const R = all + `+` + item
-                        return i < j ? L : R
-                    })
-                )
-                .join(',\n')
+            return targets.join(',\n')
         }
+        // background: linear-gradient(#000,#000);
+        // background-size: 100% 2px;
+        // background-repeat: no-repeat;
+        // background-position: 0px 50%;
         function getCssStyleR() {
             const css1 =
                 count === 1
@@ -102,6 +109,96 @@ ${getCss2()}
 
             return selector + style
         }
+    }
+    function getCss3() {
+        const base = word
+            .split('')
+            .reduce((all, now) => all + `[${now}]+`, '')
+            .slice(0, -1) //去掉末尾' +'
+
+        const HOVER = doHover(base, word.length)
+        const HAS = doHas(base, word.length)
+
+        const selector = type1() + ',\n\n\n' + type3() + ',\n\n\n' + type9()
+        return selector.replaceAll(':has()', '') + '{filter: brightness(0.8);}' // 最右边的has不必要
+
+        // :is([洛]+[萨]+[科]+[技]:hover, [洛]+[萨]+[科]:hover+[技], [洛]+[萨]:hover+[科]+[技], [洛]:hover+[萨]+[科]+[技])
+        function doHover(str: string, len: number) {
+            return Array(len) //1: word.length
+                .fill(0)
+                .map((_, index, arr) => {
+                    let idx = 0
+                    return str.replaceAll(/\[.\]/g, (e: any) => {
+                        if (++idx === arr.length - index) {
+                            return `${e}:hover`
+                        }
+                        return e
+                    })
+                })
+        }
+        // :is([洛]+[萨]+[科]+[技], [洛]+[萨]+[科]:has(+[技]), [洛]+[萨]:has(+[科]+[技]), [洛]:has(+[萨]+[科]+[技]))
+        function doHas(base: string | any[], len: number) {
+            return Array(len) //1: word.length
+                .fill(0)
+                .map((_, index, arr) => {
+                    const n = 3 + (arr.length - 1 - index) * 4 //var
+                    const L = base.slice(0, n)
+                    const R = base.slice(n)
+                    return L + ':has(' + R + ')'
+                })
+        }
+        function type1() {
+            // self 4 x 4
+            const withHover = HAS.map((e, _, arr) => doHover(e, arr.length))
+            const rs = withHover.flat().join(',\n')
+
+            return rs
+            // [洛]+[萨]+[科]+[技]:hover:has(),
+            // [洛]+[萨]+[科]:hover+[技]:has(),
+            // [洛]+[萨]:hover+[科]+[技]:has(),
+            // [洛]:hover+[萨]+[科]+[技]:has(),
+            // [洛]+[萨]+[科]:has(+[技]:hover),
+            // [洛]+[萨]+[科]:hover:has(+[技]),
+            // [洛]+[萨]:hover+[科]:has(+[技]),
+            // [洛]:hover+[萨]+[科]:has(+[技]),
+            // [洛]+[萨]:has(+[科]+[技]:hover),
+            // [洛]+[萨]:has(+[科]:hover+[技]),
+            // [洛]+[萨]:hover:has(+[科]+[技]),
+            // [洛]:hover+[萨]:has(+[科]+[技]),
+            // [洛]:has(+[萨]+[科]+[技]:hover),
+            // [洛]:has(+[萨]+[科]:hover+[技]),
+            // [洛]:has(+[萨]:hover+[科]+[技]),
+            // [洛]:hover:has(+[萨]+[科]+[技]),
+        }
+        function type3() {
+            // up 4 x 1
+            const R = ` ~ :is(${HOVER.join(', ')})`
+            const rs = HAS.map(e => e.slice(0, -1) + R + ' )').join(',\n')
+            return rs
+            // [洛]+[萨]+[科]+[技]:has( ~ :is([洛]+[萨]+[科]+[技]:hover, [洛]+[萨]+[科]:hover+[技], [洛]+[萨]:hover+[科]+[技], [洛]:hover+[萨]+[科]+[技]) ),
+            // [洛]+[萨]+[科]:has(+[技] ~ :is([洛]+[萨]+[科]+[技]:hover, [洛]+[萨]+[科]:hover+[技], [洛]+[萨]:hover+[科]+[技], [洛]:hover+[萨]+[科]+[技]) ),
+            // [洛]+[萨]:has(+[科]+[技] ~ :is([洛]+[萨]+[科]+[技]:hover, [洛]+[萨]+[科]:hover+[技], [洛]+[萨]:hover+[科]+[技], [洛]:hover+[萨]+[科]+[技]) ),
+            // [洛]:has(+[萨]+[科]+[技] ~ :is([洛]+[萨]+[科]+[技]:hover, [洛]+[萨]+[科]:hover+[技], [洛]+[萨]:hover+[科]+[技], [洛]:hover+[萨]+[科]+[技]) ),
+        }
+        function type9() {
+            // down 1 x 1
+            const rs = `:is(${HOVER.join(', ')})\n~ :is(${HAS.join(', ')})`
+            return rs
+            // :is([洛]+[萨]+[科]+[技]:hover, [洛]+[萨]+[科]:hover+[技], [洛]+[萨]:hover+[科]+[技], [洛]:hover+[萨]+[科]+[技])
+            // ~ :is([洛]+[萨]+[科]+[技]:has(), [洛]+[萨]+[科]:has(+[技]), [洛]+[萨]:has(+[科]+[技]), [洛]:has(+[萨]+[科]+[技])){
+            //     background: red!important;
+            // }
+        }
+
+        //         const selector = targets.map(
+        //             x => `
+        // ${x}:has( ~${x}:hover),
+        // ${x}:hover,
+        // ${x}:hover ~${x}
+        // `
+        //         )
+
+        //         return selector + `{background: #000;}`
     }
 }
 

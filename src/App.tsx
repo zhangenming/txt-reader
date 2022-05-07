@@ -21,7 +21,7 @@ import { useSize, useSpk, useTxt } from './hook'
 import Control from './comp/control'
 
 const SIZE = 30
-const OVERSCAN = 15
+const OVERSCAN = 2 //15
 setInterval(() => {
     // console.log(document.querySelector('.wrap>div>div').childElementCount)
 }, 1222)
@@ -50,6 +50,8 @@ const Cells = (
     })
 
     const props = (function gene() {
+        const STR = `—“”　 ·？，。！《》‘’⋯．、[]；：（）()／—@1234567890`
+        const wordType = getWordType(word)
         return {
             ...classes,
 
@@ -64,10 +66,15 @@ const Cells = (
             children: word,
             // key: idx, // ?
 
-            'data-e': word, //
             'data-i': idx, //
+            [wordType ? word : 'data-e']: wordType ? '' : word.toLowerCase(), // Recalculate Style 性能提高了非常多
+        }
+
+        function getWordType(word: string) {
+            return STR.indexOf(word) === -1
         }
     })()
+
     // idx < 100 && console.timeEnd()
     return <span {...props} />
 
@@ -114,6 +121,8 @@ function App() {
             align: 'center',
             rowIndex: Number(sessionStorage.getItem('idx')) + 17 + OVERSCAN - 1, // 33 适应屏幕高度行数
         })
+    }, [])
+    useEffect(() => {
         const timer = setInterval(() => {
             const idx = document.querySelector<HTMLElement>(
                 '.wrap span:first-child'
@@ -193,20 +202,20 @@ function App() {
                     }
                 </style> */}
 
-                {[selectWrap, ...selectArr].map(select => (
-                    <style key={select.key}>
-                        {getStyle(TXT, select.key, select.color)}
+                {[selectWrap, ...selectArr].map(({ key, color }) => (
+                    <style key={key} slot={key}>
+                        {getStyle(TXT, key, color)}
                     </style>
                 ))}
 
-                <style>
+                {/* <style>
                     {`
                         .isSpeaking {
                             background:#6666ee
                         }
                     `}
                 </style>
-                <script>{`console.log(3)`}</script>
+                <script>{`console.log(3)`}</script> */}
             </div>
         </>
     )

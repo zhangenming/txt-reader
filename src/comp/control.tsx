@@ -56,7 +56,7 @@ export default function Control({
                 {selectArr
                     .sort((l, r) => l.i - r.i)
                     .map((e, idx) => (
-                        <div className='selectItem' key={e.i}>
+                        <div className='selectItem' key={e.i} slot={e.key}>
                             <span
                                 children={idx}
                                 onClick={() => {

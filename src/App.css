@@ -44,6 +44,7 @@ body {
     justify-content: space-evenly;
     align-items: center;
     box-sizing: border-box; /*否则last会在speak状态下失效*/
+    background: cornflowerblue; /* for filter */
     /* react-window */
     position: absolute;
     width: 30px;
@@ -89,9 +90,23 @@ span[data-e='”'] {
 .selectItem {
     display: flex;
     justify-content: space-between;
+    align-items: center;
     height: 25px;
     overflow: hidden;
 }
 .selectItem span {
-    min-width: 15px;
+    min-width: 10px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+:has([slot='洛萨科技']:hover) :is([洛]+[萨]+[科]+[技], [洛]+[萨]+[科]:has(+[技]), [洛]+[萨]:has(+[科]+[技]), [洛]:has(+[萨]+[科]+[技])){
+    background: cornflowerblue;
+    color: black!important;
+}
+
+:has(:is([洛]+[萨]+[科]+[技]:hover, [洛]+[萨]+[科]:hover+[技], [洛]+[萨]:hover+[科]+[技], [洛]:hover+[萨]+[科]+[技])) [slot='洛萨科技']{
+   background: cornflowerblue;
+   color: red!important;
 }

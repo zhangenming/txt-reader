@@ -50,7 +50,6 @@ const Cells = (
     })
 
     const props = (function gene() {
-        const STR = `—“”　 ·？，。！《》‘’⋯．、[]；：（）()／—@1234567890`
         const wordType = getWordType(word)
         return {
             ...classes,
@@ -67,10 +66,12 @@ const Cells = (
             // key: idx, // ?
 
             'data-i': idx, //
-            [wordType ? word : 'data-e']: wordType ? '' : word.toLowerCase(), // Recalculate Style 性能提高了非常多
+            [wordType ? word.toLowerCase() : 'data-e']: wordType ? '' : word, // Recalculate Style 性能提高了非常多
+            // ...(wordType ? { [word.toLowerCase()]: '' } : { word }),
         }
 
         function getWordType(word: string) {
+            const STR = `—“”　 ·？，。！《》‘’⋯．、[]；：（）()／—@1234567890`
             return STR.indexOf(word) === -1
         }
     })()
@@ -133,8 +134,6 @@ function App() {
         }, 1000)
         return () => clearInterval(timer)
     }, [selectArr])
-
-    const [X, setX] = useState(0)
 
     const _children = (props: props) => {
         return Cells(lineSize, TXT, isSpkArr, props)
@@ -207,15 +206,6 @@ function App() {
                         {getStyle(TXT, key, color)}
                     </style>
                 ))}
-
-                {/* <style>
-                    {`
-                        .isSpeaking {
-                            background:#6666ee
-                        }
-                    `}
-                </style>
-                <script>{`console.log(3)`}</script> */}
             </div>
         </>
     )

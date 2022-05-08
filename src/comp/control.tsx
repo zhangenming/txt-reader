@@ -76,6 +76,7 @@ export default function Control({
                                 }}
                             />
                             <span
+                                className='item'
                                 children={e.count}
                                 onClick={() => {
                                     const i = TXT.indexOf(e.key)

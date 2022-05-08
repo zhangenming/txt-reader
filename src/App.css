@@ -24,36 +24,37 @@ body {
 }
 
 .wrap > div {
-    background: cornflowerblue;
-    color: aliceblue;
-    font-size: 25px;
-    font-family: cursive;
     /* react-window */
     position: relative;
     overflow: auto;
     will-change: transform;
     direction: ltr;
     /* react-window */
+    background: cornflowerblue;
+    color: aliceblue;
+    font-size: 25px;
+    font-family: cursive;
 }
 .wrap > div > div {
     margin: 0 auto;
     position: relative;
 }
 .wrap span {
-    display: flex;
-    justify-content: space-evenly;
-    align-items: center;
-    box-sizing: border-box; /*否则last会在speak状态下失效*/
-    background: cornflowerblue; /* for filter */
     /* react-window */
     position: absolute;
     width: 30px;
     height: 30px;
     /* react-window */
+    display: flex;
+    justify-content: space-evenly;
+    align-items: center;
+    box-sizing: border-box; /*否则last会在speak状态下失效*/
+    background: cornflowerblue; /* for filter */
+    transition: color 0.1s, background-color 0.2s;
 }
 /* ITEM class */
-.speaking {
-    background: #6666ee;
+span.speaking {
+    background: #6666ee99;
 }
 .isOdd {
     background: yellowgreen;
@@ -83,8 +84,7 @@ span[data-e='”'] {
 /* ITEM class */
 
 ::selection {
-    background-color: #6666ee99;
-    opacity: 0.3;
+    background-color: #9acd3299;
 }
 
 .selectItem {
@@ -100,13 +100,6 @@ span[data-e='”'] {
     text-overflow: ellipsis;
     white-space: nowrap;
 }
-
-:has([slot='洛萨科技']:hover) :is([洛]+[萨]+[科]+[技], [洛]+[萨]+[科]:has(+[技]), [洛]+[萨]:has(+[科]+[技]), [洛]:has(+[萨]+[科]+[技])){
-    background: cornflowerblue;
-    color: black!important;
-}
-
-:has(:is([洛]+[萨]+[科]+[技]:hover, [洛]+[萨]+[科]:hover+[技], [洛]+[萨]:hover+[科]+[技], [洛]:hover+[萨]+[科]+[技])) [slot='洛萨科技']{
-   background: cornflowerblue;
-   color: red!important;
+BACKUP{
+    color:rgb(249,181,42)
 }

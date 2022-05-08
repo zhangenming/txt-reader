@@ -36,123 +36,125 @@ export function getStyle(TXT: string, word: string, color: string) {
     const count = getWordCount(word, TXT)
     if (count === 0 || word === '' || word === ' ') return
 
-    const targets = Array.from(word)
-        .map(word => `[${word}]`)
-        .map((_, i, arr) =>
-            arr.reduce((all, item, j) => {
-                const q = j === i + 1 ? ':has(+' : '+'
-                const w = j === arr.length - 1 && i != arr.length - 1 ? ')' : ''
-                return all + q + item + w
-            })
-        )
+    const justOne = count === 1
+
+    const wordLen = word.length
+
+    const hoverStyle =
+        '\n{background:bisque; color:forestgreen;/*filter: brightness(0.8);*/}'
+
+    const base = word
+        .split('')
+        .reduce((all, now) => all + `[${now}]+`, '')
+        .slice(0, -1) //去掉末尾' +'
+
+    const HOVER = doHover(base).join(', ').replaceAll(':has()', '')
+    const _HAS = doHas(base)
+    const HAS = _HAS.join(', ').replaceAll(':has()', '')
 
     /* return后 有个空格 必要 不然\n失效; */
     return `
 /* 高亮 常亮 所有*/
 ${getCss1()}
 
-/* 高亮 常亮 first/last */
+
+/* 高亮 常亮 只first/last */
 ${getCss2()}
+
 
 /* 高亮 当hover */
 ${getCss3()}
+
+
+/* 左右联动 当hover */
+${getCss4()}
 `
 
     function getCss1() {
-        return getCssSelectorL() + getCssStyleR()
+        const type = justOne
+            ? `\
+background: linear-gradient(#000,#000);
+  background-size: 100% 2px;
+  background-repeat: no-repeat;
+  background-position: 0px 50%;`
+            : `cursor: se-resize`
 
-        function getCssSelectorL() {
-            return targets.join(',\n')
-        }
-        // background: linear-gradient(#000,#000);
-        // background-size: 100% 2px;
-        // background-repeat: no-repeat;
-        // background-position: 0px 50%;
-        function getCssStyleR() {
-            const css1 =
-                count === 1
-                    ? 'text-decoration: line-through red'
-                    : 'cursor:se-resize'
-            const css2 = `color:${color}`
-            const css3 = `content:"${word}"`
+        const style = `
+{
+  color: ${color};
+  content: '${word}';
+  ${type}
+}`
 
-            return (
-                '\n{\n' +
-                [css1, css2, css3].reduce((all, now) => {
-                    return `${all} ${now};\n`
-                }, '') +
-                '}'
+        const selector = Array.from(word)
+            .map(word => `[${word}]`)
+            .map((_, i, arr) =>
+                arr.reduce((all, item, j) => {
+                    const q = j === i + 1 ? ':has(+' : '+'
+                    const w =
+                        j === arr.length - 1 && i != arr.length - 1 ? ')' : ''
+                    return all + q + item + w
+                })
             )
-        }
+            .join(',\n')
+        return selector + style
     }
+
     function getCss2() {
+        if (justOne) return '/* 只有一个没必要显示 */'
+
         const wordPosition = getAllWordPosition(word, TXT)
-        const first = wordPosition[0]
-        const last = wordPosition.at(-1)
 
-        return [setCss(first), setCss(last!, true)].join('\n')
+        const [first, ...firstNext] = wordPosition.slice(0, wordLen)
+        const lastPriv = wordPosition.slice(wordPosition.length - wordLen)
+        const last = lastPriv.pop()!
 
-        function setCss(item: number, isLast?: boolean) {
-            const selector = `.wrap span[data-i='${item}']::${
-                isLast ? 'after' : 'before'
-            }`
-            const style = JSON.stringify({
-                width: '1px',
-                height: '30px',
-                content: `''`,
-                background: 'red',
-            })
-                .replaceAll('"', '')
-                .replaceAll(',', ';')
-                .replace('{', '{ ')
-                .replace('}', ' }')
+        return [
+            {
+                selector: [first],
+                style: `${color} transparent transparent ${color}`,
+            },
+            { selector: firstNext, style: `${color} transparent transparent` },
+            {
+                selector: lastPriv,
+                style: `transparent transparent ${color} transparent`,
+            },
+            {
+                selector: [last],
+                style: `transparent ${color} ${color} transparent`,
+            },
+        ]
+            .map(({ selector, style }) => setCss(selector, style))
+            .join('\n')
 
-            return selector + style
+        const q = setCss([first], `${color} transparent transparent ${color}`)
+        const w = setCss(firstNext, `${color} transparent transparent`)
+        const e = setCss(
+            lastPriv,
+            `transparent transparent ${color} transparent`
+        )
+        const r = setCss([last], `transparent ${color} ${color} transparent`)
+        return [q, w, e, r].join('\n')
+
+        function setCss(l: number[], r: string) {
+            const x = l.map(e => `[data-i='${e}']`)
+            return `.wrap span:is(${x}) { border:solid; border-color:${r}; }`
         }
     }
+
     function getCss3() {
-        const base = word
-            .split('')
-            .reduce((all, now) => all + `[${now}]+`, '')
-            .slice(0, -1) //去掉末尾' +'
+        if (justOne) return '/* 只有一个没必要显示 */'
 
-        const HOVER = doHover(base, word.length)
-        const HAS = doHas(base, word.length)
+        const selector = type1() + ',\n\n' + type3() + ',\n\n' + type9()
 
-        const selector = type1() + ',\n\n\n' + type3() + ',\n\n\n' + type9()
-        return selector.replaceAll(':has()', '') + '{filter: brightness(0.8);}' // 最右边的has不必要
+        return selector + hoverStyle // 最右边的has不必要
 
-        // :is([洛]+[萨]+[科]+[技]:hover, [洛]+[萨]+[科]:hover+[技], [洛]+[萨]:hover+[科]+[技], [洛]:hover+[萨]+[科]+[技])
-        function doHover(str: string, len: number) {
-            return Array(len) //1: word.length
-                .fill(0)
-                .map((_, index, arr) => {
-                    let idx = 0
-                    return str.replaceAll(/\[.\]/g, (e: any) => {
-                        if (++idx === arr.length - index) {
-                            return `${e}:hover`
-                        }
-                        return e
-                    })
-                })
-        }
-        // :is([洛]+[萨]+[科]+[技], [洛]+[萨]+[科]:has(+[技]), [洛]+[萨]:has(+[科]+[技]), [洛]:has(+[萨]+[科]+[技]))
-        function doHas(base: string | any[], len: number) {
-            return Array(len) //1: word.length
-                .fill(0)
-                .map((_, index, arr) => {
-                    const n = 3 + (arr.length - 1 - index) * 4 //var
-                    const L = base.slice(0, n)
-                    const R = base.slice(n)
-                    return L + ':has(' + R + ')'
-                })
-        }
         function type1() {
             // self 4 x 4
-            const withHover = HAS.map((e, _, arr) => doHover(e, arr.length))
+            const withHover = _HAS.map(e => doHover(e))
             const rs = withHover.flat().join(',\n')
 
-            return rs
+            return rs.replaceAll(':has()', '')
             // [洛]+[萨]+[科]+[技]:hover:has(),
             // [洛]+[萨]+[科]:hover+[技]:has(),
             // [洛]+[萨]:hover+[科]+[技]:has(),
@@ -172,8 +174,9 @@ ${getCss3()}
         }
         function type3() {
             // up 4 x 1
-            const R = ` ~ :is(${HOVER.join(', ')})`
-            const rs = HAS.map(e => e.slice(0, -1) + R + ' )').join(',\n')
+            const R = ` ~ :is(${HOVER})`
+            const rs = _HAS.map(e => e.slice(0, -1) + R + ' )').join(',\n')
+
             return rs
             // [洛]+[萨]+[科]+[技]:has( ~ :is([洛]+[萨]+[科]+[技]:hover, [洛]+[萨]+[科]:hover+[技], [洛]+[萨]:hover+[科]+[技], [洛]:hover+[萨]+[科]+[技]) ),
             // [洛]+[萨]+[科]:has(+[技] ~ :is([洛]+[萨]+[科]+[技]:hover, [洛]+[萨]+[科]:hover+[技], [洛]+[萨]:hover+[科]+[技], [洛]:hover+[萨]+[科]+[技]) ),
@@ -182,7 +185,7 @@ ${getCss3()}
         }
         function type9() {
             // down 1 x 1
-            const rs = `:is(${HOVER.join(', ')})\n~ :is(${HAS.join(', ')})`
+            const rs = `:is(${HOVER}) ~ :is(${HAS})`
             return rs
             // :is([洛]+[萨]+[科]+[技]:hover, [洛]+[萨]+[科]:hover+[技], [洛]+[萨]:hover+[科]+[技], [洛]:hover+[萨]+[科]+[技])
             // ~ :is([洛]+[萨]+[科]+[技]:has(), [洛]+[萨]+[科]:has(+[技]), [洛]+[萨]:has(+[科]+[技]), [洛]:has(+[萨]+[科]+[技])){
@@ -199,6 +202,50 @@ ${getCss3()}
         //         )
 
         //         return selector + `{background: #000;}`
+    }
+
+    function getCss4() {
+        const leftDom = `[slot='${word}']`
+
+        /* left ui */
+        const type1 = `${leftDom}\n{color:${color}; }\n\n`
+
+        /* hover: left ui */
+        const type2 = `${leftDom}:has(.item:hover),\n`
+
+        /* hover: left ui 联动 right reader */
+        const type3 = `:has(${leftDom} .item:hover) :is(${HAS}),\n`
+
+        /* hover: right reader 联动left ui */
+        const type4 = `:has(${HOVER}) ${leftDom}`
+
+        return type2 + type3 + type4 + hoverStyle
+    }
+
+    // :is([洛]+[萨]+[科]+[技]:hover, [洛]+[萨]+[科]:hover+[技], [洛]+[萨]:hover+[科]+[技], [洛]:hover+[萨]+[科]+[技])
+    function doHover(str: string) {
+        return Array(wordLen) //1: word.length
+            .fill(0)
+            .map((_, index, arr) => {
+                let idx = 0
+                return str.replaceAll(/\[.\]/g, (e: any) => {
+                    if (++idx === arr.length - index) {
+                        return `${e}:hover`
+                    }
+                    return e
+                })
+            })
+    }
+    // :is([洛]+[萨]+[科]+[技], [洛]+[萨]+[科]:has(+[技]), [洛]+[萨]:has(+[科]+[技]), [洛]:has(+[萨]+[科]+[技]))
+    function doHas(base: string) {
+        return Array(wordLen) //1: word.length
+            .fill(0)
+            .map((_, index, arr) => {
+                const n = 3 + (arr.length - 1 - index) * 4 //var
+                const L = base.slice(0, n)
+                const R = base.slice(n)
+                return L + ':has(' + R + ')'
+            })
     }
 }
 

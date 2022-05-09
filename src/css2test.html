@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+
+    <body>
+        <span q>q</span>
+        <span w>w</span>
+        <span e>e</span>
+        <span r>r</span>
+        ..
+
+        <span q>q</span>
+        <span w>www</span>
+        <span e>e</span>
+        <span r>r</span>
+        ..
+
+        <span q>q</span>
+        <span w>w</span>
+        <span e>e</span>
+        <span r>r</span>
+    </body>
+</html>
+<script>
+
+    function C1({ name }) {
+        console.log('C1 Function comp..')
+        return <div>{name + Math.random()}</div>
+    }
+    var C2 = React.memo(function ({ name }) {
+        console.log('C2 memo Function comp..')
+        return <div>{name + Math.random()}</div>
+    })
+    var C3 = React.memo(
+        function ({ name }) {
+            console.log('C3 fuza memo Function comp..')
+            return <div>{name + Math.random()}</div>
+        },
+        () => true
+    )
+
+    class RegularChildComponent extends React.Component {
+        render() {
+            console.log('Class comp..')
+            return <div>{this.props.name + Math.random()}</div>
+        }
+    }
+
+    class PureChildComponent extends React.PureComponent {
+        render() {
+            console.log('Pure Class comp..')
+            return <div>{this.props.name + Math.random()}</div>
+        }
+    }
+    class ClsComp extends React.Component {
+        render() {
+            console.log('ClsComp')
+            return <div></div>
+        }
+    }
+    function FuncComp() {
+        console.log('FuncComp')
+        return <div></div>
+    }
+    export default class ApplicationComponent extends React.Component {
+        state = {
+            name: 'Mayank',
+            val: 100,
+        }
+        X2 = React.memo(function ({ name }) {
+            console.log('C22 meme1 Function comp..')
+            return <div>{name + Math.random()}</div>
+        })
+        componentDidMount() {
+            this.setState({ val: this.state.val + 1 })
+            console.log(this.state.val)
+            this.setState({ val: this.state.val + 2 })
+            console.log(this.state.val)
+
+            setTimeout(() => {
+                this.setState({ val: this.state.val + 3 })
+                console.log(this.state.val)
+                this.setState({ val: this.state.val + 4 })
+                console.log(this.state.val)
+            }, 0)
+        }
+        render() {
+            console.log('Render Called Again')
+            const X = React.memo(function ({ name }) {
+                console.log('C23 memo2 Function comp..')
+                return <div>{name + Math.random()}</div>
+            })
+            const X2 = this.X2
+            return (
+                <div>
+                    <button
+                        onClick={() =>
+                            this.setState({
+                                name: 'Mayank',
+                            })
+                        }
+                    >
+                        but
+                    </button>
+                    <C1 name={this.state.name} />
+                    <C2 name={this.state.name} />
+                    <C3 name={this.state.name} />
+                    <X name={this.state.name} />
+                    <X2 name={this.state.name} />
+                    <RegularChildComponent name={this.state.name} />
+                    <PureChildComponent name={this.state.name} />
+                    <ClsComp />
+                    <FuncComp />
+                </div>
+            )
+        }
+    }
+
+    ReactDOM.createRoot(document.getElementById('root')!).render(
+        <React.StrictMode>
+            {/* <App /> */}
+            {/* <ApplicationComponent />{' '} */}
+            {(() => {
+                Promise.resolve(1).then(() => console.log('promsie'))
+                return ''
+            })()}
+            {location.hash ? <APP2 /> : <App />}
+            {(() => {
+                Promise.resolve(1).then(() => console.log('promsie'))
+                return ''
+            })()}
+        </React.StrictMode>
+    )
+
+    function APP2() {
+        console.log('app')
+        const [x, setX] = useState(1)
+        return (
+            <>
+                <button onClick={() => setX(x)}>x </button>
+                <button onClick={() => setX(x + 1)}>add</button>
+                {x}
+                <B />
+            </>
+        )
+    }
+    function APP22() {
+        console.log('app')
+        const [x, setX] = useState(1)
+        return (
+            <>
+                <button onClick={() => setX(x)}>x </button>
+                <button onClick={() => setX(x + 1)}>add</button>
+                {x}
+                <B />
+            </>
+        )
+    }
+    function B() {
+        console.log('b')
+        return <>'b'</>
+    }
+</script>
+<script>
+    const word = '洛萨科技'
+    const base = word
+        .split('')
+        .reduce((all, now) => all + `[${now}]+`, '')
+        .slice(0, -1) //去掉末尾' +'
+
+    const HOVER = doHover(base, word.length)
+    const HAS = doHas(base, word.length)
+    function doHover(str, len) {
+        return Array(len) //1: word.length
+            .fill()
+            .map((_, index, arr) => {
+                let idx = 0
+                return str.replaceAll(/\[.\]/g, (e, i) => {
+                    if (++idx === arr.length - index) {
+                        return `${e}:hover`
+                    }
+                    return e
+                })
+            })
+    }
+    function doHas(base, len) {
+        return Array(len) //1: word.length
+            .fill()
+            .map((_, index, arr) => {
+                const n = 3 + (arr.length - 1 - index) * 4 //var
+                const L = base.slice(0, n)
+                const R = base.slice(n)
+                return L + ':has(' + R + ')'
+            })
+    }
+    type1()
+    function type1() {
+        const withHover = HAS.map((e, _, arr) => doHover(e, arr.length))
+        const rs = withHover.flat().join(',\n')
+        console.log(HAS, withHover)
+        return rs
+        // self 4 x 4
+        // [洛]+[萨]+[科]+[技]:hover:has(),
+        // [洛]+[萨]+[科]:hover+[技]:has(),
+        // [洛]+[萨]:hover+[科]+[技]:has(),
+        // [洛]:hover+[萨]+[科]+[技]:has(),
+        // [洛]+[萨]+[科]:has(+[技]:hover),
+        // [洛]+[萨]+[科]:hover:has(+[技]),
+        // [洛]+[萨]:hover+[科]:has(+[技]),
+        // [洛]:hover+[萨]+[科]:has(+[技]),
+        // [洛]+[萨]:has(+[科]+[技]:hover),
+        // [洛]+[萨]:has(+[科]:hover+[技]),
+        // [洛]+[萨]:hover:has(+[科]+[技]),
+        // [洛]:hover+[萨]:has(+[科]+[技]),
+        // [洛]:has(+[萨]+[科]+[技]:hover),
+        // [洛]:has(+[萨]+[科]:hover+[技]),
+        // [洛]:has(+[萨]:hover+[科]+[技]),
+        // [洛]:hover:has(+[萨]+[科]+[技]),
+    }
+    function type3() {
+        const R = ` ~ :is(${HOVER.join(', ')})`
+        const rs = HAS.map(e => e.slice(0, -1) + R + ' )').join(',\n')
+        console.log(rs)
+        return rs
+        // up1 4 x 1
+        // [洛]+[萨]+[科]+[技]:has( ~ :is([洛]+[萨]+[科]+[技]:hover, [洛]+[萨]+[科]:hover+[技], [洛]+[萨]:hover+[科]+[技], [洛]:hover+[萨]+[科]+[技]) ),
+        // [洛]+[萨]+[科]:has(+[技] ~ :is([洛]+[萨]+[科]+[技]:hover, [洛]+[萨]+[科]:hover+[技], [洛]+[萨]:hover+[科]+[技], [洛]:hover+[萨]+[科]+[技]) ),
+        // [洛]+[萨]:has(+[科]+[技] ~ :is([洛]+[萨]+[科]+[技]:hover, [洛]+[萨]+[科]:hover+[技], [洛]+[萨]:hover+[科]+[技], [洛]:hover+[萨]+[科]+[技]) ),
+        // [洛]:has(+[萨]+[科]+[技] ~ :is([洛]+[萨]+[科]+[技]:hover, [洛]+[萨]+[科]:hover+[技], [洛]+[萨]:hover+[科]+[技], [洛]:hover+[萨]+[科]+[技]) ),
+    }
+    function type9() {
+        const rs = `:is(${HOVER.join(', ')})\n~ :is(${HAS.join(', ')})`
+        console.log(rs)
+        return rs
+        // down 1 x 1
+        // :is([洛]+[萨]+[科]+[技]:hover, [洛]+[萨]+[科]:hover+[技], [洛]+[萨]:hover+[科]+[技], [洛]:hover+[萨]+[科]+[技])
+        // ~ :is([洛]+[萨]+[科]+[技]:has(), [洛]+[萨]+[科]:has(+[技]), [洛]+[萨]:has(+[科]+[技]), [洛]:has(+[萨]+[科]+[技])){
+        //     background: red!important;
+        // }
+    }
+    console.log(type1() + ',\n\n\n' + type3() + ',\n\n\n' + type9())
+</script>

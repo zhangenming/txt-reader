@@ -1,8 +1,10 @@
 import { useEffect, useState } from 'react'
 
 // import txt from '../txt/三国演义'
-import txt from '../txt/循环'
+// import txt from '../txt/循环'
 // import txt from '../txt/白鹿原'
+// import txt from '../txt/人类大瘟疫'
+import txt from '../txt/天道'
 
 export function useSize(itemSize: number) {
     const [Width, setWidth] = useState(innerWidth - 100)
@@ -25,7 +27,8 @@ export function useTxt(colCount: number) {
 
     function setFunc() {
         return txt
-            .replaceAll('\n', '\n')
+            .replaceAll('\n\n', '\n')
+            .replaceAll('\n', '\n  ')
             .split('\n')
             .filter(e => e)
             .map(setLineWithSomeSpace)

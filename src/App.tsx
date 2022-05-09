@@ -7,13 +7,14 @@ import {
     memo,
     useMemo,
     useCallback,
+    KeyboardEvent,
 } from 'react'
 import { areEqual, FixedSizeGrid as Grid } from 'react-window'
 import {
-    getAllWordPosition,
     getClasses,
     getStyle,
     getWordCount,
+    getWordPosition,
     i2rc,
     rc2i,
 } from './utils'
@@ -26,8 +27,13 @@ setInterval(() => {
     // console.log(document.querySelector('.wrap>div>div').childElementCount)
 }, 1222)
 
+const warning = `×─―—-–~≈*“”　 ·？?,，.。！％%《》‘'’⋯…．、[]［］【；：（）()/／@１２３４５６７８９０1234567890℃;`
+const error = `ｉ＝ＢＣＦＫＶＷＱＩＹＬＡＭＤＴＨＮＳ`
+const STR = [...warning, ...error]
+
 const selectionObj = getSelection()!
 
+window.nextDomIdx = []
 type props = {
     columnIndex: number
     rowIndex: number
@@ -38,6 +44,7 @@ const Cells = (
     lineSize: number,
     TXT: string,
     isSpkArr: boolean[],
+    isTargetArr: number[],
     { columnIndex, rowIndex, style, isScrolling }: props
 ) => {
     const idx = rc2i(rowIndex, columnIndex, lineSize)
@@ -46,6 +53,8 @@ const Cells = (
 
     const classes = getClasses({
         speaking: isSpkArr[idx],
+        isTarget: nextDomIdx.includes(idx),
+        // isTarget: isTargetArr.includes(idx),
         // isOdd: rowIndex % 2,
     })
 
@@ -56,23 +65,22 @@ const Cells = (
 
             style: {
                 ...style,
-                ...getStyles(word),
+                // ...getStyles(word),
                 userSelect: isScrolling ? 'none' : 'text',
 
-                '--var-color': 'black',
+                // '--var-color': 'black',
             } as any,
 
             children: word,
             // key: idx, // ?
 
             'data-i': idx, //
-            [wordType ? word.toLowerCase() : 'data-e']: wordType ? '' : word, // Recalculate Style 性能提高了非常多
+            [wordType ? 'data-e' : word]: wordType ? word : '', // Recalculate Style 性能提高了非常多
             // ...(wordType ? { [word.toLowerCase()]: '' } : { word }),
         }
 
         function getWordType(word: string) {
-            const STR = `—“”　 ·？，。！《》‘’⋯．、[]；：（）()／—@1234567890`
-            return STR.indexOf(word) === -1
+            return STR.includes(word)
         }
     })()
 
@@ -99,50 +107,64 @@ const Cells = (
         }
     }
 }
+
 function App() {
     const [readerWidth, readerHeight, lineSize] = useSize(SIZE)
-    const TXT = useTxt(lineSize) //299e81
+    const TXT = useTxt(lineSize)
     const isSpkArr = useSpk(TXT)
+
+    const [isTargetArr, isTargetArrSET] = useState<number[]>([])
 
     const [select, setSelect] = useState('')
     const selectWrap = {
         key: select,
-        color: 'red',
+        color: 'black',
         i: Date.now(),
         count: getWordCount(select, TXT),
     }
 
     const [selectArr, setSelectArr] = useState<item[]>(
-        JSON.parse(sessionStorage.getItem('selectArr') || '[]')
+        JSON.parse(localStorage.getItem('selectArr') || '[]')
     )
 
     const gridRef: any = createRef()
     useEffect(() => {
         gridRef.current.scrollToItem({
             align: 'center',
-            rowIndex: Number(sessionStorage.getItem('idx')) + 17 + OVERSCAN - 1, // 33 适应屏幕高度行数
+            rowIndex: Number(localStorage.getItem('idx')) + 17 + OVERSCAN - 1, // 33 适应屏幕高度行数
         })
     }, [])
+
+    const [isMetaDown, isMetaDownSet] = useState(false)
+    const [isAltDown, isAltDownSet] = useState(false)
+    const clickType = (() => {
+        if (isMetaDown && isAltDown) return 's-resize'
+        if (isMetaDown) return 'w-resize'
+        if (isAltDown) return 'n-resize'
+        return 'e-resize'
+    })()
+
     useEffect(() => {
         const timer = setInterval(() => {
             const idx = document.querySelector<HTMLElement>(
                 '.wrap span:first-child'
             )!.dataset.i!
-            sessionStorage.setItem('idx', i2rc(idx, lineSize).r + '')
+            localStorage.setItem('idx', i2rc(idx, lineSize).r + '')
 
-            sessionStorage.setItem('selectArr', JSON.stringify(selectArr))
+            localStorage.setItem('selectArr', JSON.stringify(selectArr))
         }, 1000)
         return () => clearInterval(timer)
     }, [selectArr])
 
     const _children = (props: props) => {
-        return Cells(lineSize, TXT, isSpkArr, props)
+        return Cells(lineSize, TXT, isSpkArr, isTargetArr, props)
     }
     const children = useMemo(() => {
         return memo(_children, areEqual)
-    }, [lineSize, isSpkArr])
+    }, [lineSize, isSpkArr, isTargetArr])
     const G = () => (
         <Grid
+            style={{ '--clickType': clickType } as any}
             // onScroll={e => console.log(3)}
             // item counts
             columnCount={lineSize}
@@ -158,7 +180,7 @@ function App() {
             children={children}
             // overscanCount={6}
             overscanRowCount={OVERSCAN}
-            // useIsScrolling
+            useIsScrolling
         />
     )
 
@@ -175,14 +197,20 @@ function App() {
                     gridRef,
                     TXT,
                     lineSize,
+                    addHandle,
+                    deleteHandle,
                 }}
             />
-
-            <div className='wrap' onClick={GoToNextItem}>
+            <div
+                className='wrap'
+                onClick={GoToNextItem}
+                onKeyDown={keyDownHandle}
+                onKeyUp={keyUpHandle}
+                tabIndex={0}
+            >
                 {G()}
                 {/* <G /> */}
             </div>
-
             <div className='styles'>
                 {/* <style>
                     {
@@ -203,18 +231,45 @@ function App() {
 
                 {[selectWrap, ...selectArr].map(({ key, color }) => (
                     <style key={key} slot={key}>
-                        {getStyle(TXT, key, color)}
+                        {getStyle(TXT, key, color, key === selectWrap.key)}
                     </style>
                 ))}
             </div>
         </>
     )
 
+    function keyDownHandle(event: KeyboardEvent) {
+        if (event.metaKey) {
+            isMetaDownSet(true)
+        }
+        if (event.altKey) {
+            isAltDownSet(true)
+        }
+    }
+    function keyUpHandle(event: KeyboardEvent) {
+        if (event.key === 'Meta') {
+            isMetaDownSet(false)
+        }
+        if (event.key === 'Alt') {
+            isAltDownSet(false)
+        }
+    }
+
     function GoToNextItem({ target, metaKey, altKey }: React.MouseEvent) {
         const selectionStr = selectionObj + ''
 
-        if (selectionStr.length > 0 && selectionStr.length < 210) {
-            if (selectionStr.includes('\n')) return
+        if (selectionStr) {
+            if (selectionStr.length > 210 || selectionStr.includes('\n')) return
+
+            if (selectionStr === select) {
+                addHandle()
+                return
+            }
+            if (selectArr.find(e => e.key === selectionStr)) {
+                deleteHandle(selectionStr)
+                return
+            }
+
             setSelect(selectionStr.replaceAll(' ', ''))
             return
         }
@@ -224,30 +279,66 @@ function App() {
         const content = getComputedStyle(target).content
         if (content === 'normal') return
         const word = content.slice(1, -1) //去掉引号
+        const wordLen = word.length //去掉引号
 
-        const wordAllPosition = getAllWordPosition(word, TXT)
+        const wordPosition = getWordPosition(word, TXT)
+        const len = wordPosition.length
 
-        const clickPos = wordAllPosition.indexOf(Number(target.dataset.i))
+        const clickIdx = Number(target.dataset.i)
+        const clickPos = wordPosition.findIndex(
+            pos => Math.abs(pos - clickIdx) < wordLen
+        )
         if (clickPos === -1) return
 
         const nextPos = (() => {
-            const len = wordAllPosition.length
             if (altKey && metaKey) return len - 1 // 直接跳到最后一个
             if (altKey) return 0 // 直接跳到第一个
 
-            let nextPos = clickPos + word.length * (metaKey ? -1 : 1) // meta 相反方向
-            if (nextPos > len - 1) {
-                return nextPos - len //处理从数组尾到头
+            const nextPos = clickPos + (metaKey ? -1 : 1) // meta 相反方向
+            if (nextPos === len) {
+                return 0 // 点最后一个时 跳到第一个
+            }
+            if (nextPos === -1) {
+                return len - 1 // 点最后一个时 跳到第一个
             }
             return nextPos
         })()
 
-        const nextIdx = wordAllPosition.at(nextPos)! //从头到尾
+        const nextIdx = wordPosition.at(nextPos)! //从头到尾
+        nextDomIdx = Array(wordLen)
+            .fill(0)
+            .map((_, i) => i + nextIdx)
+
+        isTargetArrSET(
+            Array(wordLen)
+                .fill(0)
+                .map((_, i) => i + nextIdx)
+        )
+        setTimeout(() => {
+            isTargetArrSET([])
+        }, 1111)
 
         gridRef.current.scrollToItem({
             align: 'center',
             rowIndex: i2rc(nextIdx, lineSize).r,
         })
+    }
+
+    function addHandle() {
+        if (selectArr.find(e => e.key === selectWrap.key)) {
+            setSelect('')
+            selectionObj.removeAllRanges()
+            return
+        }
+
+        setSelect('')
+        setSelectArr([...selectArr, selectWrap])
+
+        selectionObj.removeAllRanges()
+    }
+
+    function deleteHandle(key: string) {
+        setSelectArr([...selectArr.filter(e => e.key !== key)])
     }
 }
 

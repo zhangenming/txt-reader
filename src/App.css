@@ -52,7 +52,20 @@ body {
     background: cornflowerblue; /* for filter */
     transition: color 0.1s, background-color 0.2s;
 }
+
 /* ITEM class */
+span.isTarget{
+    background: red;
+    filter: hue-rotate(90deg);
+    border-top: 3px solid;
+    border-bottom: 3px solid;
+}
+:not(.isTarget) + .isTarget{
+    border-left: 3px solid;
+}
+.isTarget:has(+:not(.isTarget)){
+    border-right: 3px solid;
+}
 span.speaking {
     background: #6666ee99;
 }
@@ -68,23 +81,10 @@ span[data-e='”'] {
 [class*='select'] {
     background-color: var(--var-color);
 }
-.select_just-one {
-    /* text-decoration: line-through red; */
-    background-color: #9999;
-}
-.select_many {
-    cursor: se-resize;
-}
-.select_first-item {
-    border-left: 1px solid red;
-}
-.select_last-item {
-    border-right: 1px solid red;
-}
 /* ITEM class */
 
 ::selection {
-    background-color: #9acd3299;
+    background-color: #9acd3266;
 }
 
 .selectItem {
@@ -101,5 +101,11 @@ span[data-e='”'] {
     white-space: nowrap;
 }
 BACKUP{
-    color:rgb(249,181,42)
+    color:rgb(249,181,42);
+    /* 299e81 */
+}
+
+
+:has([肖]:hover+[亚]+[文]) [肖]+[亚]+[文]{
+    /* background: red; */
 }

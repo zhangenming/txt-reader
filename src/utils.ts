@@ -1,23 +1,22 @@
-export function getAllWordPosition(word: string, TXT: string) {
-    return getWordPosition(TXT, word).flatMap((n: number) =>
+function getAllWordPosition(word: string, TXT: string) {
+    return getWordPosition(word, TXT).flatMap((n: number) =>
         Array(word.length)
             .fill(0)
             .map((_, i) => n + i)
     )
+}
+// 查找一个字符串中的所有子串的位置
+export function getWordPosition(word: string, TXT: string) {
+    if (word === '') return Array(TXT.length)
 
-    // 查找一个字符串中的所有子串的位置
-    function getWordPosition(TXT: string, word: string) {
-        if (word === '') return Array(TXT.length)
-
-        const positions = []
-        let pos = TXT.indexOf(word)
-        while (pos != -1) {
-            positions.push(pos)
-            pos = TXT.indexOf(word, pos + word.length)
-        }
-
-        return positions
+    const positions = []
+    let pos = TXT.indexOf(word)
+    while (pos != -1) {
+        positions.push(pos)
+        pos = TXT.indexOf(word, pos + word.length)
     }
+
+    return positions
 }
 
 export function getWordCount(word: string, TXT: string) {
@@ -32,7 +31,12 @@ export function getClasses(classes: object) {
     return className && { className }
 }
 
-export function getStyle(TXT: string, word: string, color: string) {
+export function getStyle(
+    TXT: string,
+    word: string,
+    color: string,
+    isSelect: boolean
+) {
     const count = getWordCount(word, TXT)
     if (count === 0 || word === '' || word === ' ') return
 
@@ -77,7 +81,9 @@ background: linear-gradient(#000,#000);
   background-size: 100% 2px;
   background-repeat: no-repeat;
   background-position: 0px 50%;`
-            : `cursor: se-resize`
+            : `cursor: var(--clickType);${
+                  isSelect ? 'background:#eae!important;' : ''
+              }`
 
         const style = `
 {

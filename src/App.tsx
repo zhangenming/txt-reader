@@ -328,13 +328,21 @@ function App() {
         }
 
         selectSET('')
-        selectArrSET([...selectArr, selectWrap])
+        selectArrSET(
+            [...selectArr, selectWrap].sort((l, r) =>
+                r.count != l.count ? r.count - l.count : r.i - l.i
+            )
+        )
 
         selectionObj.removeAllRanges()
     }
 
     function deleteHandle(key: string) {
-        selectArrSET([...selectArr.filter(e => e.key !== key)])
+        selectArrSET(
+            [...selectArr.filter(e => e.key !== key)].sort((l, r) =>
+                r.count != l.count ? r.count - l.count : r.i - l.i
+            )
+        )
     }
 }
 

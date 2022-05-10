@@ -30,9 +30,6 @@ export default function Control({
 }) {
     return (
         <div className='control'>
-            {/* <button onClick={() => setX(X + 1)}>{X}</button> */}
-            {/* <p>行长度:{columnCount}</p> */}
-
             <div className='count'>
                 <button onClick={addHandle}>add</button>
                 <span
@@ -54,20 +51,19 @@ export default function Control({
                 onChange={e => selectSET(e.target.value)}
             />
             <div>
-                {selectArr
-                    .sort((l, r) => r.count - l.count)
-                    .map(({ i, key, count }, idx) => (
-                        <div className='selectItem' key={i} slot={key}>
-                            <span
-                                children={idx}
-                                onClick={() => deleteHandle(key)}
-                            />
-                            <span
-                                className='key'
-                                children={key}
-                                onClick={() => {
-                                    // react 会不会每个span都新建了一个函数事件
-                                    selectArrSET([
+                {selectArr.map(({ i, key, count }, idx) => (
+                    <div className='selectItem' key={key} slot={key}>
+                        <span
+                            children={idx}
+                            onClick={() => deleteHandle(key)}
+                        />
+                        <span
+                            className='key'
+                            children={key}
+                            onClick={() => {
+                                // react 会不会每个span都新建了一个函数事件
+                                selectArrSET(
+                                    [
                                         ...selectArr.filter(e => e.i !== i),
                                         {
                                             i,
@@ -75,22 +71,27 @@ export default function Control({
                                             count,
                                             color: getColor(),
                                         },
-                                    ])
-                                }}
-                            />
-                            <span
-                                className='count'
-                                children={count}
-                                onClick={() => {
-                                    const i = TXT.indexOf(key)
-                                    gridRef.current.scrollToItem({
-                                        align: 'center',
-                                        rowIndex: i2rc(i, lineSize).r,
-                                    })
-                                }}
-                            />
-                        </div>
-                    ))}
+                                    ].sort((l, r) =>
+                                        r.count != l.count
+                                            ? r.count - l.count
+                                            : r.i - l.i
+                                    )
+                                )
+                            }}
+                        />
+                        <span
+                            className='count'
+                            children={count}
+                            onClick={() => {
+                                const i = TXT.indexOf(key)
+                                gridRef.current.scrollToItem({
+                                    align: 'center',
+                                    rowIndex: i2rc(i, lineSize).r,
+                                })
+                            }}
+                        />
+                    </div>
+                ))}
             </div>
         </div>
     )

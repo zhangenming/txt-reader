@@ -9,6 +9,7 @@ import txt from '../txt/天道'
 export function useSize(itemSize: number) {
     const [Width, setWidth] = useState(innerWidth - 100)
     const [Height, setHeight] = useState(innerHeight)
+
     useEffect(() => {
         window.onresize = function () {
             setWidth(innerWidth - 100)
@@ -18,11 +19,13 @@ export function useSize(itemSize: number) {
 
     return [Width, Height, Math.floor(Width / itemSize) - 1]
 }
+
 export function useTxt(colCount: number) {
     const [TXT, setTXT] = useState(setFunc)
     useEffect(() => {
         setTXT(setFunc)
     }, [colCount])
+
     return TXT
 
     function setFunc() {
@@ -39,6 +42,7 @@ export function useTxt(colCount: number) {
         return e + ' '.repeat(colCount + line2rest) // 完整第一行 + 第二行空格剩余补齐
     }
 }
+
 export function useSpk(TXT: string) {
     const [SPK, setSPK] = useState<boolean[]>([])
 
@@ -57,5 +61,6 @@ export function useSpk(TXT: string) {
         })
         setSPK(arr)
     }, [TXT])
+
     return SPK
 }

@@ -214,18 +214,18 @@ background: linear-gradient(#000,#000);
         const leftDom = `[slot='${word}']`
 
         /* left ui */
-        const type1 = `${leftDom}\n{color:${color}; }\n\n`
+        const type1 = `${leftDom}:hover\n{color:${color};background:cornflowerblue }\n\n`
 
         /* hover: left ui */
-        const type2 = `${leftDom}:has(.item:hover),\n`
+        const type2 = `${leftDom}:has(.count:hover),\n`
 
         /* hover: left ui 联动 right reader */
-        const type3 = `:has(${leftDom} .item:hover) :is(${HAS}),\n`
+        const type3 = `:has(${leftDom} .count:hover) :is(${HAS}),\n`
 
         /* hover: right reader 联动left ui */
         const type4 = `:has(${HOVER}) ${leftDom}`
 
-        return type2 + type3 + type4 + hoverStyle
+        return type1 + type2 + type3 + type4 + hoverStyle
     }
 
     // :is([洛]+[萨]+[科]+[技]:hover, [洛]+[萨]+[科]:hover+[技], [洛]+[萨]:hover+[科]+[技], [洛]:hover+[萨]+[科]+[技])

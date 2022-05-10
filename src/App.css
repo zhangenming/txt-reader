@@ -54,19 +54,20 @@ body {
 }
 
 /* ITEM class */
-span.isTarget{
+span.isTarget {
     background: red;
     filter: hue-rotate(90deg);
     border-top: 3px solid;
     border-bottom: 3px solid;
 }
-:not(.isTarget) + .isTarget{
+:not(.isTarget) + .isTarget {
     border-left: 3px solid;
 }
-.isTarget:has(+:not(.isTarget)){
+.isTarget:has(+ :not(.isTarget)) {
     border-right: 3px solid;
 }
-span.speaking {
+span.speaking,
+[data-e='：']:has(+ :not([data-e='“'])) {
     background: #6666ee99;
 }
 .isOdd {
@@ -99,13 +100,16 @@ span[data-e='”'] {
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    flex-shrink: 0;
 }
-BACKUP{
-    color:rgb(249,181,42);
+.selectItem span.key {
+    flex-shrink: 1;
+}
+BACKUP {
+    color: rgb(249, 181, 42);
     /* 299e81 */
 }
 
-
-:has([肖]:hover+[亚]+[文]) [肖]+[亚]+[文]{
+:has([肖]:hover + [亚] + [文]) [肖] + [亚] + [文] {
     /* background: red; */
 }

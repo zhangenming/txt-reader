@@ -6,10 +6,10 @@ export type item = {
     count: number
 }
 export default function Control({
-    setSelect,
-    setSelectArr,
     select,
+    selectSET,
     selectArr,
+    selectArrSET,
     selectWrap,
     gridRef,
     TXT,
@@ -17,10 +17,10 @@ export default function Control({
     addHandle,
     deleteHandle,
 }: {
-    setSelect: React.Dispatch<React.SetStateAction<string>>
-    setSelectArr: React.Dispatch<React.SetStateAction<item[]>>
     select: string
+    selectSET: React.Dispatch<React.SetStateAction<string>>
     selectArr: item[]
+    selectArrSET: React.Dispatch<React.SetStateAction<item[]>>
     selectWrap: item
     gridRef: any
     TXT: string
@@ -29,24 +29,29 @@ export default function Control({
     deleteHandle(key: string): void
 }) {
     return (
-        <div
-            className='control'
-            onKeyDown={e => console.log(2, e)}
-            onKeyUp={e => console.log(3, e)}
-            tabIndex={0}
-        >
+        <div className='control'>
             {/* <button onClick={() => setX(X + 1)}>{X}</button> */}
             {/* <p>行长度:{columnCount}</p> */}
 
             <div className='count'>
                 <button onClick={addHandle}>add</button>
-                {selectWrap.count}
+                <span
+                    className='item'
+                    children={selectWrap.count}
+                    onClick={() => {
+                        const i = TXT.indexOf(selectWrap.key)
+                        gridRef.current.scrollToItem({
+                            align: 'center',
+                            rowIndex: i2rc(i, lineSize).r,
+                        })
+                    }}
+                />
             </div>
 
             <input
                 type='text'
                 value={select}
-                onChange={e => setSelect(e.target.value)}
+                onChange={e => selectSET(e.target.value)}
             />
             <div>
                 {selectArr
@@ -58,17 +63,23 @@ export default function Control({
                                 onClick={() => deleteHandle(key)}
                             />
                             <span
+                                className='key'
                                 children={key}
                                 onClick={() => {
                                     // react 会不会每个span都新建了一个函数事件
-                                    setSelectArr([
-                                        ...selectArr.filter(ee => ee.i !== i),
-                                        { i, key, count, color: getColor() },
+                                    selectArrSET([
+                                        ...selectArr.filter(e => e.i !== i),
+                                        {
+                                            i,
+                                            key,
+                                            count,
+                                            color: getColor(),
+                                        },
                                     ])
                                 }}
                             />
                             <span
-                                className='item'
+                                className='count'
                                 children={count}
                                 onClick={() => {
                                     const i = TXT.indexOf(key)

@@ -59,7 +59,7 @@ const Cells = (
     })
 
     const props = (function gene() {
-        const wordType = getWordType(word)
+        const wordType = STR.includes(word)
         return {
             ...classes,
 
@@ -77,10 +77,6 @@ const Cells = (
             'data-i': idx, //
             [wordType ? 'data-e' : word]: wordType ? word : '', // Recalculate Style 性能提高了非常多
             // ...(wordType ? { [word.toLowerCase()]: '' } : { word }),
-        }
-
-        function getWordType(word: string) {
-            return STR.includes(word)
         }
     })()
 
@@ -115,7 +111,7 @@ function App() {
 
     const [isTargetArr, isTargetArrSET] = useState<number[]>([])
 
-    const [select, setSelect] = useState('')
+    const [select, selectSET] = useState('')
     const selectWrap = {
         key: select,
         color: 'black',
@@ -123,7 +119,7 @@ function App() {
         count: getWordCount(select, TXT),
     }
 
-    const [selectArr, setSelectArr] = useState<item[]>(
+    const [selectArr, selectArrSET] = useState<item[]>(
         JSON.parse(localStorage.getItem('selectArr') || '[]')
     )
 
@@ -188,10 +184,10 @@ function App() {
         <>
             <Control
                 {...{
-                    setSelect,
-                    setSelectArr,
                     select,
+                    selectSET,
                     selectArr,
+                    selectArrSET,
                     selectWrap,
                     selectionObj,
                     gridRef,
@@ -270,7 +266,7 @@ function App() {
                 return
             }
 
-            setSelect(selectionStr.replaceAll(' ', ''))
+            selectSET(selectionStr.replaceAll(' ', ''))
             return
         }
 
@@ -326,19 +322,19 @@ function App() {
 
     function addHandle() {
         if (selectArr.find(e => e.key === selectWrap.key)) {
-            setSelect('')
+            selectSET('')
             selectionObj.removeAllRanges()
             return
         }
 
-        setSelect('')
-        setSelectArr([...selectArr, selectWrap])
+        selectSET('')
+        selectArrSET([...selectArr, selectWrap])
 
         selectionObj.removeAllRanges()
     }
 
     function deleteHandle(key: string) {
-        setSelectArr([...selectArr.filter(e => e.key !== key)])
+        selectArrSET([...selectArr.filter(e => e.key !== key)])
     }
 }
 

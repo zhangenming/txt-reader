@@ -5,6 +5,7 @@ export type item = {
     i: number
     count: number
 }
+
 export default function Control({
     select,
     selectSET,
@@ -14,8 +15,8 @@ export default function Control({
     gridRef,
     TXT,
     lineSize,
-    addHandle,
     deleteHandle,
+    currentLine,
 }: {
     select: string
     selectSET: React.Dispatch<React.SetStateAction<string>>
@@ -25,13 +26,13 @@ export default function Control({
     gridRef: any
     TXT: string
     lineSize: number
-    addHandle: () => void
     deleteHandle(key: string): void
+    currentLine: number
 }) {
     return (
         <div className='control'>
+            <div>{currentLine}</div>
             <div className='count'>
-                <button onClick={addHandle}>add</button>
                 <span
                     className='item'
                     children={selectWrap.count}
@@ -48,7 +49,10 @@ export default function Control({
             <input
                 type='text'
                 value={select}
-                onChange={e => selectSET(e.target.value)}
+                onChange={e => {
+                    selectSET(e.target.value)
+                }}
+                onKeyDown={e => e.stopPropagation()}
             />
             <div>
                 {selectArr.map(({ i, key, count }, idx) => (

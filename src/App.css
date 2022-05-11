@@ -1,9 +1,11 @@
 body {
     margin: 0;
 }
-#root {
+.App {
     display: flex;
-    flex-direction: row;
+    height: 100vh;
+    background: steelblue;
+    background: #7171e2;
 }
 .control {
     display: flex;
@@ -22,24 +24,47 @@ body {
     display: flex;
     justify-content: flex-start;
 }
+.reader {
+    display: flex;
+    align-items: center;
+}
+.reader .reader-helper {
+    position: absolute;
+    z-index: 1;
+    transition-property: top, background-color, height;
+    transition-duration: 0.3s;
+    height: calc(var(--SIZE) * 1px);
+    width: calc(var(--SIZE) * 1px);
+    top: calc(var(--SIZE) * (var(--DIFF) + 1) * 1px);
+    background: cornflowerblue;
 
-.wrap > div {
+    height: 0; /* 需要设置0 才能响应transition */
+    width: auto;
+    left: 1em;
+    right: 1.5em;
+}
+.reader .reader-helper.active {
+    width: calc(var(--SIZE) * 1px);
+}
+.reader .wrap {
     /* react-window */
     position: relative;
     overflow: auto;
     will-change: transform;
     direction: ltr;
     /* react-window */
-    background: cornflowerblue;
+    /* background: cornflowerblue; */
     color: aliceblue;
     font-size: 25px;
     font-family: cursive;
 }
-.wrap > div > div {
+.reader .wrap > div > div {
     margin: 0 auto;
     position: relative;
+    /* 遮挡加载时露出底色 */
+    /* background: cornflowerblue;  */
 }
-.wrap span {
+.reader span {
     /* react-window */
     position: absolute;
     width: 30px;
@@ -48,12 +73,24 @@ body {
     display: flex;
     justify-content: space-evenly;
     align-items: center;
-    box-sizing: border-box; /*否则last会在speak状态下失效*/
+    box-sizing: border-box; /*否则last会在speaking状态下失效*/
     background: cornflowerblue; /* for filter */
     transition: color 0.1s, background-color 0.2s;
 }
 
 /* ITEM class */
+
+/* ITEM class */
+
+/* ITEM class */
+
+/* ITEM class */
+
+span.speaking,
+[data-e='：']:has(+ :not([data-e='“'])) {
+    background: #7171e2;
+}
+
 span.isTarget {
     background: red;
     filter: hue-rotate(90deg);
@@ -65,10 +102,6 @@ span.isTarget {
 }
 .isTarget:has(+ :not(.isTarget)) {
     border-right: 3px solid;
-}
-span.speaking,
-[data-e='：']:has(+ :not([data-e='“'])) {
-    background: #6666ee99;
 }
 .isOdd {
     background: yellowgreen;
@@ -84,6 +117,11 @@ span[data-e='”'] {
 }
 /* ITEM class */
 
+/* ITEM class */
+
+/* ITEM class */
+
+/* ITEM class */
 ::selection {
     background-color: #9acd3266;
 }
@@ -113,3 +151,5 @@ BACKUP {
 :has([肖]:hover + [亚] + [文]) [肖] + [亚] + [文] {
     /* background: red; */
 }
+
+/* // queryDomAll(":has(~:nth-child(150)):not(:has(~:nth-child(100)))") */

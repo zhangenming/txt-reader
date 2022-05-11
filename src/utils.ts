@@ -258,10 +258,10 @@ background: linear-gradient(#000,#000);
 export function rc2i(r: number, c: number, lineSize: number) {
     return r * lineSize + c
 }
-export function i2rc(i: number | string, lineSize: number) {
+export function i2rc(i: number, lineSize: number) {
     return {
-        r: Math.floor(Number(i) / lineSize),
-        c: Number(i) % lineSize,
+        r: Math.floor(i / lineSize),
+        c: i % lineSize,
     }
 }
 
@@ -272,4 +272,8 @@ export function getColor() {
         Math.floor(Math.random() * 256),
     ]
     return `rgb(${l},${g},${b})`
+}
+
+export function queryDom(selector: string) {
+    return document.querySelector<HTMLElement>(selector)!
 }

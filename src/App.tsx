@@ -9,26 +9,32 @@ import {
     useCallback,
     KeyboardEvent,
 } from 'react'
-import { areEqual, FixedSizeGrid as Grid } from 'react-window'
+import {
+    areEqual,
+    FixedSizeGrid as Grid,
+    GridOnScrollProps,
+} from 'react-window'
 import {
     getClasses,
     getStyle,
     getWordCount,
     getWordPosition,
     i2rc,
+    queryDom,
     rc2i,
 } from './utils'
-import { useSize, useSpk, useTxt } from './hook'
+import { useKey, useScrollHandle, useSize, useSpk, useTxt } from './hook'
 import Control from './comp/control'
 
 const SIZE = 30
 const OVERSCAN = 2 //15
+const DIFF = 3
 setInterval(() => {
-    // console.log(document.querySelector('.wrap>div>div').childElementCount)
+    // console.log(queryDom('.wrap>div>div').childElementCount)
 }, 1222)
 
-const warning = `×─―—-–~≈*“”　 ·？?,，.。！％%《》‘'’⋯…．、[]［］【；：（）()/／@１２３４５６７８９０1234567890℃;`
-const error = `ｉ＝ＢＣＦＫＶＷＱＩＹＬＡＭＤＴＨＮＳ`
+const warning = `©×─―－—-–~≈=*“”　  ·？?,，.。°！％%《》‘'’⋯…．、[]［］【；：（）()/／@１２３４５６７８９０1234567890℃;`
+const error = `＂ℓａｄｅｇｈｉｋｌｍｎｕｏｐｒｓｖｗｙ＇＝ＢＣＦＧＫＶＷＱＩＹＬＡＭＤＴＨＮＯＰＳＺｚ`
 const STR = [...warning, ...error]
 
 const selectionObj = getSelection()!
@@ -75,39 +81,30 @@ const Cells = (
             // key: idx, // ?
 
             'data-i': idx, //
-            [wordType ? 'data-e' : word]: wordType ? word : '', // Recalculate Style 性能提高了非常多
+            [wordType ? 'data-e' : word.toLowerCase()]: wordType ? word : '', // Recalculate Style 性能提高了非常多
             // ...(wordType ? { [word.toLowerCase()]: '' } : { word }),
         }
     })()
 
     // idx < 100 && console.timeEnd()
     return <span {...props} />
-
-    function getStyles(word: string) {
-        const style1 = word === '“' || word === '('
-        const style2 = word === '”' || word === ')'
-        const style3 = word === ' ' || word === '　'
-
-        return {
-            // ...(style1 && {
-            //     textAlign: 'right',
-            // }),
-            // ...(style2 && {
-            //     textAlign: 'left',
-            // }),
-            ...(style3 &&
-                {
-                    // fontSize: '0',
-                    // 'user-select': 'none',
-                }),
-        }
-    }
 }
 
 function App() {
-    const [readerWidth, readerHeight, lineSize] = useSize(SIZE)
-    const TXT = useTxt(lineSize)
+    const [readerWidth, readerHeight, lineSize, heightLineCount] = useSize(SIZE)
+    const [TXT, TXTkey] = useTxt(lineSize)
     const isSpkArr = useSpk(TXT)
+    const [scrollHandle, currentLine] = useScrollHandle(lineSize)
+    const gridRef: any = createRef()
+    const [keyDownHandle, keyUpHandle, clickType] = useKey(
+        OVERSCAN,
+        DIFF,
+        lineSize,
+        currentLine,
+        heightLineCount,
+        SIZE,
+        gridRef
+    )
 
     const [isTargetArr, isTargetArrSET] = useState<number[]>([])
 
@@ -120,34 +117,29 @@ function App() {
     }
 
     const [selectArr, selectArrSET] = useState<item[]>(
-        JSON.parse(localStorage.getItem('selectArr') || '[]')
+        JSON.parse(localStorage.getItem(TXTkey + 'selectArr') || '[]')
     )
 
-    const gridRef: any = createRef()
     useEffect(() => {
         gridRef.current.scrollToItem({
-            align: 'center',
-            rowIndex: Number(localStorage.getItem('idx')) + 17 + OVERSCAN - 1, // 33 适应屏幕高度行数
+            align: 'start',
+            rowIndex: Number(localStorage.getItem(TXTkey + 'idx')) + OVERSCAN,
         })
+        // queryDom<HTMLElement>('.wrap')!.style.display = 'block' // todo
     }, [])
-
-    const [isMetaDown, isMetaDownSet] = useState(false)
-    const [isAltDown, isAltDownSet] = useState(false)
-    const clickType = (() => {
-        if (isMetaDown && isAltDown) return 's-resize'
-        if (isMetaDown) return 'w-resize'
-        if (isAltDown) return 'n-resize'
-        return 'e-resize'
-    })()
 
     useEffect(() => {
         const timer = setInterval(() => {
-            const idx = document.querySelector<HTMLElement>(
-                '.wrap span:first-child'
-            )!.dataset.i!
-            localStorage.setItem('idx', i2rc(idx, lineSize).r + '')
+            const idx = queryDom('.wrap span:first-child').dataset.i
+            localStorage.setItem(
+                TXTkey + 'idx',
+                i2rc(Number(idx), lineSize).r + ''
+            )
 
-            localStorage.setItem('selectArr', JSON.stringify(selectArr))
+            localStorage.setItem(
+                TXTkey + 'selectArr',
+                JSON.stringify(selectArr)
+            )
         }, 1000)
         return () => clearInterval(timer)
     }, [selectArr])
@@ -158,10 +150,9 @@ function App() {
     const children = useMemo(() => {
         return memo(_children, areEqual)
     }, [lineSize, isSpkArr, isTargetArr])
-    const G = () => (
+    const Reader = (
         <Grid
-            style={{ '--clickType': clickType } as any}
-            // onScroll={e => console.log(3)}
+            onScroll={scrollHandle}
             // item counts
             columnCount={lineSize}
             rowCount={TXT.length / lineSize}
@@ -180,8 +171,26 @@ function App() {
         />
     )
 
+    // const [int, intSET] = useState(1)
+    // useEffect(() => {
+    //     const x = setInterval(() => {
+    //         intSET(int => int + 1)
+    //     }, 1000)
+    //     return () => clearInterval(x)
+    // }, [])
+
     return (
-        <>
+        <div
+            onKeyDown={keyDownHandle}
+            onKeyUp={keyUpHandle}
+            tabIndex={0}
+            className='App'
+            style={
+                {
+                    '--clickType': clickType,
+                } as any
+            }
+        >
             <Control
                 {...{
                     select,
@@ -193,19 +202,25 @@ function App() {
                     gridRef,
                     TXT,
                     lineSize,
-                    addHandle,
                     deleteHandle,
+                    currentLine,
                 }}
             />
-            <div
-                className='wrap'
-                onClick={GoToNextItem}
-                onKeyDown={keyDownHandle}
-                onKeyUp={keyUpHandle}
-                tabIndex={0}
-            >
-                {G()}
-                {/* <G /> */}
+            <div className='reader' onClick={GoToNextItemHandle}>
+                <div className='wrap'>
+                    <div
+                        className='reader-helper'
+                        style={
+                            {
+                                '--SIZE': SIZE,
+                                '--DIFF': DIFF,
+                            } as any
+                        }
+                    ></div>
+                    {Reader}
+                    {/* {Reader()} */}
+                    {/* <Reader /> */}
+                </div>
             </div>
             <div className='styles'>
                 {/* <style>
@@ -231,27 +246,10 @@ function App() {
                     </style>
                 ))}
             </div>
-        </>
+        </div>
     )
 
-    function keyDownHandle(event: KeyboardEvent) {
-        if (event.metaKey) {
-            isMetaDownSet(true)
-        }
-        if (event.altKey) {
-            isAltDownSet(true)
-        }
-    }
-    function keyUpHandle(event: KeyboardEvent) {
-        if (event.key === 'Meta') {
-            isMetaDownSet(false)
-        }
-        if (event.key === 'Alt') {
-            isAltDownSet(false)
-        }
-    }
-
-    function GoToNextItem({ target, metaKey, altKey }: React.MouseEvent) {
+    function GoToNextItemHandle({ target, metaKey, altKey }: React.MouseEvent) {
         const selectionStr = selectionObj + ''
 
         if (selectionStr) {

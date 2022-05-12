@@ -1,9 +1,16 @@
+const getAllWordPositionCache: any = {}
 function getAllWordPosition(word: string, TXT: string) {
-    return getWordPosition(word, TXT).flatMap((n: number) =>
-        Array(word.length)
-            .fill(0)
-            .map((_, i) => n + i)
-    )
+    const key = word + TXT.length
+
+    if (!getAllWordPositionCache[key]) {
+        getAllWordPositionCache[key] = getWordPosition(word, TXT).flatMap(
+            (n: number) =>
+                Array(word.length)
+                    .fill(0)
+                    .map((_, i) => n + i)
+        )
+    }
+    return getAllWordPositionCache[key]
 }
 // 查找一个字符串中的所有子串的位置
 export function getWordPosition(word: string, TXT: string) {
@@ -19,8 +26,15 @@ export function getWordPosition(word: string, TXT: string) {
     return positions
 }
 
+const getWordCountCache: any = {}
 export function getWordCount(word: string, TXT: string) {
-    return word === '' ? TXT.length : TXT.split(word).length - 1
+    const key = word + TXT.length
+
+    if (!getWordCountCache[key]) {
+        getWordCountCache[key] =
+            word === '' ? TXT.length : TXT.split(word).length - 1
+    }
+    return getWordCountCache[key]
 }
 
 export function getClasses(classes: object) {
@@ -44,8 +58,12 @@ export function getStyle(
 
     const wordLen = word.length
 
-    const hoverStyle =
-        '\n{background:bisque; color:forestgreen;/*filter: brightness(0.8);*/}'
+    const hoverStyle = `\n{
+        background:bisque; 
+        color:forestgreen;
+        box-shadow: 0px 3px 0px red, 0px -3px 0px red;
+        z-index: 2;
+    /*filter: brightness(0.8);*/}`
 
     const base = word
         .split('')
@@ -53,8 +71,7 @@ export function getStyle(
         .slice(0, -1) //去掉末尾' +'
 
     const HOVER = doHover(base).join(', ').replaceAll(':has()', '')
-    const _HAS = doHas(base)
-    const HAS = _HAS.join(', ').replaceAll(':has()', '')
+    const HAS = doHas(base).join(', ').replaceAll(':has()', '')
 
     /* return后 有个空格 必要 不然\n失效; */
     return `
@@ -93,7 +110,9 @@ background: linear-gradient(#000,#000);
 }`
 
         const selector = Array.from(word)
-            .map(word => `[${word}]`)
+            .map(word =>
+                isInvalidWord(word) ? `[data-invalid='${word}']` : `[${word}]`
+            )
             .map((_, i, arr) =>
                 arr.reduce((all, item, j) => {
                     const q = j === i + 1 ? ':has(+' : '+'
@@ -151,63 +170,7 @@ background: linear-gradient(#000,#000);
     function getCss3() {
         if (justOne) return '/* 只有一个没必要显示 */'
 
-        const selector = type1() + ',\n\n' + type3() + ',\n\n' + type9()
-
-        return selector + hoverStyle // 最右边的has不必要
-
-        function type1() {
-            // self 4 x 4
-            const withHover = _HAS.map(e => doHover(e))
-            const rs = withHover.flat().join(',\n')
-
-            return rs.replaceAll(':has()', '')
-            // [洛]+[萨]+[科]+[技]:hover:has(),
-            // [洛]+[萨]+[科]:hover+[技]:has(),
-            // [洛]+[萨]:hover+[科]+[技]:has(),
-            // [洛]:hover+[萨]+[科]+[技]:has(),
-            // [洛]+[萨]+[科]:has(+[技]:hover),
-            // [洛]+[萨]+[科]:hover:has(+[技]),
-            // [洛]+[萨]:hover+[科]:has(+[技]),
-            // [洛]:hover+[萨]+[科]:has(+[技]),
-            // [洛]+[萨]:has(+[科]+[技]:hover),
-            // [洛]+[萨]:has(+[科]:hover+[技]),
-            // [洛]+[萨]:hover:has(+[科]+[技]),
-            // [洛]:hover+[萨]:has(+[科]+[技]),
-            // [洛]:has(+[萨]+[科]+[技]:hover),
-            // [洛]:has(+[萨]+[科]:hover+[技]),
-            // [洛]:has(+[萨]:hover+[科]+[技]),
-            // [洛]:hover:has(+[萨]+[科]+[技]),
-        }
-        function type3() {
-            // up 4 x 1
-            const R = ` ~ :is(${HOVER})`
-            const rs = _HAS.map(e => e.slice(0, -1) + R + ' )').join(',\n')
-
-            return rs
-            // [洛]+[萨]+[科]+[技]:has( ~ :is([洛]+[萨]+[科]+[技]:hover, [洛]+[萨]+[科]:hover+[技], [洛]+[萨]:hover+[科]+[技], [洛]:hover+[萨]+[科]+[技]) ),
-            // [洛]+[萨]+[科]:has(+[技] ~ :is([洛]+[萨]+[科]+[技]:hover, [洛]+[萨]+[科]:hover+[技], [洛]+[萨]:hover+[科]+[技], [洛]:hover+[萨]+[科]+[技]) ),
-            // [洛]+[萨]:has(+[科]+[技] ~ :is([洛]+[萨]+[科]+[技]:hover, [洛]+[萨]+[科]:hover+[技], [洛]+[萨]:hover+[科]+[技], [洛]:hover+[萨]+[科]+[技]) ),
-            // [洛]:has(+[萨]+[科]+[技] ~ :is([洛]+[萨]+[科]+[技]:hover, [洛]+[萨]+[科]:hover+[技], [洛]+[萨]:hover+[科]+[技], [洛]:hover+[萨]+[科]+[技]) ),
-        }
-        function type9() {
-            // down 1 x 1
-            const rs = `:is(${HOVER}) ~ :is(${HAS})`
-            return rs
-            // :is([洛]+[萨]+[科]+[技]:hover, [洛]+[萨]+[科]:hover+[技], [洛]+[萨]:hover+[科]+[技], [洛]:hover+[萨]+[科]+[技])
-            // ~ :is([洛]+[萨]+[科]+[技]:has(), [洛]+[萨]+[科]:has(+[技]), [洛]+[萨]:has(+[科]+[技]), [洛]:has(+[萨]+[科]+[技])){
-            //     background: red!important;
-            // }
-        }
-
-        //         const selector = targets.map(
-        //             x => `
-        // ${x}:has( ~${x}:hover),
-        // ${x}:hover,
-        // ${x}:hover ~${x}
-        // `
-        //         )
-
-        //         return selector + `{background: #000;}`
+        return `:has(${HOVER}) \n:is(${HAS})` + hoverStyle
     }
 
     function getCss4() {
@@ -276,4 +239,19 @@ export function getColor() {
 
 export function queryDom(selector: string) {
     return document.querySelector<HTMLElement>(selector)!
+}
+
+const warning =
+    'ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`' +
+    `©×─―—-–~≈÷=*“”　  ·?,.°%‘’⋯…()/@&;0123456789'`
+const error = `＂ℓａｄｅｇｈｉｋｌｍｎｕｏｐｒｓｖｗｙｚ：＇。．～，！？／（）《》〉「」［］【】；、﹢－＝ＢＣＦＧＫＶＷＱＩＹＬＡＭＤＴＨＮＯＰＳＺ１２３４５６７８９０％℃`
+const invalidSTR = [...warning, ...error]
+
+export function isInvalidWord(word: string) {
+    // if (/[0-9]/.test(word)) return 'data-num'
+    // if (/[a-z]/.test(word)) return 'data-lower'
+    // if (/[A-Z]/.test(word)) return 'data-upper'
+    // if (error.includes(word)) return 'data-error'
+    // if (warning.includes(word)) return 'data-warning'
+    return invalidSTR.includes(word)
 }

@@ -22,6 +22,7 @@ import {
     i2rc,
     queryDom,
     rc2i,
+    isInvalidWord,
 } from './utils'
 import { useKey, useScrollHandle, useSize, useSpk, useTxt } from './hook'
 import Control from './comp/control'
@@ -29,13 +30,6 @@ import Control from './comp/control'
 const SIZE = 30
 const OVERSCAN = 2 //15
 const DIFF = 3
-setInterval(() => {
-    // console.log(queryDom('.wrap>div>div').childElementCount)
-}, 1222)
-
-const warning = `©×─―－—-–~≈=*“”　  ·？?,，.。°！％%《》‘'’⋯…．、[]［］【；：（）()/／@１２３４５６７８９０1234567890℃;`
-const error = `＂ℓａｄｅｇｈｉｋｌｍｎｕｏｐｒｓｖｗｙ＇＝ＢＣＦＧＫＶＷＱＩＹＬＡＭＤＴＨＮＯＰＳＺｚ`
-const STR = [...warning, ...error]
 
 const selectionObj = getSelection()!
 
@@ -65,7 +59,6 @@ const Cells = (
     })
 
     const props = (function gene() {
-        const wordType = STR.includes(word)
         return {
             ...classes,
 
@@ -81,8 +74,8 @@ const Cells = (
             // key: idx, // ?
 
             'data-i': idx, //
-            [wordType ? 'data-e' : word.toLowerCase()]: wordType ? word : '', // Recalculate Style 性能提高了非常多
-            // ...(wordType ? { [word.toLowerCase()]: '' } : { word }),
+            // 'data-word': word, // 性能不好
+            [isInvalidWord(word) ? 'data-invalid' : word]: word, // Recalculate Style 性能提高了非常多
         }
     })()
 
@@ -90,12 +83,12 @@ const Cells = (
     return <span {...props} />
 }
 
+const gridRef: any = createRef()
 function App() {
     const [readerWidth, readerHeight, lineSize, heightLineCount] = useSize(SIZE)
     const [TXT, TXTkey] = useTxt(lineSize)
-    const isSpkArr = useSpk(TXT)
     const [scrollHandle, currentLine] = useScrollHandle(lineSize)
-    const gridRef: any = createRef()
+    const isSpkArr = useSpk(TXT)
     const [keyDownHandle, keyUpHandle, clickType] = useKey(
         OVERSCAN,
         DIFF,
@@ -114,6 +107,7 @@ function App() {
         color: 'black',
         i: Date.now(),
         count: getWordCount(select, TXT),
+        isPined: false,
     }
 
     const [selectArr, selectArrSET] = useState<item[]>(
@@ -204,6 +198,7 @@ function App() {
                     lineSize,
                     deleteHandle,
                     currentLine,
+                    TXTkey,
                 }}
             />
             <div className='reader' onClick={GoToNextItemHandle}>
@@ -240,9 +235,14 @@ function App() {
                     }
                 </style> */}
 
-                {[selectWrap, ...selectArr].map(({ key, color }) => (
+                {[selectWrap, ...selectArr].map(({ key, color, isPined }) => (
                     <style key={key} slot={key}>
-                        {getStyle(TXT, key, color, key === selectWrap.key)}
+                        {getStyle(
+                            TXT,
+                            key,
+                            color,
+                            isPined || key === selectWrap.key
+                        )}
                     </style>
                 ))}
             </div>

@@ -3,11 +3,17 @@ import { useEffect, useState } from 'react'
 // import txt from '../txt/三国演义'
 // import txt from '../txt/循环'
 // import txt from '../txt/白鹿原'
-// import txt from '../txt/人类大瘟疫'
+import txt from '../txt/人类大瘟疫'
 // import txt from '../txt/天道'
-import txt from '../txt/挽救计划'
+// import txt from '../txt/挽救计划'
+// import txt from '../txt/重生之超级战舰'
 import { i2rc, queryDom } from './utils'
 const { floor } = Math
+
+const _cache = txt
+    .replaceAll('\n\n', '\n  ')
+    .split('\n')
+    .filter(e => e)
 
 export function useSize(itemSize: number) {
     const [Width, setWidth] = useState(innerWidth - 100)
@@ -36,16 +42,10 @@ export function useTxt(colCount: number) {
         setTXT(setFunc)
     }, [colCount])
 
-    return [TXT, TXT.length] as [string, number]
+    return [TXT, txt.length] as [string, number]
 
     function setFunc() {
-        return txt
-            .replaceAll('\n\n', '\n')
-            .replaceAll('\n', '\n  ')
-            .split('\n')
-            .filter(e => e)
-            .map(setLineWithSomeSpace)
-            .join('')
+        return _cache.map(setLineWithSomeSpace).join('')
     }
     function setLineWithSomeSpace(e: string) {
         const line2rest = colCount - (e.length % colCount || colCount)
@@ -58,17 +58,18 @@ export function useSpk(TXT: string) {
 
     useEffect(() => {
         let isSpeaking = false
-        const arr = [...TXT].map(e => {
-            if (e === '“') {
+        const arr = []
+        for (let i = 0; i < TXT.length; i++) {
+            if (TXT[i] === '“') {
                 isSpeaking = true
-                return false
-            }
-            if (e === '”') {
+                arr.push(false)
+            } else if (TXT[i] === '”') {
                 isSpeaking = false
-                return false
+                arr.push(false)
+            } else {
+                arr.push(isSpeaking)
             }
-            return isSpeaking
-        })
+        }
         setSPK(arr)
     }, [TXT])
 
@@ -93,7 +94,7 @@ export function useScrollHandle(lineSize: number) {
         )
     }
 }
-
+let clear
 export function useKey(
     OVERSCAN: number,
     DIFF: number,
@@ -145,20 +146,25 @@ export function useKey(
         if (e.code === 'Space') {
             setTimeout(() => {
                 const x = (OVERSCAN + DIFF) * lineSize
-                const xx = `:nth-child(${x}) ~ :not([data-e=" "])` // magic
-                const target = queryDom(xx).dataset.i
-                const rc = i2rc(Number(target), lineSize)
-                const r = rc.r - currentLine - heightLineCount - OVERSCAN
-                const rs = (DIFF + r + 1) * SIZE + 'px'
+                const xx = `:nth-child(${x}) ~ :not([data-invalid=" "])` // magic
+                const target = Number(queryDom(xx).dataset.i)
+                const rc = i2rc(target, lineSize).r
+                const rs = DIFF + rc - currentLine - heightLineCount - OVERSCAN
 
                 const dom = queryDom('.reader-helper').style
-                dom.top = rs
+                dom.top = rs * SIZE + 'px'
+                dom.height = '30px'
+                dom.opacity = '0.5'
                 dom.background = 'yellowgreen'
-                dom.height = '5px'
 
-                setTimeout(() => {
-                    dom.background = 'cornflowerblue'
+                console.log(keyDownHandle.clear)
+
+                clearTimeout(keyDownHandle.clear)
+
+                keyDownHandle.clear = setTimeout(() => {
                     dom.height = '0'
+                    dom.opacity = '0'
+                    dom.background = 'cornflowerblue'
                 }, 1111)
             })
 

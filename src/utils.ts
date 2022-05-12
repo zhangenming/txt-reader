@@ -49,12 +49,43 @@ export function getStyle(
     TXT: string,
     word: string,
     color: string,
+    isPined: boolean,
     isSelect: boolean
 ) {
     const count = getWordCount(word, TXT)
     if (count === 0 || word === '' || word === ' ') return
 
     const justOne = count === 1
+
+    // 自动联想
+    word = (() => {
+        if (justOne) return word
+
+        const wordPosition = getWordPosition(word, TXT)
+
+        let left = 1
+        while (arrIsOne(wordPosition.map(getWordLeft))) {
+            word = getWordLeft(wordPosition[0]) + word
+            left++
+        }
+        let right = 1 + word.length - left
+        while (arrIsOne(wordPosition.map(getWordRight))) {
+            word = word + getWordRight(wordPosition[0])
+            right++
+        }
+
+        return word
+
+        function getWordLeft(idx: number) {
+            return TXT[idx - left]
+        }
+        function getWordRight(idx: number) {
+            return TXT[idx + right]
+        }
+        function arrIsOne(arr: string[]) {
+            return [...new Set(arr)].length === 1
+        }
+    })()
 
     const wordLen = word.length
 
@@ -67,7 +98,15 @@ export function getStyle(
 
     const base = word
         .split('')
-        .reduce((all, now) => all + `[${now}]+`, '')
+
+        .reduce(
+            (all, now) =>
+                all +
+                (isInvalidWord(now) ? `[data-invalid='${now}']` : `[${now}]`) +
+                '+',
+            ''
+        )
+
         .slice(0, -1) //去掉末尾' +'
 
     const HOVER = doHover(base).join(', ').replaceAll(':has()', '')
@@ -99,7 +138,7 @@ background: linear-gradient(#000,#000);
   background-repeat: no-repeat;
   background-position: 0px 50%;`
             : `cursor: var(--clickType);${
-                  isSelect ? 'background:#eae!important;' : ''
+                  isPined ? 'background:#eae!important;' : ''
               }`
 
         const style = `
@@ -128,10 +167,10 @@ background: linear-gradient(#000,#000);
     function getCss2() {
         if (justOne) return '/* 只有一个没必要显示 */'
 
-        const wordPosition = getAllWordPosition(word, TXT)
+        const allWordPosition = getAllWordPosition(word, TXT)
 
-        const [first, ...firstNext] = wordPosition.slice(0, wordLen)
-        const lastPriv = wordPosition.slice(wordPosition.length - wordLen)
+        const [first, ...firstNext] = allWordPosition.slice(0, wordLen)
+        const lastPriv = allWordPosition.slice(allWordPosition.length - wordLen)
         const last = lastPriv.pop()!
 
         return [
@@ -191,13 +230,13 @@ background: linear-gradient(#000,#000);
         return type1 + type2 + type3 + type4 + hoverStyle
     }
 
-    // :is([洛]+[萨]+[科]+[技]:hover, [洛]+[萨]+[科]:hover+[技], [洛]+[萨]:hover+[科]+[技], [洛]:hover+[萨]+[科]+[技])
+    // [ [洛]+[萨]+[科]+[技]:hover, [洛]+[萨]+[科]:hover+[技], [洛]+[萨]:hover+[科]+[技], [洛]:hover+[萨]+[科]+[技] ]
     function doHover(str: string) {
         return Array(wordLen) //1: word.length
             .fill(0)
             .map((_, index, arr) => {
                 let idx = 0
-                return str.replaceAll(/\[.\]/g, (e: any) => {
+                return str.replaceAll(/\[.*?\]/g, (e: any) => {
                     if (++idx === arr.length - index) {
                         return `${e}:hover`
                     }
@@ -205,15 +244,15 @@ background: linear-gradient(#000,#000);
                 })
             })
     }
-    // :is([洛]+[萨]+[科]+[技], [洛]+[萨]+[科]:has(+[技]), [洛]+[萨]:has(+[科]+[技]), [洛]:has(+[萨]+[科]+[技]))
+    // [ [洛]+[萨]+[科]+[技], [洛]+[萨]+[科]:has(+[技]), [洛]+[萨]:has(+[科]+[技]), [洛]:has(+[萨]+[科]+[技]) ]
     function doHas(base: string) {
         return Array(wordLen) //1: word.length
             .fill(0)
-            .map((_, index, arr) => {
-                const n = 3 + (arr.length - 1 - index) * 4 //var
+            .map((_, idx) => {
+                const n = (idx + 1) * (base.length / wordLen)
                 const L = base.slice(0, n)
                 const R = base.slice(n)
-                return L + ':has(' + R + ')'
+                return `${L}:has(${R})`
             })
     }
 }
@@ -243,7 +282,7 @@ export function queryDom(selector: string) {
 
 const warning =
     'ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`' +
-    `©×─―—-–~≈÷=*“”　  ·?,.°%‘’⋯…()/@&;0123456789'`
+    `©×─―—-–~≈÷=*“”　  ·?,.°%‘’⋯…()/@&;|0123456789'`
 const error = `＂ℓａｄｅｇｈｉｋｌｍｎｕｏｐｒｓｖｗｙｚ：＇。．～，！？／（）《》〉「」［］【】；、﹢－＝ＢＣＦＧＫＶＷＱＩＹＬＡＭＤＴＨＮＯＰＳＺ１２３４５６７８９０％℃`
 const invalidSTR = [...warning, ...error]
 

@@ -42,6 +42,23 @@ export function useTxt(colCount: number) {
         setTXT(setFunc)
     }, [colCount])
 
+    // Object.entries(
+    //     [...TXT].reduce((acc, cur, i) => {
+    //         const key = TXT.slice(i, i + 5)
+
+    //         if (
+    //             [...key].some(k =>
+    //                 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.includes(k.toLocaleUpperCase())
+    //             )
+    //         )
+    //             return acc
+
+    //         if (!acc[key]) acc[key] = 1
+    //         acc[key]++
+    //         return acc
+    //     }, {})
+    // ).sort((q, w) => w[1] - q[1])
+
     return [TXT, txt.length] as [string, number]
 
     function setFunc() {
@@ -94,7 +111,8 @@ export function useScrollHandle(lineSize: number) {
         )
     }
 }
-let clear
+
+let clear: number
 export function useKey(
     OVERSCAN: number,
     DIFF: number,
@@ -157,11 +175,11 @@ export function useKey(
                 dom.opacity = '0.5'
                 dom.background = 'yellowgreen'
 
-                console.log(keyDownHandle.clear)
+                // console.log(clear) // react
 
-                clearTimeout(keyDownHandle.clear)
+                clearTimeout(clear)
 
-                keyDownHandle.clear = setTimeout(() => {
+                clear = setTimeout(() => {
                     dom.height = '0'
                     dom.opacity = '0'
                     dom.background = 'cornflowerblue'

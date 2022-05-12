@@ -235,16 +235,19 @@ function App() {
                     }
                 </style> */}
 
-                {[selectWrap, ...selectArr].map(({ key, color, isPined }) => (
-                    <style key={key} slot={key}>
-                        {getStyle(
-                            TXT,
-                            key,
-                            color,
-                            isPined || key === selectWrap.key
-                        )}
-                    </style>
-                ))}
+                {[selectWrap, ...selectArr].map(
+                    ({ key, color, isPined }, idx) => (
+                        <style key={key} slot={key}>
+                            {getStyle(
+                                TXT,
+                                key,
+                                color,
+                                isPined || key === selectWrap.key,
+                                idx === 0
+                            )}
+                        </style>
+                    )
+                )}
             </div>
         </div>
     )

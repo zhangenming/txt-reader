@@ -24,7 +24,7 @@ import {
     rc2i,
     isInvalidWord,
 } from './utils'
-import { useKey, useScrollHandle, useSize, useSpk, useTxt } from './hook'
+import { useKey, useScrollHandle, useSize, useTxt } from './hook'
 import Control from './comp/control'
 
 const SIZE = 30
@@ -43,7 +43,6 @@ type props = {
 const Cells = (
     lineSize: number,
     TXT: string,
-    isSpkArr: boolean[],
     isTargetArr: number[],
     { columnIndex, rowIndex, style, isScrolling }: props
 ) => {
@@ -52,7 +51,9 @@ const Cells = (
     const word = TXT[idx]
 
     const classes = getClasses({
-        speaking: isSpkArr[idx],
+        speaking: (function test() {
+            return TXT.indexOf('“', idx) > TXT.indexOf('”', idx) && word !== '”'
+        })(),
         isTarget: nextDomIdx.includes(idx),
         // isTarget: isTargetArr.includes(idx),
         // isOdd: rowIndex % 2,
@@ -88,7 +89,6 @@ function App() {
     const [readerWidth, readerHeight, lineSize, heightLineCount] = useSize(SIZE)
     const [TXT, TXTkey] = useTxt(lineSize)
     const [scrollHandle, currentLine] = useScrollHandle(lineSize)
-    const isSpkArr = useSpk(TXT)
     const [keyDownHandle, keyUpHandle, clickType] = useKey(
         OVERSCAN,
         DIFF,
@@ -139,11 +139,11 @@ function App() {
     }, [selectArr])
 
     const _children = (props: props) => {
-        return Cells(lineSize, TXT, isSpkArr, isTargetArr, props)
+        return Cells(lineSize, TXT, isTargetArr, props)
     }
     const children = useMemo(() => {
         return memo(_children, areEqual)
-    }, [lineSize, isSpkArr, isTargetArr])
+    }, [lineSize, isTargetArr])
     const Reader = (
         <Grid
             onScroll={scrollHandle}

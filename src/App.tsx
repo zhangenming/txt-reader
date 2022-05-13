@@ -31,6 +31,7 @@ const SIZE = 30
 const OVERSCAN = 2 //15
 const DIFF = 3
 
+const gridRef: any = createRef()
 const selectionObj = getSelection()!
 
 window.nextDomIdx = []
@@ -40,6 +41,9 @@ type props = {
     style: object
     isScrolling?: boolean
 }
+
+window.xx = 0
+let res = false
 const Cells = (
     lineSize: number,
     TXT: string,
@@ -52,7 +56,13 @@ const Cells = (
 
     const classes = getClasses({
         speaking: (function test() {
-            return TXT.indexOf('“', idx) > TXT.indexOf('”', idx) && word !== '”'
+            if (idx >= xx) {
+                const L = TXT.indexOf('“', idx)
+                const R = TXT.indexOf('”', idx)
+                xx = Math.min(L, R)
+                res = L > R && word != '”'
+            }
+            return res
         })(),
         isTarget: nextDomIdx.includes(idx),
         // isTarget: isTargetArr.includes(idx),
@@ -84,8 +94,8 @@ const Cells = (
     return <span {...props} />
 }
 
-const gridRef: any = createRef()
 function App() {
+    window.xx = 0
     const [readerWidth, readerHeight, lineSize, heightLineCount] = useSize(SIZE)
     const [TXT, TXTkey] = useTxt(lineSize)
     const [scrollHandle, currentLine] = useScrollHandle(lineSize)

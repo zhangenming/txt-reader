@@ -58,7 +58,7 @@ export function getStyle(
     const justOne = count === 1
 
     // 自动联想
-    word = (() => {
+    word = (function test2() {
         if (justOne) return word
 
         const wordPosition = getWordPosition(word, TXT)
@@ -137,9 +137,7 @@ background: linear-gradient(#000,#000);
   background-size: 100% 2px;
   background-repeat: no-repeat;
   background-position: 0px 50%;`
-            : `cursor: var(--clickType);${
-                  isPined ? 'background:#eae!important;' : ''
-              }`
+            : `cursor: var(--clickType);${isPined ? 'background:#eae' : ''}`
 
         const style = `
 {
@@ -282,8 +280,8 @@ export function queryDom(selector: string) {
 
 const warning =
     'ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`' +
-    `©×─―—-–~≈÷=*“”　  ·?,.°%‘’⋯…()/@&;|0123456789'`
-const error = `＂ℓａｄｅｇｈｉｋｌｍｎｕｏｐｒｓｖｗｙｚ：＇。．～，！？／（）《》〉「」［］【】；、﹢－＝ＢＣＦＧＫＶＷＱＩＹＬＡＭＤＴＨＮＯＰＳＺ１２３４５６７８９０％℃`
+    `©×─―—-–~≈÷=*“”"　  ·?,.°%‘’⋯…()/@&;|0123456789'`
+const error = `＂ℓａｄｅｇｈｉｋｌｍｎｕｏｐｒｓｖｗｙｚ：＇。．～，！？／（）《》〉「」［］【】；、﹢－＝ＢＣＦＧＪＫＶＷＱＩＹＬＡＭＤＴＨＮＯＰＳＺ１２３４５６７８９０％℃`
 const invalidSTR = [...warning, ...error]
 
 export function isInvalidWord(word: string) {

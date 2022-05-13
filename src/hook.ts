@@ -3,17 +3,28 @@ import { useEffect, useState } from 'react'
 // import txt from '../txt/三国演义'
 // import txt from '../txt/循环'
 // import txt from '../txt/白鹿原'
-import txt from '../txt/人类大瘟疫'
+// import txt from '../txt/人类大瘟疫'
 // import txt from '../txt/天道'
 // import txt from '../txt/挽救计划'
-// import txt from '../txt/重生之超级战舰'
+import txt from '../txt/重生之超级战舰'
+// import txt from '../txt/诡秘之主'
+// import txt from '../txt/活着'
+
 import { i2rc, queryDom } from './utils'
 const { floor } = Math
 
-const _cache = txt
-    .replaceAll('\n\n', '\n  ')
-    .split('\n')
-    .filter(e => e)
+const _cache = (_t => {
+    if (txt.length === 602843) {
+        _t = txt.replaceAll('\n', '\n\n  ')
+    }
+
+    //诡秘之主
+    if (txt.length === 5139010) {
+        _t = txt.replaceAll('\n\n', '\n').replaceAll('    ', '  ')
+    }
+
+    return _t.split('\n')
+})(txt)
 
 export function useSize(itemSize: number) {
     const [Width, setWidth] = useState(innerWidth - 100)

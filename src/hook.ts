@@ -47,6 +47,7 @@ export function useSize(itemSize: number) {
     ]
 }
 
+const useTxtCache: any = {}
 export function useTxt(colCount: number) {
     const [TXT, setTXT] = useState(setFunc)
     useEffect(() => {
@@ -73,7 +74,10 @@ export function useTxt(colCount: number) {
     return [TXT, txt.length] as [string, number]
 
     function setFunc() {
-        return _cache.map(setLineWithSomeSpace).join('')
+        if (!useTxtCache[colCount]) {
+            useTxtCache[colCount] = _cache.map(setLineWithSomeSpace).join('')
+        }
+        return useTxtCache[colCount]
     }
     function setLineWithSomeSpace(e: string) {
         const line2rest = colCount - (e.length % colCount || colCount)

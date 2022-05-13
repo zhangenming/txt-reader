@@ -13,7 +13,21 @@ function getAllWordPosition(word: string, TXT: string) {
     return getAllWordPositionCache[key]
 }
 // 查找一个字符串中的所有子串的位置
+const getWordPositionCache: any = {}
 export function getWordPosition(word: string, TXT: string) {
+    const key = word + TXT.length
+    if (!getWordPositionCache[key]) {
+        const positions = []
+        let pos = TXT.indexOf(word)
+        while (pos != -1) {
+            positions.push(pos)
+            pos = TXT.indexOf(word, pos + word.length)
+        }
+
+        getWordPositionCache[key] = positions
+    }
+    return getWordPositionCache[key]
+
     if (word === '') return Array(TXT.length)
 
     const positions = []

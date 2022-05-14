@@ -19,6 +19,8 @@ export default function Control({
     deleteHandle,
     currentLine,
     TXTkey,
+    jump,
+    heightLineCount,
 }: {
     select: string
     selectSET: React.Dispatch<React.SetStateAction<string>>
@@ -31,13 +33,17 @@ export default function Control({
     deleteHandle(key: string): void
     currentLine: number
     TXTkey: number
+    jump: (target: number) => void
+    heightLineCount: number
 }) {
     return (
         <div className='control'>
-            <div style={{ background: 'steelblue' }}>{TXTkey}</div>
-            <div style={{ background: 'steelblue' }}>{currentLine}</div>
-            <br />
+            <div>
+                {lineSize}-{currentLine}
+            </div>
+            <div>{TXTkey}</div>
 
+            <br />
             <div className='count'>
                 <span
                     className='item'
@@ -51,7 +57,6 @@ export default function Control({
                     }}
                 />
             </div>
-
             <input
                 type='text'
                 value={select}
@@ -67,7 +72,21 @@ export default function Control({
                         <div className='selectItem' key={key} slot={key}>
                             <span
                                 children={idx}
-                                onClick={() => deleteHandle(key)}
+                                onClick={() => {
+                                    selectArrSET(
+                                        [
+                                            ...selectArr.filter(e => e.i !== i),
+                                            {
+                                                ...item,
+                                                isPined: !isPined,
+                                            },
+                                        ].sort((l, r) =>
+                                            r.count != l.count
+                                                ? r.count - l.count
+                                                : r.i - l.i
+                                        )
+                                    )
+                                }}
                             />
                             <span
                                 className='key'
@@ -93,25 +112,10 @@ export default function Control({
                                 className='count'
                                 children={count}
                                 onClick={() => {
-                                    selectArrSET(
-                                        [
-                                            ...selectArr.filter(e => e.i !== i),
-                                            {
-                                                ...item,
-                                                isPined: !isPined,
-                                            },
-                                        ].sort((l, r) =>
-                                            r.count != l.count
-                                                ? r.count - l.count
-                                                : r.i - l.i
-                                        )
+                                    jump(
+                                        i2rc(TXT.indexOf(key), lineSize).r -
+                                            heightLineCount / 2
                                     )
-
-                                    // const i = TXT.indexOf(key)
-                                    // gridRef.current.scrollToItem({
-                                    //     align: 'center',
-                                    //     rowIndex: i2rc(i, lineSize).r,
-                                    // })
                                 }}
                             />
                         </div>

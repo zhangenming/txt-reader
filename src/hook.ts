@@ -1,50 +1,47 @@
 import { useEffect, useState } from 'react'
 
-// import txt from '../txt/三国演义'
-// import txt from '../txt/循环'
-// import txt from '../txt/白鹿原'
-// import txt from '../txt/人类大瘟疫'
-// import txt from '../txt/天道'
-// import txt from '../txt/挽救计划'
-import txt from '../txt/重生之超级战舰'
-// import txt from '../txt/诡秘之主'
-// import txt from '../txt/活着'
+// const txt = JSON.parse(localStorage.getItem('txt'))
+// import _txt from '../txt/三国演义'
+// import _txt from '../txt/循环'
+// import _txt from '../txt/白鹿原'
+// import _txt from '../txt/天道'
+// import _txt from '../txt/挽救计划'
+// import _txt from '../txt/重生之超级战舰'
+// import _txt from '../txt/诡秘之主'
+// import _txt from '../txt/活着'
+// import _txt from '../txt/人类大瘟疫'
+import _txt from '../txt/图灵'
+// import _txt from '../txt/圣墟'
+
+let txt = _txt
+if (location.hash) {
+    txt = (await import('../txt/圣墟')).default
+}
 
 import { i2rc, queryDom } from './utils'
 const { floor } = Math
 
-const _cache = (_t => {
-    if (txt.length === 602843) {
-        _t = txt.replaceAll('\n', '\n\n  ')
-    }
-
-    //诡秘之主
-    if (txt.length === 5139010) {
-        _t = txt.replaceAll('\n\n', '\n').replaceAll('    ', '  ')
-    }
-
-    return _t.split('\n')
-})(txt)
-
 export function useSize(itemSize: number) {
-    const [Width, setWidth] = useState(innerWidth - 100)
-    const [Height, setHeight] = useState(
-        floor(innerHeight / itemSize) * itemSize
-    )
+    const [size, sizeSET] = useState({
+        width: 0,
+        height: 0,
+    })
 
     useEffect(() => {
-        window.onresize = function () {
-            setWidth(innerWidth - 100)
-            setHeight(floor(innerHeight / itemSize) * itemSize)
+        const dom = getComputedStyle(queryDom('.container')) // alive
+
+        reset()
+        window.onresize = reset
+
+        function reset() {
+            sizeSET({
+                width: parseInt(dom.width),
+                height: parseInt(dom.height),
+            })
         }
     }, [])
 
-    return [
-        Width,
-        Height,
-        floor(Width / itemSize) - 1,
-        floor(Height / itemSize),
-    ]
+    return [floor(size.width / itemSize), floor(size.height / itemSize)]
 }
 
 const useTxtCache: any = {}
@@ -71,11 +68,14 @@ export function useTxt(colCount: number) {
     //     }, {})
     // ).sort((q, w) => w[1] - q[1])
 
-    return [TXT, txt.length] as [string, number]
+    return [TXT, txt.length] as const
 
     function setFunc() {
         if (!useTxtCache[colCount]) {
-            useTxtCache[colCount] = _cache.map(setLineWithSomeSpace).join('')
+            useTxtCache[colCount] = txt
+                .split('\n')
+                .map(setLineWithSomeSpace)
+                .join('')
         }
         return useTxtCache[colCount]
     }
@@ -91,7 +91,7 @@ export function useSpk(TXT: string) {
     useEffect(() => {
         let isSpeaking = false
         const arr = []
-        for (let i = 0; i < TXT.length; i++) {
+        for (let i = 0; i < TXT.length / 10; i++) {
             if (TXT[i] === '“') {
                 isSpeaking = true
                 arr.push(false)
@@ -111,19 +111,46 @@ export function useSpk(TXT: string) {
 export function useScrollHandle(lineSize: number) {
     const [currentLineIdx, currentLineIdxSET] = useState(0)
 
-    return [scrollHandle, currentLineIdx] as [() => void, number]
+    return [scrollHandle, currentLineIdx] as const
 
     function scrollHandle() {
         currentLineIdxSET(
             i2rc(
-                Number(
-                    document.querySelector<HTMLElement>(
-                        '.wrap span:first-child'
-                    )?.dataset.i!
-                ),
+                Number(queryDom('.wrap span:first-child').dataset.i),
                 lineSize // should from useScrollHandle or scrollHandle?
             ).r
         )
+    }
+}
+
+export function useScroll(TXTkey: number) {
+    // console.log(Number(localStorage.getItem(TXTkey + 'idx')))
+
+    const [currentLine, currentLineSET] = useState(
+        Number(localStorage.getItem(TXTkey + 'idx'))
+    )
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            localStorage.setItem(TXTkey + 'idx', currentLine + '')
+        }, 5000)
+
+        return () => clearInterval(timer)
+    }, [currentLine])
+
+    useEffect(() => {
+        jump(currentLine)
+    }, [])
+
+    return [currentLine, currentLineSET, jump] as const
+
+    function jump(target: number) {
+        // console.log(target, floor(target))
+
+        currentLineSET(floor(target))
+        setTimeout(() => {
+            queryDom('.container').scrollTop = floor(target) * 30
+        })
     }
 }
 
@@ -135,15 +162,7 @@ export function useKey(
     currentLine: number,
     heightLineCount: number,
     SIZE: number,
-    gridRef: {
-        current: {
-            scrollToItem: (arg0: {
-                align: string
-                //  "auto" | "smart" | "center" | "end" | "start";
-                rowIndex: number
-            }) => void
-        }
-    }
+    jump: (target: number) => void
 ) {
     const [isMetaHold, isMetaHoldSet] = useState(false)
     const [isAltHold, isAltHoldSet] = useState(false)
@@ -154,13 +173,9 @@ export function useKey(
         return 'e-resize'
     })()
 
-    return [keyDownHandle, keyUpHandle, clickType] as [
-        () => void,
-        () => void,
-        string
-    ]
+    return [keyDownHandle, keyUpHandle, clickType] as const
 
-    function keyUpHandle(e: KeyboardEvent) {
+    function keyUpHandle(e: React.KeyboardEvent) {
         if (e.key === 'Meta') {
             isMetaHoldSet(false)
         }
@@ -169,7 +184,7 @@ export function useKey(
         }
     }
 
-    function keyDownHandle(e: KeyboardEvent) {
+    function keyDownHandle(e: React.KeyboardEvent) {
         if (e.metaKey) {
             isMetaHoldSet(true)
         }
@@ -201,11 +216,7 @@ export function useKey(
                 }, 1111)
             })
 
-            gridRef.current.scrollToItem({
-                align: 'start',
-                //  "auto" | "smart" | "center" | "end" | "start";
-                rowIndex: currentLine + OVERSCAN + heightLineCount - DIFF,
-            })
+            jump(currentLine + OVERSCAN + heightLineCount - DIFF)
         }
     }
 }

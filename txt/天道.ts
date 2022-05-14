@@ -5686,4 +5686,4 @@ export default `
 ２００４年７月３日
 （全書完）
 
-`
+`.replaceAll('\n', '\n  ')

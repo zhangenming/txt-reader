@@ -1,7 +1,8 @@
 body {
     margin: 0;
+    -webkit-font-smoothing: antialiased;
 }
-.App {
+#root {
     display: flex;
     height: 100vh;
 }
@@ -24,8 +25,16 @@ body {
 }
 .reader {
     display: flex;
-    align-items: center;
+    flex-direction: column;
+    flex-grow: 1;
+    /* align-items: center; */
     background: steelblue;
+    color: aliceblue;
+    font-size: 25px;
+    font-family: cursive;
+    position: relative;
+    /* for .next */
+    overflow: hidden;
 }
 .reader .reader-helper {
     position: absolute;
@@ -38,46 +47,51 @@ body {
     height: 0;
     opacity: 0;
 }
-.reader .wrap {
-    /* react-window */
-    position: relative;
-    overflow: auto;
-    will-change: transform;
-    direction: ltr;
-    /* react-window */
-    color: aliceblue;
-    font-size: 25px;
-    font-family: cursive;
-}
-.reader .wrap > div > div {
-    margin: 0 auto;
-    position: relative;
-    /* 遮挡加载时露出底色 */
-    background: cornflowerblue;
-}
-.reader span {
-    /* react-window */
-    position: absolute;
-    width: 30px;
-    height: 30px;
-    /* react-window */
+.reader .next {
     display: flex;
-    justify-content: space-evenly;
+    justify-content: center;
+}
+.reader .next:hover {
+    background: yellowgreen;
+}
+
+.container {
+    overflow: auto;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    flex: 1;
+    /* background: cornflowerblue; */
+}
+.V-Grid {
+    background: cornflowerblue;
+    display: flex;
+    flex-wrap: wrap;
+    /* 没高度也能显示子元素 why */
+    height: fit-content;
+}
+/* ITEM class */
+
+/* ITEM class */
+
+/* ITEM class */
+
+/* ITEM class */
+
+.V-Grid span {
+    display: flex;
+    justify-content: center;
     align-items: center;
+    height: 30px;
+    width: 30px;
     box-sizing: border-box; /*否则last会在speaking状态下失效*/
     /* for filter */
     /* background: cornflowerblue;  */
     transition: color 0.1s, background-color 0.2s;
 }
-
-/* ITEM class */
-
-/* ITEM class */
-
-/* ITEM class */
-
-/* ITEM class */
-
+.V-Grid span:is(:first-child, :last-child) {
+    background: steelblue;
+}
 span.speaking,
 [data-e='：']:has(+ :not([data-e='“'])) {
     background: #7171e2;
@@ -95,13 +109,10 @@ span.isTarget {
 .isTarget:has(+ :not(.isTarget)) {
     border-right: 3px solid;
 }
-.isOdd {
-    background: yellowgreen;
-}
-span[data-e='“'] {
+span[data-invalid='“'] {
     justify-content: end;
 }
-span[data-e='”'] {
+span[data-invalid='”'] {
     justify-content: start;
 }
 [class*='select'] {

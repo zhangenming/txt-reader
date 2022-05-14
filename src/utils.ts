@@ -214,7 +214,7 @@ background: linear-gradient(#000,#000);
 
         function setCss(l: number[], r: string) {
             const x = l.map(e => `[data-i='${e}']`)
-            return `.wrap span:is(${x}) { border:solid; border-color:${r}; }`
+            return `span:is(${x}) { border:solid; border-color:${r}; }`
         }
     }
 
@@ -294,7 +294,7 @@ export function queryDom(selector: string) {
 
 const warning =
     'ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`' +
-    `©×─―—-–~≈÷=*“”"　  ·?,.°%‘’⋯…()/@&;|0123456789'`
+    `	©×─―—-–~≈÷=*“”"　  ·?,.°%‘’⋯…()/@&;|0123456789'`
 const error = `＂ℓａｄｅｇｈｉｋｌｍｎｕｏｐｒｓｖｗｙｚ：＇。．～，！？／（）《》〉「」［］【】；、﹢－＝ＢＣＦＧＪＫＶＷＱＩＹＬＡＭＤＴＨＮＯＰＳＺ１２３４５６７８９０％℃`
 const invalidSTR = [...warning, ...error]
 

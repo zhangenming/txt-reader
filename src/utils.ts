@@ -103,7 +103,7 @@ export function getStyle(
 
     const wordLen = word.length
 
-    const hoverStyle = `\n{
+    const hoverStyle = `{
         background:bisque; 
         color:forestgreen;
         box-shadow: 0px 3px 0px red, 0px -3px 0px red;
@@ -123,24 +123,35 @@ export function getStyle(
 
         .slice(0, -1) //去掉末尾' +'
 
-    const HOVER = doHover(base).join(', ').replaceAll(':has()', '')
-    const HAS = doHas(base).join(', ').replaceAll(':has()', '')
+    const _HOVER = doHover(base).join(',\n')
+    const HOVER = `\
+:has(
+${_HOVER}
+)`
 
+    const _HAS = doHas(base).join(',\n').replaceAll(':has()', '')
+    const HAS = `\
+:is(
+${_HAS}
+)`
     /* return后 有个空格 必要 不然\n失效; */
     return `
-/* 高亮 常亮 所有*/
+/* css1 高亮 常亮 所有*/
 ${getCss1()}
 
 
-/* 高亮 常亮 只first/last */
+
+/* css2 高亮 常亮 只first/last */
 ${getCss2()}
 
 
-/* 高亮 当hover */
+
+/* css3 高亮 当hover */
 ${getCss3()}
 
 
-/* 左右联动 当hover */
+
+/* css4 左右联动 当hover */
 ${getCss4()}
 `
 
@@ -160,20 +171,7 @@ background: linear-gradient(#000,#000);
   ${type}
 }`
 
-        const selector = Array.from(word)
-            .map(word =>
-                isInvalidWord(word) ? `[data-invalid='${word}']` : `[${word}]`
-            )
-            .map((_, i, arr) =>
-                arr.reduce((all, item, j) => {
-                    const q = j === i + 1 ? ':has(+' : '+'
-                    const w =
-                        j === arr.length - 1 && i != arr.length - 1 ? ')' : ''
-                    return all + q + item + w
-                })
-            )
-            .join(',\n')
-        return selector + style
+        return _HAS + style
     }
 
     function getCss2() {
@@ -221,34 +219,38 @@ background: linear-gradient(#000,#000);
     function getCss3() {
         if (justOne) return '/* 只有一个没必要显示 */'
 
-        return `:has(${HOVER}) \n:is(${HAS})` + hoverStyle
+        return HOVER + '\n' + HAS + hoverStyle
     }
 
     function getCss4() {
         const leftDom = `[slot='${word}']`
 
         /* left ui */
-        const type1 = `${leftDom}:hover\n{color:${color};background:cornflowerblue }\n\n`
+        const css1 = `${leftDom}:hover\n{color:${color};background:cornflowerblue }\n\n\n`
 
         /* hover: left ui */
-        const type2 = `${leftDom}:has(.count:hover),\n`
+        const type2 = `${leftDom}:has(.count:hover),\n\n`
 
         /* hover: left ui 联动 right reader */
-        const type3 = `:has(${leftDom} .count:hover) :is(${HAS}),\n`
+        const type3 = `\
+:has(${leftDom} .count:hover) 
+${HAS},\n\n`
 
         /* hover: right reader 联动left ui */
-        const type4 = `:has(${HOVER}) ${leftDom}`
+        const type4 = HOVER + '\n' + leftDom
 
-        return type1 + type2 + type3 + type4 + hoverStyle
+        const css2 = type2 + type3 + type4 + hoverStyle
+
+        return css1 + css2
     }
 
     // [ [洛]+[萨]+[科]+[技]:hover, [洛]+[萨]+[科]:hover+[技], [洛]+[萨]:hover+[科]+[技], [洛]:hover+[萨]+[科]+[技] ]
-    function doHover(str: string) {
+    function doHover(base: string) {
         return Array(wordLen) //1: word.length
             .fill(0)
             .map((_, index, arr) => {
                 let idx = 0
-                return str.replaceAll(/\[.*?\]/g, (e: any) => {
+                return base.replaceAll(/\[.*?\]/g, e => {
                     if (++idx === arr.length - index) {
                         return `${e}:hover`
                     }
@@ -256,15 +258,21 @@ background: linear-gradient(#000,#000);
                 })
             })
     }
+
     // [ [洛]+[萨]+[科]+[技], [洛]+[萨]+[科]:has(+[技]), [洛]+[萨]:has(+[科]+[技]), [洛]:has(+[萨]+[科]+[技]) ]
     function doHas(base: string) {
         return Array(wordLen) //1: word.length
             .fill(0)
-            .map((_, idx) => {
-                const n = (idx + 1) * (base.length / wordLen)
-                const L = base.slice(0, n)
-                const R = base.slice(n)
-                return `${L}:has(${R})`
+            .map((_, index, arr) => {
+                let idx = 0
+                return (
+                    base.replaceAll(/\[.*?\]/g, e => {
+                        if (++idx === arr.length - index) {
+                            return `${e}:has(`
+                        }
+                        return e
+                    }) + ')'
+                )
             })
     }
 }
@@ -295,7 +303,7 @@ export function queryDom(selector: string) {
 const warning =
     'ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`' +
     `	©×─―—-–~≈÷=*“”"　  ·?,.°%‘’⋯…()/@&;|0123456789'`
-const error = `＂ℓａｄｅｇｈｉｋｌｍｎｕｏｐｒｓｖｗｙｚ：＇。．～，！？／（）《》〉「」［］【】；、﹢－＝ＢＣＦＧＪＫＶＷＱＩＹＬＡＭＤＴＨＮＯＰＳＺ１２３４５６７８９０％℃`
+const error = `＂￥㊟ℓａｄｅｇｈｉｋｌｍｎｕｏｐｒｓｖｗｙｚ：＇。．～，！？／（）《》〉「」『』［］【】；、﹢－＝ＢＣＦＧＪＫＶＷＱＩＹＬＡＭＤＴＨＮＯＰＳＺ１２３４５６７８９０％℃`
 const invalidSTR = [...warning, ...error]
 
 export function isInvalidWord(word: string) {

@@ -1,4 +1,4 @@
-import { getColor, i2rc } from '../utils'
+import { getColor, getWordCount, i2rc } from '../utils'
 export type item = {
     key: string
     color: string
@@ -11,30 +11,24 @@ export default function Control({
     select,
     selectSET,
     selectArr,
-    selectArrSET,
-    selectWrap,
-    gridRef,
+    deleteHandle,
+    changeHandle,
     TXT,
     lineSize,
-    deleteHandle,
     currentLine,
     TXTkey,
     jump,
-    heightLineCount,
 }: {
     select: string
     selectSET: React.Dispatch<React.SetStateAction<string>>
     selectArr: item[]
-    selectArrSET: React.Dispatch<React.SetStateAction<item[]>>
-    selectWrap: item
-    gridRef: any
+    deleteHandle(key: string): void
+    changeHandle(item: item): void
     TXT: string
     lineSize: number
-    deleteHandle(key: string): void
     currentLine: number
     TXTkey: number
     jump: (target: number) => void
-    heightLineCount: number
 }) {
     return (
         <div className='control'>
@@ -47,22 +41,16 @@ export default function Control({
             <div className='count'>
                 <span
                     className='item'
-                    children={selectWrap.count}
+                    children={getWordCount(select, TXT)}
                     onClick={() => {
-                        const i = TXT.indexOf(selectWrap.key)
-                        gridRef.current.scrollToItem({
-                            align: 'center',
-                            rowIndex: i2rc(i, lineSize).r,
-                        })
+                        jump(i2rc(TXT.indexOf(select), lineSize).r)
                     }}
                 />
             </div>
             <input
                 type='text'
                 value={select}
-                onChange={e => {
-                    selectSET(e.target.value)
-                }}
+                onChange={e => selectSET(e.target.value)}
                 onKeyDown={e => e.stopPropagation()}
             />
             <div>
@@ -73,49 +61,27 @@ export default function Control({
                             <span
                                 children={idx}
                                 onClick={() => {
-                                    selectArrSET(
-                                        [
-                                            ...selectArr.filter(e => e.i !== i),
-                                            {
-                                                ...item,
-                                                isPined: !isPined,
-                                            },
-                                        ].sort((l, r) =>
-                                            r.count != l.count
-                                                ? r.count - l.count
-                                                : r.i - l.i
-                                        )
-                                    )
+                                    deleteHandle(item.key)
                                 }}
                             />
                             <span
                                 className='key'
                                 children={key}
+                                title={key}
                                 onClick={() => {
                                     // react 会不会每个span都新建了一个函数事件
-                                    selectArrSET(
-                                        [
-                                            ...selectArr.filter(e => e.i !== i),
-                                            {
-                                                ...item,
-                                                color: getColor(),
-                                            },
-                                        ].sort((l, r) =>
-                                            r.count != l.count
-                                                ? r.count - l.count
-                                                : r.i - l.i
-                                        )
-                                    )
+                                    changeHandle({
+                                        ...item,
+                                        color: getColor(),
+                                    })
                                 }}
                             />
                             <span
                                 className='count'
                                 children={count}
                                 onClick={() => {
-                                    jump(
-                                        i2rc(TXT.indexOf(key), lineSize).r -
-                                            heightLineCount / 2
-                                    )
+                                    // todo with alt
+                                    jump(i2rc(TXT.indexOf(key), lineSize).r)
                                 }}
                             />
                         </div>

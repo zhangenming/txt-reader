@@ -14,7 +14,7 @@ import _txt from '../txt/图灵'
 // import _txt from '../txt/圣墟'
 
 let txt = _txt
-if (location.hash) {
+if (location.hash === '#read') {
     txt = (await import('../txt/圣墟')).default
 }
 
@@ -123,9 +123,7 @@ export function useScrollHandle(lineSize: number) {
     }
 }
 
-export function useScroll(TXTkey: number) {
-    // console.log(Number(localStorage.getItem(TXTkey + 'idx')))
-
+export function useScroll(TXTkey: number, heightLineCount: number) {
     const [currentLine, currentLineSET] = useState(
         Number(localStorage.getItem(TXTkey + 'idx'))
     )
@@ -144,12 +142,12 @@ export function useScroll(TXTkey: number) {
 
     return [currentLine, currentLineSET, jump] as const
 
-    function jump(target: number) {
-        // console.log(target, floor(target))
+    function jump(t: number, top?: 'top') {
+        const target = t - (top ? 0 : floor(heightLineCount / 2))
 
-        currentLineSET(floor(target))
+        currentLineSET(target)
         setTimeout(() => {
-            queryDom('.container').scrollTop = floor(target) * 30
+            queryDom('.container').scrollTop = target * 30
         })
     }
 }

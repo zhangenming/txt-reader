@@ -1,25 +1,8 @@
 import type { item } from './comp/control'
 import './App.css'
-import {
-    useState,
-    createRef,
-    useEffect,
-    memo,
-    useMemo,
-    useCallback,
-    KeyboardEvent,
-} from 'react'
+import { useState, useEffect } from 'react'
 
-import {
-    getClasses,
-    getStyle,
-    getWordCount,
-    getWordPosition,
-    i2rc,
-    queryDom,
-    rc2i,
-    isInvalidWord,
-} from './utils'
+import { getStyle, getWordCount, getWordPosition, i2rc } from './utils'
 import { useKey, useScroll, useSize, useSpk, useTxt } from './hook'
 import Control from './comp/control'
 import VGrid from './V-Grid'
@@ -28,8 +11,10 @@ const SIZE = 30
 const OVERSCAN = 0 //15
 const DIFF = 3
 
-const gridRef: any = createRef()
-const selectionObj = getSelection()!
+function getSelectionString() {
+    //todo with hook effect
+    return document.getSelection()!.toString().replaceAll('\n', '') // 处理flex回车问题
+}
 
 window.nextDomIdx = []
 
@@ -41,7 +26,10 @@ export default function App() {
 
     const [TXT, TXTkey] = useTxt(lineSize)
 
-    const [currentLine, currentLineSET, jump] = useScroll(TXTkey)
+    const [currentLine, currentLineSET, jump] = useScroll(
+        TXTkey,
+        heightLineCount
+    )
 
     const spk = useSpk(TXT)
 
@@ -58,29 +46,28 @@ export default function App() {
     const [isTargetArr, isTargetArrSET] = useState<number[]>([])
 
     const [select, selectSET] = useState('')
-    const selectWrap = {
-        key: select,
-        color: 'black',
-        i: Date.now(),
-        count: getWordCount(select, TXT),
-        isPined: false,
-    }
 
-    const [selectArr, selectArrSET] = useState<item[]>(
+    const [selectArr, selectArrSet] = useState<item[]>(
         JSON.parse(localStorage.getItem(TXTkey + 'selectArr') || '[]')
     )
 
     useEffect(() => {
-        const timer = setInterval(() => {
-            localStorage.setItem(
-                TXTkey + 'selectArr',
-                JSON.stringify(selectArr)
-            )
-        }, 1000)
-
-        return () => clearInterval(timer)
+        localStorage.setItem(TXTkey + 'selectArr', JSON.stringify(selectArr))
     }, [selectArr])
 
+    // 列表逻辑
+    useEffect(() => {
+        document.onselectionchange = function () {
+            // 需要通过全局函数拿值 而不是e
+            const selection = getSelectionString()
+            // 随便点击也会触发这个事件 值是空 覆盖到期望值
+            if (selection) {
+                selectSET(selection)
+            }
+        }
+    }, [])
+
+    var asas = 0
     return (
         <>
             <Control
@@ -88,18 +75,17 @@ export default function App() {
                     select,
                     selectSET,
                     selectArr,
-                    selectArrSET,
-                    selectWrap,
-                    selectionObj,
-                    gridRef,
+                    deleteHandle,
+                    changeHandle,
                     TXT,
                     lineSize,
-                    deleteHandle,
                     currentLine,
                     TXTkey,
                     jump,
-                    heightLineCount,
+                    asas, // ok why, ts
                 }}
+                // error
+                asas={0}
             />
 
             <div
@@ -112,6 +98,13 @@ export default function App() {
                     onKeyDown: keyDownHandle,
                     onKeyUp: keyUpHandle,
                     tabIndex: 0,
+                    onCopy(e) {
+                        e.preventDefault()
+                        e.clipboardData.setData(
+                            'text/plain',
+                            getSelectionString()
+                        )
+                    },
                 }}
             >
                 <div className='reader-helper' />
@@ -134,6 +127,7 @@ export default function App() {
                     NEXT
                 </div>
             </div>
+
             <div className='styles'>
                 {/* <style>
                     {
@@ -152,109 +146,140 @@ export default function App() {
                     }
                 </style> */}
 
-                {[selectWrap, ...selectArr].map(
-                    ({ key, color, isPined }, idx) => (
-                        <style key={key} slot={key}>
-                            {getStyle(
-                                TXT,
-                                key,
-                                color,
-                                isPined || key === selectWrap.key,
-                                idx === 0
-                            )}
-                        </style>
-                    )
-                )}
+                {[
+                    {
+                        key: select,
+                        color: 'black',
+                        i: Date.now(),
+                        count: getWordCount(select, TXT),
+                        isPined: false,
+                    },
+                    ...selectArr,
+                ].map(({ key, color, isPined }, idx) => (
+                    <style key={key + idx} slot={key}>
+                        {getStyle(
+                            TXT,
+                            key,
+                            color,
+                            isPined || key === select,
+                            idx === 0
+                        )}
+                    </style>
+                ))}
             </div>
         </>
     )
 
     function GoToNextItemHandle({ target, metaKey, altKey }: React.MouseEvent) {
-        const selectionStr = selectionObj.toString().replaceAll('\n', '') // why?
+        const selectionStr = getSelectionString()
 
-        if (selectionStr) {
-            if (selectionStr.length > 210 || selectionStr.includes('\n')) return
+        // 拉选selection状态
+        if (target instanceof HTMLDivElement) {
+            // 拉取起始值 添加到列表
+            // if (getWordCount(selectionStr, TXT) > 10) {
+            //     addHandle()
+            // }
 
-            if (selectionStr === select) {
+            // 拉取存在值 从列表删除
+            if (selectArr.find(e => e.key === selectionStr)) {
+                deleteHandle(selectionStr)
+                // getSelection()!.removeAllRanges()
+                selectSET('')
+            }
+        }
+
+        // 点击click状态
+        if (target instanceof HTMLSpanElement) {
+            const content = getComputedStyle(target).content
+            if (content === 'normal') return
+            const word = content.slice(1, -1) //去掉引号
+
+            // 点击的是拉取状态 添加到列表
+            if (select === word) {
                 addHandle()
                 return
             }
-            if (selectArr.find(e => e.key === selectionStr)) {
-                deleteHandle(selectionStr)
-                return
-            }
 
-            selectSET(selectionStr.replaceAll(' ', ''))
-            return
-        }
+            // 其他点击 走跳转逻辑
+            const wordPosition = getWordPosition(word, TXT)
+            const len = wordPosition.length
+            const wordLen = word.length
 
-        if (!(target instanceof HTMLElement)) return alert(1) // ?
+            const clickIdx = Number(target.dataset.i)
+            const clickPos = wordPosition.findIndex(
+                (pos: number) => Math.abs(pos - clickIdx) < wordLen
+            )
+            if (clickPos === -1) return
 
-        const content = getComputedStyle(target).content
-        if (content === 'normal') return
-        const word = content.slice(1, -1) //去掉引号
-        const wordLen = word.length //去掉引号
+            const nextPos = (() => {
+                if (altKey && metaKey) return len - 1 // 直接跳到最后一个
+                if (altKey) return 0 // 直接跳到第一个
 
-        const wordPosition = getWordPosition(word, TXT)
-        const len = wordPosition.length
+                const nextPos = clickPos + (metaKey ? -1 : 1) // meta 相反方向
+                if (nextPos === len) {
+                    return 0 // 点最后一个时 跳到第一个
+                }
+                if (nextPos === -1) {
+                    return len - 1 // 点最后一个时 跳到第一个
+                }
+                return nextPos
+            })()
 
-        const clickIdx = Number(target.dataset.i)
-        const clickPos = wordPosition.findIndex(
-            (pos: number) => Math.abs(pos - clickIdx) < wordLen
-        )
-        if (clickPos === -1) return
-
-        const nextPos = (() => {
-            if (altKey && metaKey) return len - 1 // 直接跳到最后一个
-            if (altKey) return 0 // 直接跳到第一个
-
-            const nextPos = clickPos + (metaKey ? -1 : 1) // meta 相反方向
-            if (nextPos === len) {
-                return 0 // 点最后一个时 跳到第一个
-            }
-            if (nextPos === -1) {
-                return len - 1 // 点最后一个时 跳到第一个
-            }
-            return nextPos
-        })()
-
-        const nextIdx = wordPosition.at(nextPos)! //从头到尾
-        nextDomIdx = Array(wordLen)
-            .fill(0)
-            .map((_, i) => i + nextIdx)
-
-        isTargetArrSET(
-            Array(wordLen)
+            const nextIdx = wordPosition.at(nextPos)! //从头到尾
+            nextDomIdx = Array(wordLen)
                 .fill(0)
                 .map((_, i) => i + nextIdx)
-        )
-        setTimeout(() => {
-            isTargetArrSET([])
-        }, 1111)
 
-        jump(i2rc(nextIdx, lineSize).r - heightLineCount / 2)
+            isTargetArrSET(
+                Array(wordLen)
+                    .fill(0)
+                    .map((_, i) => i + nextIdx)
+            )
+            setTimeout(() => {
+                isTargetArrSET([])
+            }, 1111)
+
+            jump(i2rc(nextIdx, lineSize).r)
+        }
     }
 
     function addHandle() {
-        if (selectArr.find(e => e.key === selectWrap.key)) {
-            selectSET('')
-            selectionObj.removeAllRanges()
-            return
+        // 为什么不需要参数
+        if (select === '' || select === '\n') {
+            alert(1)
+            return // 什么时候会出现?
         }
 
         selectSET('')
-        selectArrSET(
-            [...selectArr, selectWrap].sort((l, r) =>
-                r.count != l.count ? r.count - l.count : r.i - l.i
-            )
-        )
 
-        selectionObj.removeAllRanges()
+        selectArrSetWrap([
+            ...selectArr,
+            {
+                key: select,
+                color: 'black',
+                i: Date.now(),
+                count: getWordCount(select, TXT),
+                isPined: false,
+            },
+        ])
+
+        getSelection()!.removeAllRanges()
+    }
+    function deleteHandle(key: string) {
+        selectArrSetWrap(selectArr.filter(e => e.key !== key))
+    }
+    function changeHandle(item: item) {
+        selectArrSetWrap([
+            ...selectArr.filter(e => e.key !== item.key),
+            {
+                ...item,
+            },
+        ])
     }
 
-    function deleteHandle(key: string) {
-        selectArrSET(
-            [...selectArr.filter(e => e.key !== key)].sort((l, r) =>
+    function selectArrSetWrap(arr: item[]) {
+        selectArrSet(
+            arr.sort((l, r) =>
                 r.count != l.count ? r.count - l.count : r.i - l.i
             )
         )

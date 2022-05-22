@@ -3,51 +3,46 @@ import type { item } from './comp/control'
 import { useState, useEffect, memo } from 'react'
 import {
     callWithTime,
+    getSelectionString,
     getStyle,
     getWordCount,
     getWordPosition,
     i2rc,
     useEffectWrap,
 } from './utils'
-import { useKey, useScroll, useSize, useSpk, useTXT } from './hook'
+import { useKey, useScroll, useSizeCount, useSpking, useTXT } from './hook'
 import Control from './comp/control'
 import VGrid from './V-Grid'
 
 export const SIZE = 30
-const OVERSCAN = 30 //30
+const OVERSCAN = 10 //30
 const DIFF = 3
 
-function getSelectionString() {
-    //todo with hook effect
-    return document.getSelection()!.toString().replaceAll('\n', '') // 处理flex回车问题
-}
-
 const APP = () => {
-    // const [hook, hookSET] = useState() // for clear hook count
+    // const [hook, hookSET] = useState() // for clear hook count, 本身也会引入新的计数
     console.log('%c --- RENDER --- ', 'background: #222; color: #bada55')
 
-    const { width: lineSize, height: heightLineCount } = useSize()
-    const [TXT, txtLen, TXTLen] = useTXT(lineSize)
-    // const spk = useSpk(TXT, TXTLen)
+    const { widthCount, heightCount } = useSizeCount()
+    const [TXT, TXTLen, txtLen] = useTXT(widthCount)
+    const spking = useSpking(TXT, TXTLen)
 
-    const [isTargetArr, isTargetArrSET] = useState<number[]>([])
-    const [currentLine, currentLineSET, jump] = useScroll(
+    const [currentLine, SET_currentLine, jumpLine] = useScroll(
         txtLen,
-        heightLineCount
+        heightCount
     )
 
     const [onKeyDown, onKeyUp, clickType] = useKey(
         OVERSCAN,
         DIFF,
-        lineSize,
+        widthCount,
         currentLine,
-        heightLineCount,
-        jump
+        heightCount,
+        jumpLine
     )
 
-    const [select, selectSET] = useState('')
+    const [select, SET_select] = useState('')
 
-    const [selectArr, selectArrSet] = useState<item[]>(
+    const [selectArr, SET_selectArr] = useState<item[]>(
         JSON.parse(localStorage.getItem(txtLen + 'selectArr') || '[]')
     )
 
@@ -62,27 +57,28 @@ const APP = () => {
             const selection = getSelectionString()
             // 随便点击也会触发这个事件 值是空 覆盖到期望值
             if (selection) {
-                selectSET(selection)
+                SET_select(selection)
             }
         }
     }, [])
 
+    const [isTargetArr, SET_isTargetArr] = useState<number[]>([])
     return (
         <>
             <Control
                 {...{
                     select,
-                    selectSET,
+                    SET_select,
                     selectArr,
                     deleteHandle,
                     changeHandle,
                     TXT,
-                    txtLen,
                     TXTLen,
-                    lineSize,
-                    heightLineCount,
+                    txtLen,
+                    widthCount,
+                    heightCount,
                     currentLine,
-                    jump,
+                    jump: jumpLine,
                     tabIndex: 1,
                     onKeyDown,
                     onKeyUp,
@@ -111,13 +107,11 @@ const APP = () => {
                     <VGrid
                         {...{
                             TXT,
-                            lineSize,
-                            heightLineCount,
-                            height: (TXT.length / lineSize) * 30,
-                            SIZE,
+                            widthCount,
+                            heightCount,
                             currentLine,
-                            currentLineSET,
-                            // spk,
+                            SET_currentLine,
+                            spking,
                             OVERSCAN,
                         }}
                     />
@@ -148,7 +142,7 @@ const APP = () => {
 
                 <style>
                     {(() => {
-                        const last = lineSize * OVERSCAN + 1
+                        const last = widthCount * OVERSCAN + 1
                         const selector = `.V-Grid span:is(:first-child, :nth-last-child(${last}))`
                         return selector + ` \n\n {background: steelblue;}`
                     })()}
@@ -192,7 +186,7 @@ const APP = () => {
             if (selectArr.find(e => e.key === selectionStr)) {
                 deleteHandle(selectionStr)
                 // getSelection()!.removeAllRanges()
-                selectSET('')
+                SET_select('')
             }
         }
 
@@ -235,16 +229,16 @@ const APP = () => {
 
             const nextIdx = wordPosition.at(nextPos)! //从头到尾
 
-            isTargetArrSET(
+            SET_isTargetArr(
                 Array(wordLen)
                     .fill(0)
                     .map((_, i) => i + nextIdx)
             )
             setTimeout(() => {
-                isTargetArrSET([])
+                SET_isTargetArr([])
             }, 1111)
 
-            jump(i2rc(nextIdx, lineSize).r)
+            jumpLine(i2rc(nextIdx, widthCount).r)
         }
     }
 
@@ -255,7 +249,7 @@ const APP = () => {
             return // 什么时候会出现?
         }
 
-        selectSET('')
+        SET_select('')
 
         selectArrSetWrap([
             ...selectArr,
@@ -283,7 +277,7 @@ const APP = () => {
     }
 
     function selectArrSetWrap(arr: item[]) {
-        selectArrSet(
+        SET_selectArr(
             arr.sort((l, r) =>
                 r.count != l.count ? r.count - l.count : r.i - l.i
             )

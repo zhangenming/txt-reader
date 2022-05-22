@@ -18,115 +18,111 @@ import { SIZE } from './App'
 const book = decodeURI(location.hash).slice(1) || '星之继承者（全3册）'
 const txt = (await import('../txt/' + book)).default
 
-import { i2rc, queryDom, useEffectWrap } from './utils'
+import { i2rc, makeFuncCache, queryDom, useEffectWrap } from './utils'
 const { floor } = Math
 
-export function useSize() {
-    const [size, sizeSET] = useState(getter)
+export function useSizeCount() {
+    const call = useCallback(makeFuncCache(getter), [])
+
+    const [state, SET_state] = useState(call)
 
     useEffectWrap(() => {
-        window.onresize = () => sizeSET(getter)
-    }, [])
+        window.onresize = () => SET_state(call)
+    }, [state])
 
-    return size
+    return state
 
     function getter() {
+        const min = 0
+        const width = innerWidth - 100 - min - 15 /*滚轴宽度*/
+        const height = innerHeight - 30 - min
         return {
-            width: floor((innerWidth - 100 - 15) / SIZE),
-            height: floor((innerHeight - 30) / SIZE),
+            widthCount: floor(width / SIZE),
+            heightCount: floor(height / SIZE),
         }
     }
 }
+
 const useTxtCache: any = {}
-export function useTXT(n: number) {
-    // ? 为什么两周前就写出的形式 现在才判断出这就是最佳实践
-    const [TXT, setTXT] = useState(getter)
+export function useTXT(widthCount: number) {
+    // txt(with widthCount) -> TXT
+    const [state, SET_state] = useState(getter)
 
     useEffectWrap(() => {
-        setTXT(getter)
-    }, [n])
+        SET_state(getter)
+    }, [widthCount])
 
-    return [TXT, txt.length, TXT.length] as const
+    return [state, state.length, txt.length] as const
 
     function getter(): string {
-        if (!useTxtCache[n]) {
-            useTxtCache[n] = txt
+        if (!useTxtCache[widthCount]) {
+            useTxtCache[widthCount] = txt
                 .split('\n')
                 .map((e: string) => {
-                    const line2rest = n - (e.length % n || n) // 第二行空格剩余补齐
-                    return e + ' '.repeat(n + line2rest) // 完整第一行 + 第二行空格剩余补齐
+                    const line =
+                        widthCount + // 完整第一行
+                        widthCount - // 第二行空格剩余补齐
+                        (e.length % widthCount || widthCount)
+                    return e + ' '.repeat(line)
                 })
                 .join('')
         }
-        return useTxtCache[n]
+        return useTxtCache[widthCount]
     }
+    // todo 全局处理->局部加载
 }
 
-export function useSpk(TXT: string, TXTLen: number) {
-    const [SPK, setSPK] = useState(getter)
+export function useSpking(TXT: string, TXTLen: number) {
+    // todo 全局处理->局部加载
+    const call = useCallback(makeFuncCache(getter), [TXTLen])
+    const [state, SET_state] = useState(call)
 
     useEffectWrap(() => {
-        setSPK(getter)
+        SET_state(call)
     }, [TXTLen])
 
-    return SPK
+    return state
 
     function getter() {
-        const arr = []
+        const results = []
 
         let isSpeaking = false
         for (let i = 0; i < TXT.length / 10; i++) {
             if (TXT[i] === '“') {
                 isSpeaking = true
-                arr.push(false)
+                results.push(false)
             } else if (TXT[i] === '”') {
                 isSpeaking = false
-                arr.push(false)
+                results.push(false)
             } else {
-                arr.push(isSpeaking)
+                results.push(isSpeaking)
             }
         }
 
-        console.log('useSpk', TXTLen, arr)
-        return arr
-    }
-}
-
-export function useScrollHandle(lineSize: number) {
-    const [currentLineIdx, currentLineIdxSET] = useState(0)
-
-    return [scrollHandle, currentLineIdx] as const
-
-    function scrollHandle() {
-        currentLineIdxSET(
-            i2rc(
-                Number(queryDom('.wrap span:first-child').dataset.i),
-                lineSize // should from useScrollHandle or scrollHandle?
-            ).r
-        )
+        return results
     }
 }
 
 export function useScroll(txtLen: number, heightLineCount: number) {
-    const [currentLine, currentLineSET] = useState(() =>
+    const [state, SET_state] = useState(() =>
         Number(localStorage.getItem(txtLen + 'idx'))
     ) // 函数形式只会执行一次
 
     useEffectWrap(() => {
-        queryDom('.container').scrollTop = currentLine * SIZE // todo, dom -> react ref?
+        queryDom('.container').scrollTop = state * SIZE // todo, dom -> react ref?
     }, [])
 
-    return [currentLine, useCallback(SET, [txtLen]), jumpLine] as const
+    return [state, useCallback(SET, [txtLen]), jumpLine] as const
 
-    function jumpLine(currentLine: number) {
-        const target = currentLine - floor(heightLineCount / 2)
+    function jumpLine(_target: number) {
+        const target = _target - floor(heightLineCount / 2)
 
         SET(target)
         queryDom('.container').scrollTop = target * SIZE
     }
 
     function SET(n: number) {
-        currentLineSET(n)
+        SET_state(n)
         localStorage.setItem(txtLen + 'idx', n + '')
     }
 }
@@ -140,8 +136,8 @@ export function useKey(
     heightLineCount: number,
     jump: (target: number) => void
 ) {
-    const [isMetaHold, isMetaHoldSet] = useState(false)
-    const [isAltHold, isAltHoldSet] = useState(false)
+    const [isMetaHold, SET_isMetaHold] = useState(false)
+    const [isAltHold, SET_isAltHold] = useState(false)
     const clickType = (() => {
         if (isMetaHold && isAltHold) return 's-resize'
         if (isMetaHold) return 'w-resize'
@@ -153,19 +149,19 @@ export function useKey(
 
     function keyUpHandle(e: React.KeyboardEvent) {
         if (e.key === 'Meta') {
-            isMetaHoldSet(false)
+            SET_isMetaHold(false)
         }
         if (e.key === 'Alt') {
-            isAltHoldSet(false)
+            SET_isAltHold(false)
         }
     }
 
     function keyDownHandle(e: React.KeyboardEvent) {
         if (e.metaKey) {
-            isMetaHoldSet(true)
+            SET_isMetaHold(true)
         }
         if (e.altKey) {
-            isAltHoldSet(true)
+            SET_isAltHold(true)
         }
         if (e.code === 'Space') {
             setTimeout(() => {

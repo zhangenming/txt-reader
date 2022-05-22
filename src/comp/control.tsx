@@ -9,30 +9,30 @@ export type item = {
 
 export default function Control({
     select,
-    selectSET,
+    SET_select,
     selectArr,
     deleteHandle,
     changeHandle,
     TXT,
-    txtLen,
     TXTLen,
-    lineSize,
-    heightLineCount,
+    txtLen,
+    widthCount,
+    heightCount,
     currentLine,
     jump,
     onKeyUp,
     onKeyDown,
 }: {
     select: string
-    selectSET: React.Dispatch<React.SetStateAction<string>>
+    SET_select: React.Dispatch<React.SetStateAction<string>>
     selectArr: item[]
     deleteHandle(key: string): void
     changeHandle(item: item): void
     TXT: string
-    txtLen: number
     TXTLen: number
-    lineSize: number
-    heightLineCount: number
+    txtLen: number
+    widthCount: number
+    heightCount: number
     currentLine: number
     jump: (target: number) => void
     onKeyUp: (e: React.KeyboardEvent<Element>) => void
@@ -50,7 +50,7 @@ export default function Control({
         >
             <div>{currentLine}</div>
             <div>
-                {lineSize}-{heightLineCount}
+                {widthCount}-{heightCount}
             </div>
             <br />
 
@@ -63,14 +63,14 @@ export default function Control({
                     className='item'
                     children={getWordCount(select, TXT)}
                     onClick={() => {
-                        jump(i2rc(TXT.indexOf(select), lineSize).r)
+                        jump(i2rc(TXT.indexOf(select), widthCount).r)
                     }}
                 />
             </div>
             <input
                 type='text'
                 value={select}
-                onChange={e => selectSET(e.target.value)}
+                onChange={e => SET_select(e.target.value)}
                 onKeyDown={e => e.stopPropagation()}
             />
             <div>
@@ -101,7 +101,7 @@ export default function Control({
                                 children={count}
                                 onClick={() => {
                                     // todo with alt
-                                    jump(i2rc(TXT.indexOf(key), lineSize).r)
+                                    jump(i2rc(TXT.indexOf(key), widthCount).r)
                                 }}
                             />
                         </div>

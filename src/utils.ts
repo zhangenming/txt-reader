@@ -15,6 +15,23 @@ function getAllWordPosition(word: string, TXT: string) {
     }
     return getAllWordPositionCache[key]
 }
+
+const c: any = {}
+export function makeFuncCache(
+    func: (..._: any) => any
+    // getKey = (x: any) => JSON.stringify(x)
+) {
+    const cache: any = {}
+    return (x: any) => {
+        const key = JSON.stringify(func(x))
+
+        if (!cache[key]) {
+            cache[key] = func(x)
+        }
+        return cache[key]
+    }
+}
+
 // 查找一个字符串中的所有子串的位置
 const getWordPositionCache: any = {}
 export function getWordPosition(word: string, TXT: string) {
@@ -402,4 +419,9 @@ export function callWithTime2(name: string, func: any) {
         console.timeEnd('  CALL -  ' + name)
         return rt
     }
+}
+
+export function getSelectionString() {
+    //todo with hook effect
+    return document.getSelection()!.toString().replaceAll('\n', '') // 处理flex回车问题
 }

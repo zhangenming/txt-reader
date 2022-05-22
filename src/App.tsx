@@ -1,14 +1,20 @@
-import type { item } from './comp/control'
 import './App.css'
-import { useState, useEffect } from 'react'
-
-import { getStyle, getWordCount, getWordPosition, i2rc } from './utils'
-import { useKey, useScroll, useSize, useSpk, useTxt } from './hook'
+import type { item } from './comp/control'
+import { useState, useEffect, memo } from 'react'
+import {
+    callWithTime,
+    getStyle,
+    getWordCount,
+    getWordPosition,
+    i2rc,
+    useEffectWrap,
+} from './utils'
+import { useKey, useScroll, useSize, useSpk, useTXT } from './hook'
 import Control from './comp/control'
 import VGrid from './V-Grid'
 
-const SIZE = 30
-const OVERSCAN = 0 //15
+export const SIZE = 30
+const OVERSCAN = 30 //30
 const DIFF = 3
 
 function getSelectionString() {
@@ -16,47 +22,41 @@ function getSelectionString() {
     return document.getSelection()!.toString().replaceAll('\n', '') // 处理flex回车问题
 }
 
-window.nextDomIdx = []
+const APP = () => {
+    // const [hook, hookSET] = useState() // for clear hook count
+    console.log('%c --- RENDER --- ', 'background: #222; color: #bada55')
 
-window.xx = 0
+    const { width: lineSize, height: heightLineCount } = useSize()
+    const [TXT, txtLen, TXTLen] = useTXT(lineSize)
+    // const spk = useSpk(TXT, TXTLen)
 
-export default function App() {
-    window.xx = 0
-    const [lineSize, heightLineCount] = useSize(SIZE)
-
-    const [TXT, TXTkey] = useTxt(lineSize)
-
+    const [isTargetArr, isTargetArrSET] = useState<number[]>([])
     const [currentLine, currentLineSET, jump] = useScroll(
-        TXTkey,
+        txtLen,
         heightLineCount
     )
 
-    const spk = useSpk(TXT)
-
-    const [keyDownHandle, keyUpHandle, clickType] = useKey(
+    const [onKeyDown, onKeyUp, clickType] = useKey(
         OVERSCAN,
         DIFF,
         lineSize,
         currentLine,
         heightLineCount,
-        SIZE,
         jump
     )
-
-    const [isTargetArr, isTargetArrSET] = useState<number[]>([])
 
     const [select, selectSET] = useState('')
 
     const [selectArr, selectArrSet] = useState<item[]>(
-        JSON.parse(localStorage.getItem(TXTkey + 'selectArr') || '[]')
+        JSON.parse(localStorage.getItem(txtLen + 'selectArr') || '[]')
     )
 
-    useEffect(() => {
-        localStorage.setItem(TXTkey + 'selectArr', JSON.stringify(selectArr))
+    useEffectWrap(() => {
+        localStorage.setItem(txtLen + 'selectArr', JSON.stringify(selectArr))
     }, [selectArr])
 
     // 列表逻辑
-    useEffect(() => {
+    useEffectWrap(() => {
         document.onselectionchange = function () {
             // 需要通过全局函数拿值 而不是e
             const selection = getSelectionString()
@@ -67,7 +67,6 @@ export default function App() {
         }
     }, [])
 
-    var asas = 0
     return (
         <>
             <Control
@@ -78,14 +77,16 @@ export default function App() {
                     deleteHandle,
                     changeHandle,
                     TXT,
+                    txtLen,
+                    TXTLen,
                     lineSize,
+                    heightLineCount,
                     currentLine,
-                    TXTkey,
                     jump,
-                    asas, // ok why, ts
+                    tabIndex: 1,
+                    onKeyDown,
+                    onKeyUp,
                 }}
-                // error
-                asas={0}
             />
 
             <div
@@ -93,11 +94,8 @@ export default function App() {
                     className: 'reader',
                     style: {
                         '--clickType': clickType,
-                    } as any,
+                    },
                     onClick: GoToNextItemHandle,
-                    onKeyDown: keyDownHandle,
-                    onKeyUp: keyUpHandle,
-                    tabIndex: 0,
                     onCopy(e) {
                         e.preventDefault()
                         e.clipboardData.setData(
@@ -109,42 +107,52 @@ export default function App() {
             >
                 <div className='reader-helper' />
 
-                <VGrid
-                    {...{
-                        TXT,
-                        lineSize,
-                        heightLineCount,
-                        height: (TXT.length / lineSize) * 30,
-                        SIZE,
-                        currentLine,
-                        currentLineSET,
-                        spk,
-                        OVERSCAN,
-                    }}
-                />
+                <div className='wrap'>
+                    <VGrid
+                        {...{
+                            TXT,
+                            lineSize,
+                            heightLineCount,
+                            height: (TXT.length / lineSize) * 30,
+                            SIZE,
+                            currentLine,
+                            currentLineSET,
+                            // spk,
+                            OVERSCAN,
+                        }}
+                    />
+                </div>
 
-                <div className='next' onMouseOver={() => console.log(1)}>
+                <div className='next' onMouseOver={() => console.log}>
                     NEXT
                 </div>
             </div>
 
             <div className='styles'>
                 {/* <style>
-                    {
-                        Array(columnCount)
-                            .fill(null)
-                            .map((_, i) => `span:hover ${'+span '.repeat(i)}`)
-                            .join(',\n') + '{background:yellowgreen}'
-                        // // // // // //
-                        // aot 卡, 使用jit
-                        // span:hover,
-                        // span:hover + span,
-                        // span:hover + span + span,
-                        // span:hover + span + span + span {
-                        //     background: yellowgreen;
-                        // }
-                    }
-                </style> */}
+        {
+            Array(columnCount)
+                .fill(null)
+                .map((_, i) => `span:hover ${'+span '.repeat(i)}`)
+                .join(',\n') + '{background:yellowgreen}'
+            // // // // // //
+            // aot 卡, 使用jit
+            // span:hover,
+            // span:hover + span,
+            // span:hover + span + span,
+            // span:hover + span + span + span {
+            //     background: yellowgreen;
+            // }
+        }
+    </style> */}
+
+                <style>
+                    {(() => {
+                        const last = lineSize * OVERSCAN + 1
+                        const selector = `.V-Grid span:is(:first-child, :nth-last-child(${last}))`
+                        return selector + ` \n\n {background: steelblue;}`
+                    })()}
+                </style>
 
                 {[
                     {
@@ -226,9 +234,6 @@ export default function App() {
             })()
 
             const nextIdx = wordPosition.at(nextPos)! //从头到尾
-            nextDomIdx = Array(wordLen)
-                .fill(0)
-                .map((_, i) => i + nextIdx)
 
             isTargetArrSET(
                 Array(wordLen)
@@ -285,3 +290,11 @@ export default function App() {
         )
     }
 }
+function APPwrap() {
+    console.time()
+    const rt = APP()
+    console.timeEnd()
+    return rt
+}
+
+export default callWithTime('APP', APP)

@@ -1,96 +1,80 @@
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
+import { SIZE } from './App'
 
 // const txt = JSON.parse(localStorage.getItem('txt'))
-// import _txt from '../txt/三国演义'
-// import _txt from '../txt/循环'
-// import _txt from '../txt/白鹿原'
-// import _txt from '../txt/天道'
-// import _txt from '../txt/挽救计划'
-// import _txt from '../txt/重生之超级战舰'
-// import _txt from '../txt/诡秘之主'
-// import _txt from '../txt/活着'
-// import _txt from '../txt/人类大瘟疫'
-import _txt from '../txt/图灵'
-// import _txt from '../txt/圣墟'
+// '三国演义'
+// '循环'
+// '白鹿原'
+// '天道'
+// '挽救计划'
+// '重生之超级战舰'
+// '诡秘之主'
+// '活着'
+// '人类大瘟疫'
+// '图灵'
+// '圣墟'
+//
 
-let txt = _txt
-if (location.hash === '#read') {
-    txt = (await import('../txt/圣墟')).default
-}
+const book = decodeURI(location.hash).slice(1) || '星之继承者（全3册）'
+const txt = (await import('../txt/' + book)).default
 
-import { i2rc, queryDom } from './utils'
+import { i2rc, queryDom, useEffectWrap } from './utils'
 const { floor } = Math
 
-export function useSize(itemSize: number) {
-    const [size, sizeSET] = useState({
-        width: 0,
-        height: 0,
-    })
+export function useSize() {
+    const [size, sizeSET] = useState(getter)
 
-    useEffect(() => {
-        const dom = getComputedStyle(queryDom('.container')) // alive
-
-        reset()
-        window.onresize = reset
-
-        function reset() {
-            sizeSET({
-                width: parseInt(dom.width),
-                height: parseInt(dom.height),
-            })
-        }
+    useEffectWrap(() => {
+        window.onresize = () => sizeSET(getter)
     }, [])
 
-    return [floor(size.width / itemSize), floor(size.height / itemSize)]
+    return size
+
+    function getter() {
+        return {
+            width: floor((innerWidth - 100 - 15) / SIZE),
+            height: floor((innerHeight - 30) / SIZE),
+        }
+    }
 }
-
 const useTxtCache: any = {}
-export function useTxt(colCount: number) {
-    const [TXT, setTXT] = useState(setFunc)
-    useEffect(() => {
-        setTXT(setFunc)
-    }, [colCount])
+export function useTXT(n: number) {
+    // ? 为什么两周前就写出的形式 现在才判断出这就是最佳实践
+    const [TXT, setTXT] = useState(getter)
 
-    // Object.entries(
-    //     [...TXT].reduce((acc, cur, i) => {
-    //         const key = TXT.slice(i, i + 5)
+    useEffectWrap(() => {
+        setTXT(getter)
+    }, [n])
 
-    //         if (
-    //             [...key].some(k =>
-    //                 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.includes(k.toLocaleUpperCase())
-    //             )
-    //         )
-    //             return acc
+    return [TXT, txt.length, TXT.length] as const
 
-    //         if (!acc[key]) acc[key] = 1
-    //         acc[key]++
-    //         return acc
-    //     }, {})
-    // ).sort((q, w) => w[1] - q[1])
-
-    return [TXT, txt.length] as const
-
-    function setFunc() {
-        if (!useTxtCache[colCount]) {
-            useTxtCache[colCount] = txt
+    function getter(): string {
+        if (!useTxtCache[n]) {
+            useTxtCache[n] = txt
                 .split('\n')
-                .map(setLineWithSomeSpace)
+                .map((e: string) => {
+                    const line2rest = n - (e.length % n || n) // 第二行空格剩余补齐
+                    return e + ' '.repeat(n + line2rest) // 完整第一行 + 第二行空格剩余补齐
+                })
                 .join('')
         }
-        return useTxtCache[colCount]
-    }
-    function setLineWithSomeSpace(e: string) {
-        const line2rest = colCount - (e.length % colCount || colCount)
-        return e + ' '.repeat(colCount + line2rest) // 完整第一行 + 第二行空格剩余补齐
+        return useTxtCache[n]
     }
 }
 
-export function useSpk(TXT: string) {
-    const [SPK, setSPK] = useState<boolean[]>([])
+export function useSpk(TXT: string, TXTLen: number) {
+    const [SPK, setSPK] = useState(getter)
 
-    useEffect(() => {
-        let isSpeaking = false
+    useEffectWrap(() => {
+        setSPK(getter)
+    }, [TXTLen])
+
+    return SPK
+
+    function getter() {
         const arr = []
+
+        let isSpeaking = false
         for (let i = 0; i < TXT.length / 10; i++) {
             if (TXT[i] === '“') {
                 isSpeaking = true
@@ -102,10 +86,10 @@ export function useSpk(TXT: string) {
                 arr.push(isSpeaking)
             }
         }
-        setSPK(arr)
-    }, [TXT])
 
-    return SPK
+        console.log('useSpk', TXTLen, arr)
+        return arr
+    }
 }
 
 export function useScrollHandle(lineSize: number) {
@@ -123,32 +107,27 @@ export function useScrollHandle(lineSize: number) {
     }
 }
 
-export function useScroll(TXTkey: number, heightLineCount: number) {
-    const [currentLine, currentLineSET] = useState(
-        Number(localStorage.getItem(TXTkey + 'idx'))
-    )
+export function useScroll(txtLen: number, heightLineCount: number) {
+    const [currentLine, currentLineSET] = useState(() =>
+        Number(localStorage.getItem(txtLen + 'idx'))
+    ) // 函数形式只会执行一次
 
-    useEffect(() => {
-        const timer = setInterval(() => {
-            localStorage.setItem(TXTkey + 'idx', currentLine + '')
-        }, 5000)
-
-        return () => clearInterval(timer)
-    }, [currentLine])
-
-    useEffect(() => {
-        jump(currentLine)
+    useEffectWrap(() => {
+        queryDom('.container').scrollTop = currentLine * SIZE // todo, dom -> react ref?
     }, [])
 
-    return [currentLine, currentLineSET, jump] as const
+    return [currentLine, useCallback(SET, [txtLen]), jumpLine] as const
 
-    function jump(t: number, top?: 'top') {
-        const target = t - (top ? 0 : floor(heightLineCount / 2))
+    function jumpLine(currentLine: number) {
+        const target = currentLine - floor(heightLineCount / 2)
 
-        currentLineSET(target)
-        setTimeout(() => {
-            queryDom('.container').scrollTop = target * 30
-        })
+        SET(target)
+        queryDom('.container').scrollTop = target * SIZE
+    }
+
+    function SET(n: number) {
+        currentLineSET(n)
+        localStorage.setItem(txtLen + 'idx', n + '')
     }
 }
 
@@ -159,7 +138,6 @@ export function useKey(
     lineSize: number,
     currentLine: number,
     heightLineCount: number,
-    SIZE: number,
     jump: (target: number) => void
 ) {
     const [isMetaHold, isMetaHoldSet] = useState(false)

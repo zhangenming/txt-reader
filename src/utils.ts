@@ -1,3 +1,6 @@
+import { useEffect } from 'react'
+import { invalidData } from './book'
+
 const getAllWordPositionCache: any = {}
 function getAllWordPosition(word: string, TXT: string) {
     const key = word + TXT.length
@@ -297,14 +300,11 @@ export function getColor() {
 }
 
 export function queryDom(selector: string) {
-    return document.querySelector<HTMLElement>(selector)!
+    return (
+        document.querySelector<HTMLElement>(selector) ||
+        document.documentElement
+    )
 }
-
-const warning =
-    'ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`' +
-    `	©×─―—-–~≈÷=*“”"　  ·?,.°%‘’⋯…()/@&;|0123456789'`
-const error = `＂￥㊟ℓａｄｅｇｈｉｋｌｍｎｕｏｐｒｓｖｗｙｚ：＇。．～，！？／（）《》〉「」『』［］【】；、﹢－＝ＢＣＦＧＪＫＶＷＱＩＹＬＡＭＤＴＨＮＯＰＳＺ１２３４５６７８９０％℃`
-const invalidSTR = [...warning, ...error]
 
 export function isInvalidWord(word: string) {
     // if (/[0-9]/.test(word)) return 'data-num'
@@ -312,5 +312,94 @@ export function isInvalidWord(word: string) {
     // if (/[A-Z]/.test(word)) return 'data-upper'
     // if (error.includes(word)) return 'data-error'
     // if (warning.includes(word)) return 'data-warning'
-    return invalidSTR.includes(word)
+    return invalidData.includes(word)
+}
+
+// useTxt useSpk useSpk
+// useSpk
+export function useEffectWrap(func: any = () => {}, deps?: any) {
+    if (!1) {
+        const name = new Error()
+            .stack!.split('\n')[3]
+            .split('(')[0]
+            .replaceAll('    at ', '')
+
+        console.log('注册', name)
+
+        const type = (() => {
+            if (!deps) return 'every' // 没数组
+            if (!deps.length) return 'onece' // 空数组
+            return deps
+        })()
+
+        const flag = `      EFFECT --- ${name} (${type}) `.slice(0, 100)
+
+        useEffect(function EFFECT() {
+            console.log('执行', name)
+            console.time(flag)
+            func()
+            console.timeEnd(flag)
+        }, deps)
+    } else {
+        useEffect(func, deps)
+    }
+}
+
+export function callWithTime(name: any, func?: any) {
+    if (!func) {
+        func = name
+        name = new Error()
+            .stack!.split('\n')[2]
+            .match(/src\/.*tsx/)?.[0]
+            .slice(4, -4)
+    }
+
+    const f = {
+        [name]: function (...x: any) {
+            console.time(name)
+            const rt = func(...x)
+            console.timeEnd(name)
+            return rt
+        },
+    }
+
+    console.log(Object.keys(f)[0])
+
+    if (!0) {
+        return Object.values(f)[0]
+    } else {
+        return func
+    }
+}
+
+function geneFunc(f: any) {
+    f = f + ''
+    const l = f.indexOf('{') + 1
+    const r = f.lastIndexOf('}')
+    const newF = `
+${f.slice(0, l)}
+console.time()
+${f.slice(l, r)}
+console.timeEnd()
+${f.slice(r)}
+`
+
+    console.log(88, newF)
+
+    return newF
+}
+
+export function callWithTime2(name: string, func: any) {
+    return eval(`()=>function ${name}(...x){
+        console.time('  CALL -  ' + name)
+        const rt = func(...x)
+        console.timeEnd('  CALL -  ' + name)
+        return rt}`)()
+
+    return function name(...x: any) {
+        console.time('  CALL -  ' + name)
+        const rt = func(...x)
+        console.timeEnd('  CALL -  ' + name)
+        return rt
+    }
 }

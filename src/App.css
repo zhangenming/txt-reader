@@ -1,8 +1,8 @@
 body {
     margin: 0;
-    -webkit-font-smoothing: antialiased;
 }
 #root {
+    -webkit-font-smoothing: antialiased;
     display: flex;
     height: 100vh;
 }
@@ -10,10 +10,8 @@ body {
     display: flex;
     flex-direction: column;
     width: 100px;
-    min-width: 100px;
-    max-width: 100px;
     background: yellowgreen;
-    box-sizing: border-box;
+    overflow: auto;
 }
 .control input {
     width: 100%;
@@ -27,13 +25,11 @@ body {
     display: flex;
     flex-direction: column;
     flex-grow: 1;
-    /* align-items: center; */
     background: steelblue;
     color: aliceblue;
     font-size: 25px;
     font-family: cursive;
-    position: relative;
-    /* for .next */
+    /* todo */
     overflow: hidden;
 }
 .reader .reader-helper {
@@ -49,19 +45,28 @@ body {
 }
 .reader .next {
     display: flex;
+    flex-grow: 1;
     justify-content: center;
-}
-.reader .next:hover {
+    align-items: center;
+    height: 30px;
     background: yellowgreen;
 }
-
-.container {
-    overflow: auto;
-    width: 100%;
+.reader .next:hover {
+    background: steelblue;
+}
+.wrap {
     display: flex;
     justify-content: center;
-    flex: 1;
-    /* background: cornflowerblue; */
+}
+.container {
+    display: flex;
+    flex-shrink: 0;
+    justify-content: center;
+    overflow-y: scroll;
+    transition: height 0.4s;
+}
+.container:focus-visible {
+    outline: none;
 }
 .V-Grid {
     background: cornflowerblue;
@@ -70,14 +75,8 @@ body {
     /* 没高度也能显示子元素 why */
     height: fit-content;
 }
-/* ITEM class */
 
-/* ITEM class */
-
-/* ITEM class */
-
-/* ITEM class */
-
+/* ITEM class begin begin begin begin begin begin begin begin begin begin begin begin*/
 .V-Grid span {
     display: flex;
     justify-content: center;
@@ -89,14 +88,11 @@ body {
     /* background: cornflowerblue;  */
     transition: color 0.1s, background-color 0.2s;
 }
-.V-Grid span:is(:first-child, :last-child) {
-    background: steelblue;
-}
+
 span.speaking,
 [data-e='：']:has(+ :not([data-e='“'])) {
     background: #7171e2;
 }
-
 span.isTarget {
     background: red;
     filter: hue-rotate(90deg);
@@ -118,16 +114,7 @@ span[data-invalid='”'] {
 [class*='select'] {
     background-color: var(--var-color);
 }
-/* ITEM class */
-
-/* ITEM class */
-
-/* ITEM class */
-
-/* ITEM class */
-::selection {
-    background-color: #9acd3266;
-}
+/* ITEM class end end end end end end end end end end end end end end end end end end*/
 
 .selectItem {
     display: flex;

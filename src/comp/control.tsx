@@ -14,10 +14,14 @@ export default function Control({
     deleteHandle,
     changeHandle,
     TXT,
+    txtLen,
+    TXTLen,
     lineSize,
+    heightLineCount,
     currentLine,
-    TXTkey,
     jump,
+    onKeyUp,
+    onKeyDown,
 }: {
     select: string
     selectSET: React.Dispatch<React.SetStateAction<string>>
@@ -25,17 +29,33 @@ export default function Control({
     deleteHandle(key: string): void
     changeHandle(item: item): void
     TXT: string
+    txtLen: number
+    TXTLen: number
     lineSize: number
+    heightLineCount: number
     currentLine: number
-    TXTkey: number
     jump: (target: number) => void
+    onKeyUp: (e: React.KeyboardEvent<Element>) => void
+    onKeyDown: (e: React.KeyboardEvent<Element>) => void
 }) {
     return (
-        <div className='control'>
+        <div
+            {...{
+                className: 'control',
+                tabIndex: 1,
+                onKeyUp,
+                onKeyDown,
+                // 两种方式空格连续按着时 原生不卡 自己实现卡
+            }}
+        >
+            <div>{currentLine}</div>
             <div>
-                {lineSize}-{currentLine}
+                {lineSize}-{heightLineCount}
             </div>
-            <div>{TXTkey}</div>
+            <br />
+
+            <div>{(txtLen / 10000).toFixed(1) + ' W'}</div>
+            <div>{(TXTLen / 10000).toFixed(1) + ' W'}</div>
 
             <br />
             <div className='count'>

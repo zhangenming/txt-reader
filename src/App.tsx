@@ -1,6 +1,6 @@
 import './App.css'
 import type { item } from './comp/control'
-import { useState, useEffect, memo } from 'react'
+import { useState, useEffect, memo, useMemo, useCallback } from 'react'
 import {
     callWithTime,
     getSelectionString,
@@ -15,9 +15,11 @@ import Control from './comp/control'
 import VGrid from './V-Grid'
 
 export const SIZE = 30
-const OVERSCAN = 10 //30
+const OVERSCAN_top = 0
+const OVERSCAN_bottom = 0
 const DIFF = 3
 
+let REDNER = 0
 const APP = () => {
     // const [hook, hookSET] = useState() // for clear hook count, 本身也会引入新的计数
     console.log('%c --- RENDER --- ', 'background: #222; color: #bada55')
@@ -32,7 +34,7 @@ const APP = () => {
     )
 
     const [onKeyDown, onKeyUp, clickType] = useKey(
-        OVERSCAN,
+        OVERSCAN_bottom,
         DIFF,
         widthCount,
         currentLine,
@@ -46,12 +48,12 @@ const APP = () => {
         JSON.parse(localStorage.getItem(txtLen + 'selectArr') || '[]')
     )
 
-    useEffectWrap(() => {
+    useEffect(() => {
         localStorage.setItem(txtLen + 'selectArr', JSON.stringify(selectArr))
     }, [selectArr])
 
     // 列表逻辑
-    useEffectWrap(() => {
+    useEffect(() => {
         document.onselectionchange = function () {
             // 需要通过全局函数拿值 而不是e
             const selection = getSelectionString()
@@ -63,6 +65,7 @@ const APP = () => {
     }, [])
 
     const [isTargetArr, SET_isTargetArr] = useState<number[]>([])
+
     return (
         <>
             <Control
@@ -103,22 +106,21 @@ const APP = () => {
             >
                 <div className='reader-helper' />
 
-                <div className='wrap'>
-                    <VGrid
-                        {...{
-                            TXT,
-                            widthCount,
-                            heightCount,
-                            currentLine,
-                            SET_currentLine,
-                            spking,
-                            OVERSCAN,
-                        }}
-                    />
-                </div>
+                <VGrid
+                    {...{
+                        TXT,
+                        widthCount,
+                        heightCount,
+                        currentLine,
+                        SET_currentLine,
+                        spking,
+                        OVERSCAN_top,
+                        OVERSCAN_bottom,
+                    }}
+                />
 
                 <div className='next' onMouseOver={() => console.log}>
-                    NEXT
+                    NEXT {++REDNER}
                 </div>
             </div>
 
@@ -142,8 +144,9 @@ const APP = () => {
 
                 <style>
                     {(() => {
-                        const last = widthCount * OVERSCAN + 1
-                        const selector = `.V-Grid span:is(:first-child, :nth-last-child(${last}))`
+                        const first = OVERSCAN_top * widthCount + 1
+                        const last = OVERSCAN_bottom * widthCount + 1
+                        const selector = `.V-Grid span:is(:nth-child(${first}), :nth-last-child(${last}))`
                         return selector + ` \n\n {background: steelblue;}`
                     })()}
                 </style>
@@ -186,7 +189,8 @@ const APP = () => {
             if (selectArr.find(e => e.key === selectionStr)) {
                 deleteHandle(selectionStr)
                 // getSelection()!.removeAllRanges()
-                SET_select('')
+            } else {
+                addHandle()
             }
         }
 
@@ -251,7 +255,7 @@ const APP = () => {
 
         SET_select('')
 
-        selectArrSetWrap([
+        SETWRAP_selectArr([
             ...selectArr,
             {
                 key: select,
@@ -265,10 +269,11 @@ const APP = () => {
         getSelection()!.removeAllRanges()
     }
     function deleteHandle(key: string) {
-        selectArrSetWrap(selectArr.filter(e => e.key !== key))
+        SET_select('')
+        SETWRAP_selectArr(selectArr.filter(e => e.key !== key))
     }
     function changeHandle(item: item) {
-        selectArrSetWrap([
+        SETWRAP_selectArr([
             ...selectArr.filter(e => e.key !== item.key),
             {
                 ...item,
@@ -276,7 +281,7 @@ const APP = () => {
         ])
     }
 
-    function selectArrSetWrap(arr: item[]) {
+    function SETWRAP_selectArr(arr: item[]) {
         SET_selectArr(
             arr.sort((l, r) =>
                 r.count != l.count ? r.count - l.count : r.i - l.i

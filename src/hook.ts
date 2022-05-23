@@ -14,9 +14,10 @@ import { SIZE } from './App'
 // '图灵'
 // '圣墟'
 //
+import txt from '../txt/星之继承者（全3册）'
 
 const book = decodeURI(location.hash).slice(1) || '星之继承者（全3册）'
-const txt = (await import('../txt/' + book)).default
+// const txt = (await import('../txt/' + book)).default
 
 import { i2rc, makeFuncCache, queryDom, useEffectWrap } from './utils'
 const { floor } = Math
@@ -26,8 +27,10 @@ export function useSizeCount() {
 
     const [state, SET_state] = useState(call)
 
-    useEffectWrap(() => {
-        window.onresize = () => SET_state(call)
+    useEffect(() => {
+        window.onresize = () => {
+            SET_state(call)
+        }
     }, [state])
 
     return state
@@ -48,7 +51,7 @@ export function useTXT(widthCount: number) {
     // txt(with widthCount) -> TXT
     const [state, SET_state] = useState(getter)
 
-    useEffectWrap(() => {
+    useEffect(() => {
         SET_state(getter)
     }, [widthCount])
 
@@ -59,11 +62,11 @@ export function useTXT(widthCount: number) {
             useTxtCache[widthCount] = txt
                 .split('\n')
                 .map((e: string) => {
-                    const line =
+                    const needSpace =
                         widthCount + // 完整第一行
                         widthCount - // 第二行空格剩余补齐
                         (e.length % widthCount || widthCount)
-                    return e + ' '.repeat(line)
+                    return e + ' '.repeat(needSpace)
                 })
                 .join('')
         }
@@ -77,7 +80,7 @@ export function useSpking(TXT: string, TXTLen: number) {
     const call = useCallback(makeFuncCache(getter), [TXTLen])
     const [state, SET_state] = useState(call)
 
-    useEffectWrap(() => {
+    useEffect(() => {
         SET_state(call)
     }, [TXTLen])
 
@@ -108,7 +111,7 @@ export function useScroll(txtLen: number, heightLineCount: number) {
         Number(localStorage.getItem(txtLen + 'idx'))
     ) // 函数形式只会执行一次
 
-    useEffectWrap(() => {
+    useEffect(() => {
         queryDom('.container').scrollTop = state * SIZE // todo, dom -> react ref?
     }, [])
 
@@ -129,7 +132,7 @@ export function useScroll(txtLen: number, heightLineCount: number) {
 
 let clear: number
 export function useKey(
-    OVERSCAN: number,
+    OVERSCAN_bottom: number,
     DIFF: number,
     lineSize: number,
     currentLine: number,
@@ -165,11 +168,12 @@ export function useKey(
         }
         if (e.code === 'Space') {
             setTimeout(() => {
-                const x = (OVERSCAN + DIFF) * lineSize
+                const x = (OVERSCAN_bottom + DIFF) * lineSize
                 const xx = `:nth-child(${x}) ~ :not([data-invalid=" "])` // magic
                 const target = Number(queryDom(xx).dataset.i)
                 const rc = i2rc(target, lineSize).r
-                const rs = DIFF + rc - currentLine - heightLineCount - OVERSCAN
+                const rs =
+                    DIFF + rc - currentLine - heightLineCount - OVERSCAN_bottom
 
                 const dom = queryDom('.reader-helper').style
                 dom.top = rs * SIZE + 'px'
@@ -188,7 +192,7 @@ export function useKey(
                 }, 1111)
             })
 
-            jump(currentLine + OVERSCAN + heightLineCount - DIFF)
+            jump(currentLine + OVERSCAN_bottom + heightLineCount - DIFF)
         }
     }
 }

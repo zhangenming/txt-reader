@@ -1,10 +1,12 @@
 body {
     margin: 0;
 }
+
 #root {
     -webkit-font-smoothing: antialiased;
     display: flex;
     height: 100vh;
+    --size: 30px;
 }
 .control {
     display: flex;
@@ -12,14 +14,6 @@ body {
     width: 100px;
     background: yellowgreen;
     overflow: auto;
-}
-.control input {
-    width: 100%;
-    box-sizing: border-box;
-}
-.control .count {
-    display: flex;
-    justify-content: flex-start;
 }
 .reader {
     display: flex;
@@ -48,15 +42,11 @@ body {
     flex-grow: 1;
     justify-content: center;
     align-items: center;
-    height: 30px;
+    height: var(--size);
     background: yellowgreen;
 }
 .reader .next:hover {
     background: steelblue;
-}
-.wrap {
-    display: flex;
-    justify-content: center;
 }
 .container {
     display: flex;
@@ -70,27 +60,27 @@ body {
 }
 .V-Grid {
     background: cornflowerblue;
-    display: flex;
-    flex-wrap: wrap;
-    /* 没高度也能显示子元素 why */
     height: fit-content;
+    transition: width 1s;
+    line-height: var(--size);
 }
 
 /* ITEM class begin begin begin begin begin begin begin begin begin begin begin begin*/
 .V-Grid span {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 30px;
-    width: 30px;
+    display: inline-block;
+    text-align: center;
+    vertical-align: bottom;
+    height: var(--size);
+    width: var(--size);
     box-sizing: border-box; /*否则last会在speaking状态下失效*/
     /* for filter */
     /* background: cornflowerblue;  */
     transition: color 0.1s, background-color 0.2s;
 }
 
+/* magic invalid*/
 span.speaking,
-[data-e='：']:has(+ :not([data-e='“'])) {
+[data-invalid='：']:has(+ :not([data-invalid='“'])) {
     background: #7171e2;
 }
 span.isTarget {
@@ -106,9 +96,11 @@ span.isTarget {
     border-right: 3px solid;
 }
 span[data-invalid='“'] {
+    display: inline-flex;
     justify-content: end;
 }
 span[data-invalid='”'] {
+    display: inline-flex;
     justify-content: start;
 }
 [class*='select'] {
@@ -133,9 +125,3 @@ span[data-invalid='”'] {
 .selectItem span.key {
     flex-shrink: 1;
 }
-BACKUP {
-    color: rgb(249, 181, 42);
-    /* 299e81 */
-}
-
-/* // queryDomAll(":has(~:nth-child(150)):not(:has(~:nth-child(100)))") */

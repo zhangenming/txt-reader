@@ -99,14 +99,7 @@ export default memo(
                 (e.target as HTMLElement).scrollTop / SIZE
             )
 
-            if (0) {
-                SET_currentLine(lineIdxScrollChange)
-            } else {
-                clearTimeout(clear)
-                clear = setTimeout(() => {
-                    SET_currentLine(lineIdxScrollChange)
-                }, 10)
-            }
+            SET_currentLine(lineIdxScrollChange)
         }
     })
 )

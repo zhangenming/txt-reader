@@ -106,18 +106,23 @@ const APP = () => {
             >
                 <div className='reader-helper' />
 
-                <VGrid
-                    {...{
-                        TXT,
-                        widthCount,
-                        heightCount,
-                        currentLine,
-                        SET_currentLine,
-                        spking,
-                        OVERSCAN_top,
-                        OVERSCAN_bottom,
-                    }}
-                />
+                {useCallback(
+                    (
+                        <VGrid
+                            {...{
+                                TXT,
+                                widthCount,
+                                heightCount,
+                                currentLine,
+                                SET_currentLine,
+                                spking,
+                                OVERSCAN_top,
+                                OVERSCAN_bottom,
+                            }}
+                        />
+                    ) as any,
+                    [Math.round(currentLine / 10)]
+                )}
 
                 <div className='next' onMouseOver={() => console.log}>
                     NEXT {++REDNER}

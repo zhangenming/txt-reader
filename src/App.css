@@ -1,13 +1,13 @@
 body {
     margin: 0;
 }
-
 #root {
     -webkit-font-smoothing: antialiased;
     display: flex;
     height: 100vh;
     --size: 30px;
 }
+
 .control {
     display: flex;
     flex-direction: column;
@@ -77,7 +77,6 @@ body {
     /* background: cornflowerblue;  */
     transition: color 0.1s, background-color 0.2s;
 }
-
 /* magic invalid*/
 span.speaking,
 [data-invalid='：']:has(+ :not([data-invalid='“'])) {

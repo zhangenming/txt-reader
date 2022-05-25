@@ -19,8 +19,7 @@ import txt from '../txt/星之继承者（全3册）'
 const book = decodeURI(location.hash).slice(1) || '星之继承者（全3册）'
 // const txt = (await import('../txt/' + book)).default
 
-import { i2rc, makeFuncCache, queryDom, useEffectWrap } from './utils'
-const { floor } = Math
+import { floor, i2rc, makeFuncCache, queryDom, useEffectWrap } from './utils'
 
 export function useSizeCount() {
     const call = useCallback(makeFuncCache(getter), [])
@@ -62,11 +61,12 @@ export function useTXT(widthCount: number) {
             useTxtCache[widthCount] = txt
                 .split('\n')
                 .map((e: string) => {
-                    const needSpace =
-                        widthCount + // 完整第一行
-                        widthCount - // 第二行空格剩余补齐
-                        (e.length % widthCount || widthCount)
-                    return e + ' '.repeat(needSpace)
+                    const all =
+                        widthCount -
+                        (e.length % widthCount || widthCount) + // 第一行空格剩余补齐
+                        widthCount // 完整第二行
+
+                    return e + '〇'.repeat(all)
                 })
                 .join('')
         }

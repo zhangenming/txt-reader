@@ -1,6 +1,8 @@
 import { useEffect } from 'react'
 import { invalidData } from './book'
 
+export const floor = Math.floor
+
 const getAllWordPositionCache: any = {}
 function getAllWordPosition(word: string, TXT: string) {
     const key = word + TXT.length
@@ -166,6 +168,7 @@ ${getCss2()}
 
 
 
+
 /* css3 高亮 当hover */
 ${getCss3()}
 
@@ -173,6 +176,7 @@ ${getCss3()}
 
 /* css4 左右联动 当hover */
 ${getCss4()}
+
 `
 
     function getCss1() {
@@ -302,16 +306,16 @@ export function rc2i(r: number, c: number, lineSize: number) {
 }
 export function i2rc(i: number, lineSize: number) {
     return {
-        r: Math.floor(i / lineSize),
+        r: floor(i / lineSize),
         c: i % lineSize,
     }
 }
 
 export function getColor() {
     const [l, g, b] = [
-        Math.floor(Math.random() * 256),
-        Math.floor(Math.random() * 256),
-        Math.floor(Math.random() * 256),
+        floor(Math.random() * 256),
+        floor(Math.random() * 256),
+        floor(Math.random() * 256),
     ]
     return `rgb(${l},${g},${b})`
 }
@@ -332,16 +336,12 @@ export function isInvalidWord(word: string) {
     return invalidData.includes(word)
 }
 
-// useTxt useSpk useSpk
-// useSpk
 export function useEffectWrap(func: any = () => {}, deps?: any) {
-    if (!1) {
+    if (!0) {
         const name = new Error()
             .stack!.split('\n')[3]
             .split('(')[0]
             .replaceAll('    at ', '')
-
-        console.log('注册', name)
 
         const type = (() => {
             if (!deps) return 'every' // 没数组
@@ -351,6 +351,7 @@ export function useEffectWrap(func: any = () => {}, deps?: any) {
 
         const flag = `      EFFECT --- ${name} (${type}) `.slice(0, 100)
 
+        console.log('注册', name)
         useEffect(function EFFECT() {
             console.log('执行', name)
             console.time(flag)
@@ -380,9 +381,7 @@ export function callWithTime(name: any, func?: any) {
         },
     }
 
-    console.log(Object.keys(f)[0])
-
-    if (!0) {
+    if (!1) {
         return Object.values(f)[0]
     } else {
         return func
@@ -421,7 +420,8 @@ export function callWithTime2(name: string, func: any) {
     }
 }
 
+const selection = document.getSelection()!
 export function getSelectionString() {
     //todo with hook effect
-    return document.getSelection()!.toString().replaceAll('\n', '') // 处理flex回车问题
+    return selection.toString()
 }

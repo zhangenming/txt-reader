@@ -3,6 +3,7 @@ import type { item } from './comp/control'
 import { useState, useEffect, memo, useMemo, useCallback } from 'react'
 import {
     callWithTime,
+    floor,
     getSelectionString,
     getStyle,
     getWordCount,
@@ -13,10 +14,9 @@ import {
 import { useKey, useScroll, useSizeCount, useSpking, useTXT } from './hook'
 import Control from './comp/control'
 import VGrid from './V-Grid'
+import { useScrollData } from './useSrollData'
 
 export const SIZE = 30
-const OVERSCAN_top = 0
-const OVERSCAN_bottom = 0
 const DIFF = 3
 
 let REDNER = 0
@@ -25,6 +25,13 @@ const APP = () => {
     console.log('%c --- RENDER --- ', 'background: #222; color: #bada55')
 
     const { widthCount, heightCount } = useSizeCount()
+
+    const _o = 1
+    const OVERSCAN_top = !_o ? 0 : 30
+    const OVERSCAN_bottom = !_o ? 0 : 30
+    const OVERSCAN_change = !_o ? 0 : 10
+
+    // const { scrolling } = useScrollData()
     const [TXT, TXTLen, txtLen] = useTXT(widthCount)
     const spking = useSpking(TXT, TXTLen)
 
@@ -55,6 +62,7 @@ const APP = () => {
     // 列表逻辑
     useEffect(() => {
         document.onselectionchange = function () {
+            return
             // 需要通过全局函数拿值 而不是e
             const selection = getSelectionString()
             // 随便点击也会触发这个事件 值是空 覆盖到期望值
@@ -95,13 +103,6 @@ const APP = () => {
                         '--clickType': clickType,
                     },
                     onClick: GoToNextItemHandle,
-                    onCopy(e) {
-                        e.preventDefault()
-                        e.clipboardData.setData(
-                            'text/plain',
-                            getSelectionString()
-                        )
-                    },
                 }}
             >
                 <div className='reader-helper' />
@@ -121,11 +122,18 @@ const APP = () => {
                             }}
                         />
                     ) as any,
-                    [Math.round(currentLine / 10)]
+                    [
+                        widthCount,
+                        heightCount,
+                        floor(currentLine / (OVERSCAN_change || 1)),
+                    ]
                 )}
 
                 <div className='next' onMouseOver={() => console.log}>
-                    NEXT {++REDNER}
+                    {(OVERSCAN_top + OVERSCAN_bottom + heightCount) *
+                        widthCount}
+                    +++ NEXT {++REDNER}
+                    {/* -- {scrolling ? 1 : 2} */}
                 </div>
             </div>
 
@@ -147,14 +155,14 @@ const APP = () => {
         }
     </style> */}
 
-                <style>
+                {/* <style>
                     {(() => {
                         const first = OVERSCAN_top * widthCount + 1
                         const last = OVERSCAN_bottom * widthCount + 1
                         const selector = `.V-Grid span:is(:nth-child(${first}), :nth-last-child(${last}))`
                         return selector + ` \n\n {background: steelblue;}`
                     })()}
-                </style>
+                </style> */}
 
                 {[
                     {
@@ -181,35 +189,27 @@ const APP = () => {
     )
 
     function GoToNextItemHandle({ target, metaKey, altKey }: React.MouseEvent) {
-        const selectionStr = getSelectionString()
+        const selection = getSelectionString()
 
         // 拉选selection状态
         if (target instanceof HTMLDivElement) {
-            // 拉取起始值 添加到列表
-            // if (getWordCount(selectionStr, TXT) > 10) {
-            //     addHandle()
-            // }
+            // console.log('div', selection)
 
             // 拉取存在值 从列表删除
-            if (selectArr.find(e => e.key === selectionStr)) {
-                deleteHandle(selectionStr)
-                // getSelection()!.removeAllRanges()
+            if (selectArr.find(e => e.key === selection)) {
+                deleteHandle(selection)
             } else {
-                addHandle()
+                addHandle(selection)
             }
         }
 
         // 点击click状态
         if (target instanceof HTMLSpanElement) {
-            const content = getComputedStyle(target).content
+            // console.log('span', selection)
+
+            const content = getComputedStyle(target).content // js <-> css
             if (content === 'normal') return
             const word = content.slice(1, -1) //去掉引号
-
-            // 点击的是拉取状态 添加到列表
-            if (select === word) {
-                addHandle()
-                return
-            }
 
             // 其他点击 走跳转逻辑
             const wordPosition = getWordPosition(word, TXT)
@@ -251,14 +251,10 @@ const APP = () => {
         }
     }
 
-    function addHandle() {
-        // 为什么不需要参数
-        if (select === '' || select === '\n') {
-            alert(1)
-            return // 什么时候会出现?
+    function addHandle(select: string) {
+        if (select === '') {
+            return
         }
-
-        SET_select('')
 
         SETWRAP_selectArr([
             ...selectArr,
@@ -274,7 +270,6 @@ const APP = () => {
         getSelection()!.removeAllRanges()
     }
     function deleteHandle(key: string) {
-        SET_select('')
         SETWRAP_selectArr(selectArr.filter(e => e.key !== key))
     }
     function changeHandle(item: item) {

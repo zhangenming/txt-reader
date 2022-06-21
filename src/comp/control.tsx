@@ -54,8 +54,8 @@ export default function Control({
             </div>
             <br />
 
-            <div>{(txtLen / 10000).toFixed(1) + ' W'}</div>
-            <div>{(TXTLen / 10000).toFixed(1) + ' W'}</div>
+            <div>{txtLen / 10000}</div>
+            <div>{TXTLen / 10000}</div>
 
             <br />
             <div className='count'>

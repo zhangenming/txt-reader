@@ -1,4 +1,5 @@
 import './App.css'
+import './debug.js'
 import type { item } from './comp/control'
 import { useState, useEffect, memo, useMemo, useCallback } from 'react'
 import {
@@ -22,17 +23,17 @@ const DIFF = 3
 let REDNER = 0
 const APP = () => {
     // const [hook, hookSET] = useState() // for clear hook count, 本身也会引入新的计数
-    console.log('%c --- RENDER --- ', 'background: #222; color: #bada55')
+    // console.log('%c --- RENDER --- ', 'background: #222; color: #bada55')
 
     const { widthCount, heightCount } = useSizeCount()
 
-    const _o = 1
+    const _o = 0
     const OVERSCAN_top = !_o ? 0 : 30
     const OVERSCAN_bottom = !_o ? 0 : 30
     const OVERSCAN_change = !_o ? 0 : 10
 
     // const { scrolling } = useScrollData()
-    const [TXT, TXTLen, txtLen] = useTXT(widthCount)
+    const [TXT, TXTLen, txt, txtLen] = useTXT(widthCount)
     const spking = useSpking(TXT, TXTLen)
 
     const [currentLine, SET_currentLine, jumpLine] = useScroll(
@@ -112,6 +113,7 @@ const APP = () => {
                         <VGrid
                             {...{
                                 TXT,
+                                txt,
                                 widthCount,
                                 heightCount,
                                 currentLine,

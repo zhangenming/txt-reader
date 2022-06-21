@@ -19,7 +19,14 @@ import txt from '../txt/星之继承者（全3册）'
 const book = decodeURI(location.hash).slice(1) || '星之继承者（全3册）'
 // const txt = (await import('../txt/' + book)).default
 
-import { floor, i2rc, makeFuncCache, queryDom, useEffectWrap } from './utils'
+import {
+    floor,
+    getWordCount,
+    i2rc,
+    makeFuncCache,
+    queryDom,
+    useEffectWrap,
+} from './utils'
 
 export function useSizeCount() {
     const call = useCallback(makeFuncCache(getter), [])
@@ -50,25 +57,28 @@ export function useTXT(widthCount: number) {
     // txt(with widthCount) -> TXT
     const [state, SET_state] = useState(getter)
 
+    // const allIdx = [...new Set(txt)].sort()
+    // console.log(allIdx, getWordCount('\n', txt))
+
     useEffect(() => {
         SET_state(getter)
     }, [widthCount])
 
-    return [state, state.length, txt.length] as const
+    return [state, state.length, txt, txt.length] as const
 
     function getter(): string {
         if (!useTxtCache[widthCount]) {
             useTxtCache[widthCount] = txt
-                .split('\n')
-                .map((e: string) => {
-                    const all =
-                        widthCount -
-                        (e.length % widthCount || widthCount) + // 第一行空格剩余补齐
-                        widthCount // 完整第二行
+            // .split('\n')
+            // .map((e: string) => {
+            //     const all =
+            //         widthCount -
+            //         (e.length % widthCount || widthCount) + // 第一行空格剩余补齐
+            //         widthCount // 完整第二行
 
-                    return e + '〇'.repeat(all)
-                })
-                .join('')
+            //     return e + '〇'.repeat(all)
+            // })
+            // .join('')
         }
         return useTxtCache[widthCount]
     }

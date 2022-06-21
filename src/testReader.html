@@ -1,25 +1,51 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Document</title>
-  </head>
-  <body>
-    <div id="dom1" style="white-space: pre-wrap"></div>
-    <div id="dom2" style="white-space: pre-wrap"></div>
-  </body>
-  <script type="module">
-    import TXTb from '../txt/1.js'
-    const txt = TXTb
-    const len = txt.length
-    const x = parseInt(len / 2)
-    const q = txt.slice(0, x)
-    const w = txt.slice(x)
-    // dom.innerHTML = TXTb
-    // dom1.innerHTML = q
-    // dom2.innerHTML = w
-    dom1.innerHTML = txt
-  </script>
+    <head>
+        <meta charset="UTF-8" />
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Document</title>
+    </head>
+    <body>
+        <button id="popup-trigger">Click for popup</button>
+
+        <div id="popup">Click outisde the box to close</div>
+        <style>
+            body {
+                text-align: center;
+                padding-top: 50px;
+            }
+            #popup {
+                position: absolute;
+                top: 90px;
+                right: 0;
+                left: 0;
+                box-shadow: 0px 3px 3px -2px rgba(0, 0, 0, 0.2),
+                    0px 3px 4px 0px rgba(0, 0, 0, 0.14),
+                    0px 1px 8px 0px rgba(0, 0, 0, 0.12);
+                width: 250px;
+                margin: auto;
+                z-index: 3;
+                overflow: hidden;
+                border-radius: 4px;
+                display: none;
+                padding: 8px;
+                text-align: center;
+            }
+            #popup.show {
+                display: block;
+            }
+        </style>
+        <script>
+            const popupEl = document.querySelector('#popup')
+            const popupBttn = document.querySelector('#popup-trigger')
+
+            popupBttn.addEventListener('click', e => {
+                popupEl.classList.toggle('show')
+            })
+            document.addEventListener('click', e => {
+                console.log(e, e.target.closest('#popup'))
+            })
+        </script>
+    </body>
 </html>

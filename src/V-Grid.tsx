@@ -8,6 +8,7 @@ import { callWithTime, floor, getClasses, isInvalidWord } from './utils'
 export default memo(
     callWithTime(function VGrid({
         TXT,
+        txt,
         widthCount,
         heightCount,
         currentLine,
@@ -17,6 +18,7 @@ export default memo(
         OVERSCAN_bottom,
     }: {
         TXT: string
+        txt: string
         widthCount: number
         heightCount: number
         currentLine: number
@@ -31,7 +33,7 @@ export default memo(
         const paddingTop = currentLine - OVERSCAN_top
         const paddingBottom = TXT.length / widthCount - currentLine
 
-        console.log('VG.....')
+        // console.log('VG.....')
 
         return (
             <>
@@ -54,14 +56,44 @@ export default memo(
                         {(() => {
                             let tempIdx = 0
                             let newLineIdx = 0
+                            let rt = [...TXT.slice(L, R)]
+                            // reduce有必要 虽然返回数目和之前相同 貌似可以使用map
+                            // 但中途修改了新数组 map做不到(只能修改原数组)
+                            // .reduce(transform, [])
 
-                            return (
-                                [...TXT.slice(L, R)]
-                                    // reduce有必要 虽然返回数目和之前相同 貌似可以使用map
-                                    // 但中途修改了新数组 map做不到(只能修改原数组)
-                                    .reduce(transform, [])
-                                    .map(geneChild)
-                            )
+                            // const isNeedLine = preLine.lastIndexOf('\n')
+                            // if (isNeedLine != -1) {
+                            //     const newLine = preLine.slice(isNeedLine)
+
+                            //     // rt = rt.slice(0, -widthCount)
+                            // }
+
+                            const enterIdx = TXT.lastIndexOf('\n', L) + 1
+
+                            const need = widthCount - (enterIdx % widthCount)
+
+                            console.log(L)
+
+                            if (L - enterIdx === need) {
+                            } else {
+                            }
+                            // rt.unshift('\n')
+
+                            const preLine = [...TXT.slice(L - widthCount, L)]
+                            const firstLine = [...TXT.slice(L, L + widthCount)]
+
+                            const idx2 = firstLine.lastIndexOf('\n')
+                            if (idx2 === -1) {
+                                // rt.unshift(...TXT.slice(L - need, L))
+                            } else {
+                                // Array(idx2)
+                                //     .fill(0)
+                                //     .forEach(() => {
+                                //         rt.shift()
+                                //     })
+                            }
+
+                            return rt.map(geneChild)
 
                             function transform(
                                 acc: (string | number)[],
@@ -89,10 +121,11 @@ export default memo(
                                 const idx = L + i
 
                                 //标志符
-                                if (typeof word === 'number') {
+                                if (word === '\n') {
                                     return (
                                         <span
                                             key={idx}
+                                            data-i={idx}
                                             style={{
                                                 width: 'inherit',
                                             }}

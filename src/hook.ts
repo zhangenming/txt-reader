@@ -14,7 +14,7 @@ import { SIZE } from './App'
 // '图灵'
 // '圣墟'
 //
-import txt from '../txt/星之继承者（全3册）'
+import txt from '../txt/万历十五年'
 
 const book = decodeURI(location.hash).slice(1) || '星之继承者（全3册）'
 // const txt = (await import('../txt/' + book)).default
@@ -24,26 +24,24 @@ import {
     getWordCount,
     i2rc,
     makeFuncCache,
-    queryDom,
+    querySelector,
     useEffectWrap,
 } from './utils'
 
 export function useSizeCount() {
-    const call = useCallback(makeFuncCache(getter), [])
-
-    const [state, SET_state] = useState(call)
+    const [state, SET_state] = useState(getter)
 
     useEffect(() => {
         window.onresize = () => {
-            SET_state(call)
+            SET_state(getter)
         }
-    }, [state])
+    }, [])
 
     return state
 
     function getter() {
         const min = 0
-        const width = innerWidth - 100 - min - 15 /*滚轴宽度*/
+        const width = innerWidth - 100 - min - 17 /*滚轴宽度*/
         const height = innerHeight - 30 - min
         return {
             widthCount: floor(width / SIZE),
@@ -64,21 +62,23 @@ export function useTXT(widthCount: number) {
         SET_state(getter)
     }, [widthCount])
 
-    return [state, state.length, txt, txt.length] as const
+    return [txt, txt.length, state, state.length] as const
 
     function getter(): string {
         if (!useTxtCache[widthCount]) {
             useTxtCache[widthCount] = txt
-            // .split('\n')
-            // .map((e: string) => {
-            //     const all =
-            //         widthCount -
-            //         (e.length % widthCount || widthCount) + // 第一行空格剩余补齐
-            //         widthCount // 完整第二行
+                .replaceAll(/    /g, '  ')
+                .replaceAll(/\n+/g, '\n')
+                .split('\n')
+                .map((e: string) => {
+                    const all =
+                        widthCount -
+                        (e.length % widthCount || widthCount) + // 第一行空格剩余补齐
+                        widthCount // 完整第二行
 
-            //     return e + '〇'.repeat(all)
-            // })
-            // .join('')
+                    return e + ' '.repeat(all)
+                })
+                .join('')
         }
         return useTxtCache[widthCount]
     }
@@ -116,28 +116,30 @@ export function useSpking(TXT: string, TXTLen: number) {
     }
 }
 
-export function useScroll(txtLen: number, heightLineCount: number) {
+export function useScroll(txtLen: number, heightLineCount: number, domC: any) {
     const [state, SET_state] = useState(() =>
         Number(localStorage.getItem(txtLen + 'idx'))
     ) // 函数形式只会执行一次
 
     useEffect(() => {
-        queryDom('.container').scrollTop = state * SIZE // todo, dom -> react ref?
+        querySelector('.container').scrollTop = state * SIZE // todo, dom -> react ref?
     }, [])
 
-    return [state, useCallback(SET, [txtLen]), jumpLine] as const
+    useEffect(() => {
+        localStorage.setItem(txtLen + 'idx', state + '')
+        console.log(333, state)
+    }, [state])
 
-    function jumpLine(_target: number) {
-        const target = _target - floor(heightLineCount / 2)
+    return [
+        state,
+        useCallback(SET_state, [txtLen]),
+        function jumpLine(_target: number) {
+            const target = _target - floor(heightLineCount / 2)
 
-        SET(target)
-        queryDom('.container').scrollTop = target * SIZE
-    }
-
-    function SET(n: number) {
-        SET_state(n)
-        localStorage.setItem(txtLen + 'idx', n + '')
-    }
+            SET_state(target)
+            querySelector('.container').scrollTop = target * SIZE
+        },
+    ] as const
 }
 
 let clear: number
@@ -204,5 +206,4 @@ export function useKey(
 
             jump(currentLine + OVERSCAN_bottom + heightLineCount - DIFF)
         }
-    }
 }

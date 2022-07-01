@@ -1,75 +1,577 @@
-<!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Document</title>
-    </head>
-    <body>
-        <span>1</span>
-        <span>1</span>
-        <span>1</span>
-        <span>1</span>
-        <span>1</span>
-        <span>1</span>
-        <span>1</span>
-        <span>1</span>
-        <span>1</span>
-    </body>
-    <style>
-        /* .wrap span:hover {
-    background: #000;
-} */
-        /* span:hover + span {
-    background: #000;
-} */
-        /* span + span:hover {
-    background: #000;
-} */
 
-        /* span:hover:has(+ span) {
-    background: #000;
-} */
+<head>
+    <script type="module" src="/@vite/client"></script>
+    <script type="module">
+        import RefreshRuntime from "/@react-refresh"
+        RefreshRuntime.injectIntoGlobalHook(window)
+        window.$RefreshReg$ = () => { }
+        window.$RefreshSig$ = () => (type) => type
+        window.__vite_plugin_react_preamble_installed__ = true
+    </script>
 
-        /* span:hover:has(+(span)) {
-    background: #000;
-}
-span:hover:has(+ span:hover) {
-    background: #000;
-} */
-
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/svg+xml" href="/src/favicon.svg">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vite App</title>
+    <style type="text/css">
         body {
-            display: flex;
-            display: flex;
-            align-content: center;
-            justify-content: center;
-            align-items: center;
-        }
-        span {
-            width: 40px;
-            height: 40px;
-            display: flex;
-            align-content: center;
-            justify-content: center;
-            align-items: center;
-        }
-        /* hover */
-        span:hover {
-            background: #000;
-        }
-        /* right */
-        span + span + span:hover + span {
-            background: blue;
-        }
-        /* left */
-        /* h1:has(+ p) 紧跟着 <p> 的 <h1>  h1 p */
-        span:has(+ span:hover) {
-            background: yellow;
+            margin: 0;
         }
 
-        span:has(+ span:has(+ span:hover)) {
-            background: yellow;
+        #root {
+            -webkit-font-smoothing: antialiased;
+            display: flex;
+            height: 100vh;
+            --size: 30px;
+        }
+
+        .control {
+            display: flex;
+            flex-direction: column;
+            width: 100px;
+            background: yellowgreen;
+            overflow: auto;
+        }
+
+        .reader {
+            display: flex;
+            flex-direction: column;
+            flex-grow: 1;
+            background: steelblue;
+            color: aliceblue;
+            font-size: 25px;
+            font-family: fangsong;
+            /* todo */
+            overflow: hidden;
+        }
+
+        .reader .reader-helper {
+            position: absolute;
+            z-index: 1;
+            transition-property: top, background-color, height, opacity;
+            transition-duration: 0.3s;
+
+            width: 100%;
+            /* 需要设置0 才能响应transition */
+            height: 0;
+            opacity: 0;
+        }
+
+        .reader .next {
+            display: flex;
+            flex-grow: 1;
+            justify-content: center;
+            align-items: center;
+            height: var(--size);
+            background: yellowgreen;
+        }
+
+        .reader .next:hover {
+            background: steelblue;
+        }
+
+        .container {
+            display: flex;
+            flex-shrink: 0;
+            justify-content: center;
+            overflow-y: scroll;
+            transition: height 0.4s;
+        }
+
+        .container:focus-visible {
+            outline: none;
+        }
+
+        .V-Grid {
+            background: cornflowerblue;
+            height: fit-content;
+            transition: width 1s;
+        }
+
+        /* ITEM class begin begin begin begin begin begin begin begin begin begin begin begin*/
+        .V-Grid span {
+            display: inline-block;
+            text-align: center;
+            vertical-align: bottom;
+            box-sizing: border-box;
+            /*否则last会在speaking状态下失效*/
+            /* for filter */
+            /* background: cornflowerblue;  */
+            transition: color 0.1s, background-color 0.2s;
+        }
+
+        /* magic invalid*/
+        span.speaking,
+        [data-invalid='：']:has(+ :not([data-invalid='“'])) {
+            background: #7171e2;
+        }
+
+        span.isTarget {
+            background: red;
+            filter: hue-rotate(90deg);
+            border-top: 3px solid;
+            border-bottom: 3px solid;
+        }
+
+        :not(.isTarget)+.isTarget {
+            border-left: 3px solid;
+        }
+
+        .isTarget:has(+ :not(.isTarget)) {
+            border-right: 3px solid;
+        }
+
+        span[data-invalid='“'] {
+            display: inline-flex;
+            justify-content: end;
+        }
+
+        span[data-invalid='”'] {
+            display: inline-flex;
+            justify-content: start;
+        }
+
+        [class*='select'] {
+            background-color: var(--var-color);
+        }
+
+        /* ITEM class end end end end end end end end end end end end end end end end end end*/
+
+        .selectItem {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: 25px;
+            overflow: hidden;
+        }
+
+        .selectItem span {
+            min-width: 10px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        .selectItem span.key {
+            flex-shrink: 1;
         }
     </style>
+</head>
+
+<body>
+    <div id="root">
+        <div class="control" tabindex="1"><button>updata</button>
+            <div>702</div>
+            <div>17-44</div><br>
+            <div>17.6265</div>
+            <div>19.2882</div><br>
+            <div class="count"><span class="item">192882</span></div><input type="text" value="">
+            <div>
+                <div class="selectItem" slot="跪在前列"><span>0</span><span class="key" title="跪在前列">跪在前列</span><span
+                        class="count">1</span></div>
+            </div>
+        </div>
+        <div class="reader" style="--clickType:e-resize;">
+            <div class="reader-helper"></div>
+            <div class="container" tabindex="1" style="height: 1320px;">
+                <div class="V-Grid" style="padding-top: 21060px; padding-bottom: 319320px; width: 510px;"><span
+                        data-i="11934" 眉="眉">眉</span>
+                    <p>，而且注意修<span data-i="11934" 眉="眉">眉</span>饰，袍服每天<span data-i="11934"
+                            眉="眉">眉</span>都像崭新的一样折痕分明。他的心智也完全</p><span data-i="11941" data-invalid="，">，</span><span
+                        data-i="11942" 而="而">而</span><span data-i="11943" 且="且">且</span><span data-i="11944"
+                        注="注">注</span><span data-i="11945" 意="意">意</span><span data-i="11946" 修="修">修</span><span
+                        data-i="11947" 饰="饰">饰</span><span data-i="11948" data-invalid="，">，</span><span data-i="11949"
+                        袍="袍">袍</span><span data-i="11950" 服="服">服</span><span data-i="11951" 每="每">每</span><span
+                        data-i="11952" 天="天">天</span><span data-i="11953" 都="都">都</span><span data-i="11954"
+                        像="像">像</span><span data-i="11955" 崭="崭">崭</span><span data-i="11956" 新="新">新</span><span
+                        data-i="11957" 的="的">的</span><span data-i="11958" 一="一">一</span><span data-i="11959"
+                        样="样">样</span><span data-i="11960" 折="折">折</span><span data-i="11961" 痕="痕">痕</span><span
+                        data-i="11962" 分="分">分</span><span data-i="11963" 明="明">明</span><span data-i="11964"
+                        data-invalid="。">。</span><span data-i="11965" 他="他">他</span><span data-i="11966"
+                        的="的">的</span><span data-i="11967" 心="心">心</span><span data-i="11968" 智="智">智</span><span
+                        data-i="11969" 也="也">也</span><span data-i="11970" 完="完">完</span><span data-i="11971"
+                        全="全">全</span><span data-i="11972" 和="和">和</span><span data-i="11973" 仪="仪">仪</span><span
+                        data-i="11974" 表="表">表</span><span data-i="11975" 相="相">相</span><span data-i="11976"
+                        一="一">一</span><span data-i="11977" 致="致">致</span><span data-i="11978"
+                        data-invalid="。">。</span><span data-i="11979" 他="他">他</span><span data-i="11980"
+                        不="不">不</span><span data-i="11981" 开="开">开</span><span data-i="11982" 口="口">口</span><span
+                        data-i="11983" 则="则">则</span><span data-i="11984" 已="已">已</span><span data-i="11985"
+                        data-invalid="，">，</span><span data-i="11986" 一="一">一</span><span data-i="11987"
+                        开="开">开</span><span data-i="11988" 口="口">口</span><span data-i="11989" 就="就">就</span><span
+                        data-i="11990" 能="能">能</span><span data-i="11991" 揭="揭">揭</span><span data-i="11992"
+                        出="出">出</span><span data-i="11993" 事="事">事</span><span data-i="11994" 情="情">情</span><span
+                        data-i="11995" 的="的">的</span><span data-i="11996" 要="要">要</span><span data-i="11997"
+                        害="害">害</span><span data-i="11998" data-invalid="，">，</span><span data-i="11999"
+                        言="言">言</span><span data-i="12000" 辞="辞">辞</span><span data-i="12001" 简="简">简</span><span
+                        data-i="12002" 短="短">短</span><span data-i="12003" 准="准">准</span><span data-i="12004"
+                        确="确">确</span><span data-i="12005" data-invalid="，">，</span><span data-i="12006"
+                        使="使">使</span><span data-i="12007" 人="人">人</span><span data-i="12008" 无="无">无</span><span
+                        data-i="12009" 可="可">可</span><span data-i="12010" 置="置">置</span><span data-i="12011"
+                        疑="疑">疑</span><span data-i="12012" data-invalid="，">，</span><span data-i="12013"
+                        颇="颇">颇</span><span data-i="12014" 合="合">合</span><span data-i="12015" 于="于">于</span><span
+                        data-i="12016" 中="中">中</span><span data-i="12017" 国="国">国</span><span data-i="12018"
+                        古="古">古</span><span data-i="12019" 语="语">语</span><span data-i="12020" 所="所">所</span><span
+                        data-i="12021" 谓="谓">谓</span><span data-i="12022" data-invalid="“">“</span><span data-i="12023"
+                        夫="夫" class="speaking">夫</span><span data-i="12024" 人="人" class="speaking">人</span><span
+                        data-i="12025" 不="不" class="speaking">不</span><span data-i="12026" 言="言"
+                        class="speaking">言</span><span data-i="12027" data-invalid="，" class="speaking">，</span><span
+                        data-i="12028" 言="言" class="speaking">言</span><span data-i="12029" 必="必"
+                        class="speaking">必</span><span data-i="12030" 有="有" class="speaking">有</span><span
+                        data-i="12031" 中="中" class="speaking">中</span><span data-i="12032"
+                        data-invalid="”">”</span><span data-i="12033" data-invalid="。">。</span><span data-i="12034"
+                        data-invalid=" "> </span><span data-i="12035" data-invalid=" "> </span><span data-i="12036"
+                        data-invalid=" "> </span><span data-i="12037" data-invalid=" "> </span><span data-i="12038"
+                        data-invalid=" "> </span><span data-i="12039" data-invalid=" "> </span><span data-i="12040"
+                        data-invalid=" "> </span><span data-i="12041" data-invalid=" "> </span><span data-i="12042"
+                        data-invalid=" "> </span><span data-i="12043" data-invalid=" "> </span><span data-i="12044"
+                        data-invalid=" "> </span><span data-i="12045" data-invalid=" "> </span><span data-i="12046"
+                        data-invalid=" "> </span><span data-i="12047" data-invalid=" "> </span><span data-i="12048"
+                        data-invalid=" "> </span><span data-i="12049" data-invalid=" "> </span><span data-i="12050"
+                        data-invalid=" "> </span><span data-i="12051" data-invalid=" "> </span><span data-i="12052"
+                        data-invalid=" "> </span><span data-i="12053" data-invalid=" "> </span><span data-i="12054"
+                        data-invalid=" "> </span><span data-i="12055" 万="万">万</span><span data-i="12056"
+                        历="历">历</span><span data-i="12057" 和="和">和</span><span data-i="12058" 他="他">他</span><span
+                        data-i="12059" 的="的">的</span><span data-i="12060" 两="两">两</span><span data-i="12061"
+                        位="位">位</span><span data-i="12062" 母="母">母</span><span data-i="12063" 亲="亲">亲</span><span
+                        data-i="12064" 对="对">对</span><span data-i="12065" 张="张">张</span><span data-i="12066"
+                        居="居">居</span><span data-i="12067" 正="正">正</span><span data-i="12068" 有="有">有</span><span
+                        data-i="12069" 特="特">特</span><span data-i="12070" 殊="殊">殊</span><span data-i="12071"
+                        的="的">的</span><span data-i="12072" 尊="尊">尊</span><span data-i="12073" 重="重">重</span><span
+                        data-i="12074" data-invalid="，">，</span><span data-i="12075" 并="并">并</span><span data-i="12076"
+                        称="称">称</span><span data-i="12077" 之="之">之</span><span data-i="12078" 为="为">为</span><span
+                        data-i="12079" data-invalid="“">“</span><span data-i="12080" 元="元"
+                        class="speaking">元</span><span data-i="12081" 辅="辅" class="speaking">辅</span><span
+                        data-i="12082" 张="张" class="speaking">张</span><span data-i="12083" 先="先"
+                        class="speaking">先</span><span data-i="12084" 生="生" class="speaking">生</span><span
+                        data-i="12085" data-invalid="”">”</span><span data-i="12086" data-invalid="，">，</span><span
+                        data-i="12087" 其="其">其</span><span data-i="12088" 原="原">原</span><span data-i="12089"
+                        因="因">因</span><span data-i="12090" 说="说">说</span><span data-i="12091" 来="来">来</span><span
+                        data-i="12092" 话="话">话</span><span data-i="12093" 长="长">长</span><span data-i="12094"
+                        data-invalid="。">。</span><span data-i="12095" 在="在">在</span><span data-i="12096"
+                        隆="隆">隆</span><span data-i="12097" 庆="庆">庆</span><span data-i="12098" 皇="皇">皇</span><span
+                        data-i="12099" 帝="帝">帝</span><span data-i="12100" 去="去">去</span><span data-i="12101"
+                        世="世">世</span><span data-i="12102" 的="的">的</span><span data-i="12103" 时="时">时</span><span
+                        data-i="12104" 候="候">候</span><span data-i="12105" data-invalid="，">，</span><span data-i="12106"
+                        高="高">高</span><span data-i="12107" 拱="拱">拱</span><span data-i="12108" 是="是">是</span><span
+                        data-i="12109" 当="当">当</span><span data-i="12110" 时="时">时</span><span data-i="12111"
+                        的="的">的</span><span data-i="12112" data-invalid="“">“</span><span data-i="12113" 首="首"
+                        class="speaking">首</span><span data-i="12114" 揆="揆" class="speaking">揆</span><span
+                        data-i="12115" data-invalid="”">”</span><span data-i="12116" data-invalid="，">，</span><span
+                        data-i="12117" 即="即">即</span><span data-i="12118" 首="首">首</span><span data-i="12119"
+                        席="席">席</span><span data-i="12120" 内="内">内</span><span data-i="12121" 阁="阁">阁</span><span
+                        data-i="12122" 大="大">大</span><span data-i="12123" 学="学">学</span><span data-i="12124"
+                        士="士">士</span><span data-i="12125" data-invalid="。">。</span><span data-i="12126"
+                        高="高">高</span><span data-i="12127" 拱="拱">拱</span><span data-i="12128" 自="自">自</span><span
+                        data-i="12129" 以="以">以</span><span data-i="12130" 为="为">为</span><span data-i="12131"
+                        是="是">是</span><span data-i="12132" 先="先">先</span><span data-i="12133" 皇="皇">皇</span><span
+                        data-i="12134" 的="的">的</span><span data-i="12135" 元="元">元</span><span data-i="12136"
+                        老="老">老</span><span data-i="12137" 重="重">重</span><span data-i="12138" 臣="臣">臣</span><span
+                        data-i="12139" data-invalid="，">，</span><span data-i="12140" 不="不">不</span><span data-i="12141"
+                        把="把">把</span><span data-i="12142" 新="新">新</span><span data-i="12143" 皇="皇">皇</span><span
+                        data-i="12144" 帝="帝">帝</span><span data-i="12145" 放="放">放</span><span data-i="12146"
+                        在="在">在</span><span data-i="12147" 眼="眼">眼</span><span data-i="12148" 里="里">里</span><span
+                        data-i="12149" data-invalid="。">。</span><span data-i="12150" 新="新">新</span><span data-i="12151"
+                        皇="皇">皇</span><span data-i="12152" 帝="帝">帝</span><span data-i="12153" 有="有">有</span><span
+                        data-i="12154" 事="事">事</span><span data-i="12155" 派="派">派</span><span data-i="12156"
+                        人="人">人</span><span data-i="12157" 询="询">询</span><span data-i="12158" 问="问">问</span><span
+                        data-i="12159" 高="高">高</span><span data-i="12160" 拱="拱">拱</span><span data-i="12161"
+                        的="的">的</span><span data-i="12162" 意="意">意</span><span data-i="12163" 见="见">见</span><span
+                        data-i="12164" data-invalid="，">，</span><span data-i="12165" 他="他">他</span><span data-i="12166"
+                        竟="竟">竟</span><span data-i="12167" 敢="敢">敢</span><span data-i="12168" 肆="肆">肆</span><span
+                        data-i="12169" 无="无">无</span><span data-i="12170" 忌="忌">忌</span><span data-i="12171"
+                        惮="惮">惮</span><span data-i="12172" 地="地">地</span><span data-i="12173" 对="对">对</span><span
+                        data-i="12174" 使="使">使</span><span data-i="12175" 者="者">者</span><span data-i="12176"
+                        说="说">说</span><span data-i="12177" data-invalid="：">：</span><span data-i="12178"
+                        data-invalid="“">“</span><span data-i="12179" 你="你" class="speaking">你</span><span
+                        data-i="12180" 自="自" class="speaking">自</span><span data-i="12181" 称="称"
+                        class="speaking">称</span><span data-i="12182" 奉="奉" class="speaking">奉</span><span
+                        data-i="12183" 了="了" class="speaking">了</span><span data-i="12184" 圣="圣"
+                        class="speaking">圣</span><span data-i="12185" 旨="旨" class="speaking">旨</span><span
+                        data-i="12186" data-invalid="，" class="speaking">，</span><span data-i="12187" 我="我"
+                        class="speaking">我</span><span data-i="12188" 说="说" class="speaking">说</span><span
+                        data-i="12189" 这="这" class="speaking">这</span><span data-i="12190" 是="是"
+                        class="speaking">是</span><span data-i="12191" 一="一" class="speaking">一</span><span
+                        data-i="12192" 个="个" class="speaking">个</span><span data-i="12193" 不="不"
+                        class="speaking">不</span><span data-i="12194" 满="满" class="speaking">满</span><span
+                        data-i="12195" data-invalid="1" class="speaking">1</span><span data-i="12196" data-invalid="0"
+                        class="speaking">0</span><span data-i="12197" 岁="岁" class="speaking">岁</span><span
+                        data-i="12198" 的="的" class="speaking">的</span><span data-i="12199" 小="小"
+                        class="speaking">小</span><span data-i="12200" 孩="孩" class="speaking">孩</span><span
+                        data-i="12201" 的="的" class="speaking">的</span><span data-i="12202" 话="话"
+                        class="speaking">话</span><span data-i="12203" data-invalid="。" class="speaking">。</span><span
+                        data-i="12204" 你="你" class="speaking">你</span><span data-i="12205" 难="难"
+                        class="speaking">难</span><span data-i="12206" 道="道" class="speaking">道</span><span
+                        data-i="12207" 能="能" class="speaking">能</span><span data-i="12208" 让="让"
+                        class="speaking">让</span><span data-i="12209" 我="我" class="speaking">我</span><span
+                        data-i="12210" 相="相" class="speaking">相</span><span data-i="12211" 信="信"
+                        class="speaking">信</span><span data-i="12212" 他="他" class="speaking">他</span><span
+                        data-i="12213" 真="真" class="speaking">真</span><span data-i="12214" 能="能"
+                        class="speaking">能</span><span data-i="12215" 管="管" class="speaking">管</span><span
+                        data-i="12216" 理="理" class="speaking">理</span><span data-i="12217" 天="天"
+                        class="speaking">天</span><span data-i="12218" 下="下" class="speaking">下</span><span
+                        data-i="12219" 大="大" class="speaking">大</span><span data-i="12220" 事="事"
+                        class="speaking">事</span><span data-i="12221" 吗="吗" class="speaking">吗</span><span
+                        data-i="12222" data-invalid="？" class="speaking">？</span><span data-i="12223"
+                        data-invalid="”">”</span><span data-i="12224" 在="在">在</span><span data-i="12225"
+                        他="他">他</span><span data-i="12226" 的="的">的</span><span data-i="12227" 眼="眼">眼</span><span
+                        data-i="12228" 里="里">里</span><span data-i="12229" data-invalid="，">，</span><span data-i="12230"
+                        天="天">天</span><span data-i="12231" 子="子">子</span><span data-i="12232" 不="不">不</span><span
+                        data-i="12233" 过="过">过</span><span data-i="12234" 是="是">是</span><span data-i="12235"
+                        小="小">小</span><span data-i="12236" 孩="孩">孩</span><span data-i="12237" 子="子">子</span><span
+                        data-i="12238" data-invalid="，">，</span><span data-i="12239" 太="太">太</span><span data-i="12240"
+                        后="后">后</span><span data-i="12241" 不="不">不</span><span data-i="12242" 过="过">过</span><span
+                        data-i="12243" 是="是">是</span><span data-i="12244" 妇="妇">妇</span><span data-i="12245"
+                        道="道">道</span><span data-i="12246" 人="人">人</span><span data-i="12247" 家="家">家</span><span
+                        data-i="12248" data-invalid="，">，</span><span data-i="12249" 这="这">这</span><span data-i="12250"
+                        种="种">种</span><span data-i="12251" 狂="狂">狂</span><span data-i="12252" 妄="妄">妄</span><span
+                        data-i="12253" 跋="跋">跋</span><span data-i="12254" 扈="扈">扈</span><span data-i="12255"
+                        是="是">是</span><span data-i="12256" 和="和">和</span><span data-i="12257" 人="人">人</span><span
+                        data-i="12258" 臣="臣">臣</span><span data-i="12259" 的="的">的</span><span data-i="12260"
+                        身="身">身</span><span data-i="12261" 分="分">分</span><span data-i="12262" 决="决">决</span><span
+                        data-i="12263" 不="不">不</span><span data-i="12264" 能="能">能</span><span data-i="12265"
+                        相="相">相</span><span data-i="12266" 容="容">容</span><span data-i="12267" 的="的">的</span><span
+                        data-i="12268" data-invalid="。">。</span><span data-i="12269" 幸="幸">幸</span><span data-i="12270"
+                        而="而">而</span><span data-i="12271" 上="上">上</span><span data-i="12272" 天="天">天</span><span
+                        data-i="12273" 保="保">保</span><span data-i="12274" 佑="佑">佑</span><span data-i="12275"
+                        data-invalid="，">，</span><span data-i="12276" 还="还">还</span><span data-i="12277"
+                        有="有">有</span><span data-i="12278" 忠="忠">忠</span><span data-i="12279" 臣="臣">臣</span><span
+                        data-i="12280" 张="张">张</span><span data-i="12281" 居="居">居</span><span data-i="12282"
+                        正="正">正</span><span data-i="12283" 在="在">在</span><span data-i="12284"
+                        data-invalid="，">，</span><span data-i="12285" 他="他">他</span><span data-i="12286"
+                        立="立">立</span><span data-i="12287" 即="即">即</span><span data-i="12288" 献="献">献</span><span
+                        data-i="12289" 上="上">上</span><span data-i="12290" 奇="奇">奇</span><span data-i="12291"
+                        计="计">计</span><span data-i="12292" data-invalid="，">，</span><span data-i="12293"
+                        建="建">建</span><span data-i="12294" 议="议">议</span><span data-i="12295" 采="采">采</span><span
+                        data-i="12296" 取="取">取</span><span data-i="12297" 断="断">断</span><span data-i="12298"
+                        然="然">然</span><span data-i="12299" 措="措">措</span><span data-i="12300" 施="施">施</span><span
+                        data-i="12301" 解="解">解</span><span data-i="12302" 决="决">决</span><span data-i="12303"
+                        高="高">高</span><span data-i="12304" 拱="拱">拱</span><span data-i="12305"
+                        data-invalid="。">。</span><span data-i="12306" data-invalid="1">1</span><span data-i="12307"
+                        data-invalid="5">5</span><span data-i="12308" data-invalid="7">7</span><span data-i="12309"
+                        data-invalid="2">2</span><span data-i="12310" 年="年">年</span><span data-i="12311"
+                        夏="夏">夏</span><span data-i="12312" data-invalid="，">，</span><span data-i="12313"
+                        有="有">有</span><span data-i="12314" 一="一">一</span><span data-i="12315" 天="天">天</span><span
+                        data-i="12316" 百="百">百</span><span data-i="12317" 官="官">官</span><span data-i="12318"
+                        奉="奉">奉</span><span data-i="12319" 召="召">召</span><span data-i="12320" 在="在">在</span><span
+                        data-i="12321" 宫="宫">宫</span><span data-i="12322" 门="门">门</span><span data-i="12323"
+                        前="前">前</span><span data-i="12324" 集="集">集</span><span data-i="12325" 合="合">合</span><span
+                        data-i="12326" data-invalid="。">。</span><span data-i="12327" 一="一">一</span><span data-i="12328"
+                        个="个">个</span><span data-i="12329" 宦="宦">宦</span><span data-i="12330" 官="官">官</span><span
+                        data-i="12331" 手="手">手</span><span data-i="12332" 执="执">执</span><span data-i="12333"
+                        黄="黄">黄</span><span data-i="12334" 纸="纸">纸</span><span data-i="12335" 文="文">文</span><span
+                        data-i="12336" 书="书">书</span><span data-i="12337" data-invalid="，">，</span><span data-i="12338"
+                        这="这">这</span><span data-i="12339" 是="是">是</span><span data-i="12340" 两="两">两</span><span
+                        data-i="12341" 位="位">位</span><span data-i="12342" 太="太">太</span><span data-i="12343"
+                        后="后">后</span><span data-i="12344" 的="的">的</span><span data-i="12345" 懿="懿">懿</span><span
+                        data-i="12346" 旨="旨">旨</span><span data-i="12347" data-invalid="，">，</span><span data-i="12348"
+                        也="也">也</span><span data-i="12349" 是="是">是</span><span data-i="12350" 新="新">新</span><span
+                        data-i="12351" 皇="皇">皇</span><span data-i="12352" 帝="帝">帝</span><span data-i="12353"
+                        的="的">的</span><span data-i="12354" 圣="圣">圣</span><span data-i="12355" 旨="旨">旨</span><span
+                        data-i="12356" data-invalid="。">。</span><span data-i="12357" 黄="黄">黄</span><span data-i="12358"
+                        纸="纸">纸</span><span data-i="12359" 文="文">文</span><span data-i="12360" 书="书">书</span><span
+                        data-i="12361" 一="一">一</span><span data-i="12362" 经="经">经</span><span data-i="12363"
+                        宣="宣">宣</span><span data-i="12364" 读="读">读</span><span data-i="12365" 完="完">完</span><span
+                        data-i="12366" 毕="毕">毕</span><span data-i="12367" data-invalid="，">，</span><span data-i="12368"
+                        跪="跪">跪</span><span data-i="12369" 在="在">在</span><span data-i="12370" 前="前">前</span><span
+                        data-i="12371" 列="列">列</span><span data-i="12372" 的="的">的</span><span data-i="12373"
+                        高="高">高</span><span data-i="12374" 拱="拱">拱</span><span data-i="12375" 不="不">不</span><span
+                        data-i="12376" 禁="禁">禁</span><span data-i="12377" 神="神">神</span><span data-i="12378"
+                        色="色">色</span><span data-i="12379" 大="大">大</span><span data-i="12380" 变="变">变</span><span
+                        data-i="12381" data-invalid="。">。</span><span data-i="12382" 他="他">他</span><span data-i="12383"
+                        已="已">已</span><span data-i="12384" 经="经">经</span><span data-i="12385" 被="被">被</span><span
+                        data-i="12386" 褫="褫">褫</span><span data-i="12387" 去="去">去</span><span data-i="12388"
+                        官="官">官</span><span data-i="12389" 衔="衔">衔</span><span data-i="12390" 职="职">职</span><span
+                        data-i="12391" 位="位">位</span><span data-i="12392" data-invalid="，">，</span><span data-i="12393"
+                        并="并">并</span><span data-i="12394" 被="被">被</span><span data-i="12395" 勒="勒">勒</span><span
+                        data-i="12396" 令="令">令</span><span data-i="12397" 即="即">即</span><span data-i="12398"
+                        日="日">日</span><span data-i="12399" 出="出">出</span><span data-i="12400" 京="京">京</span><span
+                        data-i="12401" data-invalid="，">，</span><span data-i="12402" 遣="遣">遣</span><span data-i="12403"
+                        返="返">返</span><span data-i="12404" 原="原">原</span><span data-i="12405" 籍="籍">籍</span><span
+                        data-i="12406" data-invalid="。">。</span><span data-i="12407" 按="按">按</span><span data-i="12408"
+                        照="照">照</span><span data-i="12409" 惯="惯">惯</span><span data-i="12410" 例="例">例</span><span
+                        data-i="12411" data-invalid="，">，</span><span data-i="12412" 他="他">他</span><span data-i="12413"
+                        从="从">从</span><span data-i="12414" 此="此">此</span><span data-i="12415" 就="就">就</span><span
+                        data-i="12416" 在="在">在</span><span data-i="12417" 原="原">原</span><span data-i="12418"
+                        籍="籍">籍</span><span data-i="12419" 地="地">地</span><span data-i="12420" 方="方">方</span><span
+                        data-i="12421" 官="官">官</span><span data-i="12422" 的="的">的</span><span data-i="12423"
+                        监="监">监</span><span data-i="12424" 视="视">视</span><span data-i="12425" 之="之">之</span><span
+                        data-i="12426" 下="下">下</span><span data-i="12427" data-invalid="，">，</span><span data-i="12428"
+                        终="终">终</span><span data-i="12429" 身="身">身</span><span data-i="12430" 不="不">不</span><span
+                        data-i="12431" 得="得">得</span><span data-i="12432" 离="离">离</span><span data-i="12433"
+                        境="境">境</span><span data-i="12434" data-invalid="。">。</span><span data-i="12435"
+                        张="张">张</span><span data-i="12436" 居="居">居</span><span data-i="12437" 正="正">正</span><span
+                        data-i="12438" 在="在">在</span><span data-i="12439" 艰="艰">艰</span><span data-i="12440"
+                        危="危">危</span><span data-i="12441" 之="之">之</span><span data-i="12442" 际="际">际</span><span
+                        data-i="12443" 保="保">保</span><span data-i="12444" 障="障">障</span><span data-i="12445"
+                        了="了">了</span><span data-i="12446" 皇="皇">皇</span><span data-i="12447" 室="室">室</span><span
+                        data-i="12448" 的="的">的</span><span data-i="12449" 安="安">安</span><span data-i="12450"
+                        全="全">全</span><span data-i="12451" data-invalid="，">，</span><span data-i="12452"
+                        建="建">建</span><span data-i="12453" 立="立">立</span><span data-i="12454" 了="了">了</span><span
+                        data-i="12455" 如="如">如</span><span data-i="12456" 此="此">此</span><span data-i="12457"
+                        的="的">的</span><span data-i="12458" 殊="殊">殊</span><span data-i="12459" 勋="勋">勋</span><span
+                        data-i="12460" data-invalid="，">，</span><span data-i="12461" 其="其">其</span><span data-i="12462"
+                        取="取">取</span><span data-i="12463" 高="高">高</span><span data-i="12464" 拱="拱">拱</span><span
+                        data-i="12465" 而="而">而</span><span data-i="12466" 代="代">代</span><span data-i="12467"
+                        之="之">之</span><span data-i="12468" 自="自">自</span><span data-i="12469" 属="属">属</span><span
+                        data-i="12470" 理="理">理</span><span data-i="12471" 所="所">所</span><span data-i="12472"
+                        当="当">当</span><span data-i="12473" 然="然">然</span><span data-i="12474"
+                        data-invalid="。">。</span><span data-i="12475" data-invalid=" "> </span><span data-i="12476"
+                        data-invalid=" "> </span><span data-i="12477" data-invalid=" "> </span><span data-i="12478"
+                        data-invalid=" "> </span><span data-i="12479" data-invalid=" "> </span><span data-i="12480"
+                        data-invalid=" "> </span><span data-i="12481" data-invalid=" "> </span><span data-i="12482"
+                        data-invalid=" "> </span><span data-i="12483" data-invalid=" "> </span><span data-i="12484"
+                        data-invalid=" "> </span><span data-i="12485" data-invalid=" "> </span><span data-i="12486"
+                        data-invalid=" "> </span><span data-i="12487" data-invalid=" "> </span><span data-i="12488"
+                        data-invalid=" "> </span><span data-i="12489" data-invalid=" "> </span><span data-i="12490"
+                        data-invalid=" "> </span><span data-i="12491" data-invalid=" "> </span><span data-i="12492"
+                        data-invalid=" "> </span><span data-i="12493" data-invalid=" "> </span><span data-i="12494"
+                        data-invalid=" "> </span><span data-i="12495" data-invalid=" "> </span><span data-i="12496"
+                        data-invalid=" "> </span><span data-i="12497" 除="除">除</span><span data-i="12498"
+                        了="了">了</span><span data-i="12499" 首="首">首</span><span data-i="12500" 揆="揆">揆</span><span
+                        data-i="12501" 以="以">以</span><span data-i="12502" 外="外">外</span><span data-i="12503"
+                        data-invalid="，">，</span><span data-i="12504" 张="张">张</span><span data-i="12505"
+                        居="居">居</span><span data-i="12506" 正="正">正</span><span data-i="12507" 又="又">又</span><span
+                        data-i="12508" 兼="兼">兼</span><span data-i="12509" 管="管">管</span><span data-i="12510"
+                        万="万">万</span><span data-i="12511" 历="历">历</span><span data-i="12512" 的="的">的</span><span
+                        data-i="12513" 教="教">教</span><span data-i="12514" 育="育">育</span><span data-i="12515"
+                        事="事">事</span><span data-i="12516" 务="务">务</span><span data-i="12517"
+                        data-invalid="。">。</span><span data-i="12518" 小="小">小</span><span data-i="12519"
+                        皇="皇">皇</span><span data-i="12520" 帝="帝">帝</span><span data-i="12521" 的="的">的</span><span
+                        data-i="12522" 五="五">五</span><span data-i="12523" 个="个">个</span><span data-i="12524"
+                        主="主">主</span><span data-i="12525" 讲="讲">讲</span><span data-i="12526" 经="经">经</span><span
+                        data-i="12527" 史="史">史</span><span data-i="12528" 的="的">的</span><span data-i="12529"
+                        老="老">老</span><span data-i="12530" 师="师">师</span><span data-i="12531"
+                        data-invalid="、">、</span><span data-i="12532" 两="两">两</span><span data-i="12533"
+                        个="个">个</span><span data-i="12534" 教="教">教</span><span data-i="12535" 书="书">书</span><span
+                        data-i="12536" 法="法">法</span><span data-i="12537" 的="的">的</span><span data-i="12538"
+                        老="老">老</span><span data-i="12539" 师="师">师</span><span data-i="12540" 和="和">和</span><span
+                        data-i="12541" 一="一">一</span><span data-i="12542" 个="个">个</span><span data-i="12543"
+                        侍="侍">侍</span><span data-i="12544" 读="读">读</span><span data-i="12545"
+                        data-invalid="，">，</span><span data-i="12546" 都="都">都</span><span data-i="12547"
+                        是="是">是</span><span data-i="12548" 他="他">他</span><span data-i="12549" 一="一">一</span><span
+                        data-i="12550" 手="手">手</span><span data-i="12551" 任="任">任</span><span data-i="12552"
+                        命="命">命</span><span data-i="12553" 的="的">的</span><span data-i="12554"
+                        data-invalid="。">。</span><span data-i="12555" 他="他">他</span><span data-i="12556"
+                        还="还">还</span><span data-i="12557" 编="编">编</span><span data-i="12558" 订="订">订</span><span
+                        data-i="12559" 了="了">了</span><span data-i="12560" 讲="讲">讲</span><span data-i="12561"
+                        章="章">章</span><span data-i="12562" 作="作">作</span><span data-i="12563" 为="为">为</span><span
+                        data-i="12564" 万="万">万</span><span data-i="12565" 历="历">历</span><span data-i="12566"
+                        的="的">的</span><span data-i="12567" 教="教">教</span><span data-i="12568" 科="科">科</span><span
+                        data-i="12569" 书="书">书</span><span data-i="12570" data-invalid="，">，</span><span data-i="12571"
+                        有="有">有</span><span data-i="12572" 机="机">机</span><span data-i="12573" 会="会">会</span><span
+                        data-i="12574" 还="还">还</span><span data-i="12575" 亲="亲">亲</span><span data-i="12576"
+                        自="自">自</span><span data-i="12577" 讲="讲">讲</span><span data-i="12578" 授="授">授</span><span
+                        data-i="12579" data-invalid="。">。</span><span data-i="12580" data-invalid=" "> </span><span
+                        data-i="12581" data-invalid=" "> </span><span data-i="12582" data-invalid=" "> </span><span
+                        data-i="12583" data-invalid=" "> </span><span data-i="12584" data-invalid=" "> </span><span
+                        data-i="12585" data-invalid=" "> </span><span data-i="12586" data-invalid=" "> </span><span
+                        data-i="12587" data-invalid=" "> </span><span data-i="12588" data-invalid=" "> </span><span
+                        data-i="12589" data-invalid=" "> </span><span data-i="12590" data-invalid=" "> </span><span
+                        data-i="12591" data-invalid=" "> </span><span data-i="12592" data-invalid=" "> </span><span
+                        data-i="12593" data-invalid=" "> </span><span data-i="12594" data-invalid=" "> </span><span
+                        data-i="12595" data-invalid=" "> </span><span data-i="12596" data-invalid=" "> </span><span
+                        data-i="12597" data-invalid=" "> </span><span data-i="12598" data-invalid=" "> </span><span
+                        data-i="12599" 万="万">万</span><span data-i="12600" 历="历">历</span><span data-i="12601"
+                        皇="皇">皇</span><span data-i="12602" 帝="帝">帝</span><span data-i="12603" 学="学">学</span><span
+                        data-i="12604" 习="习">习</span><span data-i="12605" 的="的">的</span><span data-i="12606"
+                        地="地">地</span><span data-i="12607" 方="方">方</span><span data-i="12608" 是="是">是</span><span
+                        data-i="12609" 文="文">文</span><span data-i="12610" 华="华">华</span><span data-i="12611"
+                        殿="殿">殿</span><span data-i="12612" data-invalid="。">。</span><span data-i="12613"
+                        data-invalid="1">1</span><span data-i="12614" data-invalid="5">5</span><span data-i="12615"
+                        data-invalid="7">7</span><span data-i="12616" data-invalid="2">2</span><span data-i="12617"
+                        年="年">年</span><span data-i="12618" 秋="秋">秋</span><span data-i="12619" 天="天">天</span><span
+                        data-i="12620" 以="以">以</span><span data-i="12621" 后="后">后</span><span data-i="12622"
+                        data-invalid="，">，</span><span data-i="12623" 他="他">他</span><span data-i="12624"
+                        每="每">每</span><span data-i="12625" 天="天">天</span><span data-i="12626" 的="的">的</span><span
+                        data-i="12627" 功="功">功</span><span data-i="12628" 课="课">课</span><span data-i="12629"
+                        有="有">有</span><span data-i="12630" 三="三">三</span><span data-i="12631" 项="项">项</span><span
+                        data-i="12632" 内="内">内</span><span data-i="12633" 容="容">容</span><span data-i="12634"
+                        data-invalid="：">：</span><span data-i="12635" 经="经">经</span><span data-i="12636"
+                        书="书">书</span><span data-i="12637" data-invalid="、">、</span><span data-i="12638"
+                        书="书">书</span><span data-i="12639" 法="法">法</span><span data-i="12640"
+                        data-invalid="、">、</span><span data-i="12641" 历="历">历</span><span data-i="12642"
+                        史="史">史</span><span data-i="12643" data-invalid="。">。</span><span data-i="12644"
+                        学="学">学</span><span data-i="12645" 习="习">习</span><span data-i="12646" 完="完">完</span><span
+                        data-i="12647" 经="经">经</span><span data-i="12648" 书="书">书</span><span data-i="12649"
+                        以="以">以</span><span data-i="12650" 后="后">后</span><span data-i="12651"
+                        data-invalid="，">，</span><span data-i="12652" 授="授">授</span><span data-i="12653"
+                        课="课">课</span><span data-i="12654" 老="老">老</span><span data-i="12655" 师="师">师</span><span
+                        data-i="12656" 可="可">可</span><span data-i="12657" 以="以">以</span><span data-i="12658"
+                        到="到">到</span><span data-i="12659" 休="休">休</span><span data-i="12660" 息="息">息</span><span
+                        data-i="12661" 室="室">室</span><span data-i="12662" 小="小">小</span><span data-i="12663"
+                        憩="憩">憩</span><span data-i="12664" data-invalid="，">，</span><span data-i="12665"
+                        但="但">但</span><span data-i="12666" 皇="皇">皇</span><span data-i="12667" 帝="帝">帝</span><span
+                        data-i="12668" 本="本">本</span><span data-i="12669" 人="人">人</span><span data-i="12670"
+                        却="却">却</span><span data-i="12671" 并="并">并</span><span data-i="12672" 不="不">不</span><span
+                        data-i="12673" 能="能">能</span><span data-i="12674" 那="那">那</span><span data-i="12675"
+                        么="么">么</span><span data-i="12676" 清="清">清</span><span data-i="12677" 闲="闲">闲</span><span
+                        data-i="12678" data-invalid="。">。</span><span data-i="12679" 这="这">这</span><span data-i="12680"
+                        时="时">时</span><span data-i="12681" 候="候">候</span>
+                </div>
+            </div>
+            <div class="next">748+++ NEXT 1</div>
+        </div>
+        <div class="styles">
+            <style slot=""></style>
+            <style slot="跪在前列">
+                /* css1 高亮 常亮 所有*/
+                [跪]+[在]+[前]+[列],
+                [跪]+[在]+[前]:has(+[列]),
+                [跪]+[在]:has(+[前]+[列]),
+                [跪]:has(+[在]+[前]+[列]) {
+                    color: black;
+                    content: '跪在前列';
+                    background: linear-gradient(#000, #000);
+                    background-size: 100% 2px;
+                    background-repeat: no-repeat;
+                    background-position: 0px 50%;
+                }
+
+
+
+                /* css2 高亮 常亮 只first/last */
+                /* 只有一个没必要显示 */
+
+
+
+
+                /* css3 高亮 当hover */
+                /* 只有一个没必要显示 */
+
+
+
+                /* css4 左右联动 当hover */
+                [slot='跪在前列']:hover {
+                    color: black;
+                    background: cornflowerblue
+                }
+
+
+                [slot='跪在前列']:has(.count:hover),
+
+                :has([slot='跪在前列'] .count:hover):is([跪]+[在]+[前]+[列],
+                    [跪]+[在]+[前]:has(+[列]),
+                    [跪]+[在]:has(+[前]+[列]),
+                    [跪]:has(+[在]+[前]+[列])),
+
+                :has([跪]+[在]+[前]+[列]:hover,
+                    [跪]+[在]+[前]:hover+[列],
+                    [跪]+[在]:hover+[前]+[列],
+                    [跪]:hover+[在]+[前]+[列]) [slot='跪在前列'] {
+                    background: bisque;
+                    color: forestgreen;
+                    box-shadow: 0px 3px 0px red, 0px -3px 0px red;
+                    z-index: 2;
+                    /*filter: brightness(0.8);*/
+                }
+            </style>
+        </div>
+    </div>
+    <script type="module" src="/src/main.tsx"></script>
+
+
+</body>
+
 </html>

@@ -320,11 +320,8 @@ export function getColor() {
     return `rgb(${l},${g},${b})`
 }
 
-export function queryDom(selector: string) {
-    return (
-        document.querySelector<HTMLElement>(selector) ||
-        document.documentElement
-    )
+export function querySelector(selector: string) {
+    return document.querySelector<HTMLElement>(selector)!
 }
 
 export function isInvalidWord(word: string) {

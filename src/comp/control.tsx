@@ -1,4 +1,5 @@
-import { getColor, getWordCount, i2rc } from '../utils'
+import { SIZE } from '../App'
+import { floor, getColor, getWordCount, i2rc } from '../utils'
 export type item = {
     key: string
     color: string
@@ -19,9 +20,11 @@ export default function Control({
     widthCount,
     heightCount,
     currentLine,
-    jump,
+    jumpLine,
     onKeyUp,
     onKeyDown,
+    SET_currentLine,
+    domC,
 }: {
     select: string
     SET_select: React.Dispatch<React.SetStateAction<string>>
@@ -34,7 +37,7 @@ export default function Control({
     widthCount: number
     heightCount: number
     currentLine: number
-    jump: (target: number) => void
+    jumpLine: (target: number) => void
     onKeyUp: (e: React.KeyboardEvent<Element>) => void
     onKeyDown: (e: React.KeyboardEvent<Element>) => void
 }) {
@@ -48,6 +51,21 @@ export default function Control({
                 // 两种方式空格连续按着时 原生不卡 自己实现卡
             }}
         >
+            <button
+                onClick={() => {
+                    const lineIdxScrollChange = floor(
+                        (domC.current as HTMLElement).scrollTop / SIZE
+                    )
+
+                    console.log(domC, lineIdxScrollChange)
+                    setTimeout(() => {
+                        SET_currentLine(lineIdxScrollChange)
+                    }, 1111)
+                }}
+            >
+                updata
+            </button>
+
             <div>{currentLine}</div>
             <div>
                 {widthCount}-{heightCount}
@@ -63,7 +81,7 @@ export default function Control({
                     className='item'
                     children={getWordCount(select, TXT)}
                     onClick={() => {
-                        jump(i2rc(TXT.indexOf(select), widthCount).r)
+                        jumpLine(i2rc(TXT.indexOf(select), widthCount).r)
                     }}
                 />
             </div>
@@ -101,7 +119,9 @@ export default function Control({
                                 children={count}
                                 onClick={() => {
                                     // todo with alt
-                                    jump(i2rc(TXT.indexOf(key), widthCount).r)
+                                    jumpLine(
+                                        i2rc(TXT.indexOf(key), widthCount).r
+                                    )
                                 }}
                             />
                         </div>

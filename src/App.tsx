@@ -1,7 +1,7 @@
 import './App.css'
 import './debug.js'
 import type { item } from './comp/control'
-import { useState, useEffect, memo, useMemo, useCallback } from 'react'
+import { useState, useEffect, memo, useMemo, useCallback, useRef } from 'react'
 import {
     callWithTime,
     floor,
@@ -15,30 +15,41 @@ import {
 import { useKey, useScroll, useSizeCount, useSpking, useTXT } from './hook'
 import Control from './comp/control'
 import VGrid from './V-Grid'
-import { useScrollData } from './useSrollData'
+// import { useScrollData } from './useSrollData'
 
 export const SIZE = 30
 const DIFF = 3
-
 let REDNER = 0
 const APP = () => {
+    // useEffect(() => {
+    //     const f = () =>
+    //         requestAnimationFrame(() => {
+    //             domC.current.scrollTop += 0.1
+    //             f()
+    //         })
+
+    //     f()
+    // }, [])
+    const _o = 1
+    const OVERSCAN_top = !_o ? 0 : 0
+    const OVERSCAN_bottom = !_o ? 0 : 0
+    const OVERSCAN_change = !_o ? 0 : 30
+
     // const [hook, hookSET] = useState() // for clear hook count, 本身也会引入新的计数
     // console.log('%c --- RENDER --- ', 'background: #222; color: #bada55')
 
     const { widthCount, heightCount } = useSizeCount()
 
-    const _o = 0
-    const OVERSCAN_top = !_o ? 0 : 30
-    const OVERSCAN_bottom = !_o ? 0 : 30
-    const OVERSCAN_change = !_o ? 0 : 10
-
     // const { scrolling } = useScrollData()
-    const [TXT, TXTLen, txt, txtLen] = useTXT(widthCount)
+    const [txt, txtLen, TXT, TXTLen] = useTXT(widthCount)
+
     const spking = useSpking(TXT, TXTLen)
 
+    const domC = useRef<HTMLElement>(null)
     const [currentLine, SET_currentLine, jumpLine] = useScroll(
         txtLen,
-        heightCount
+        heightCount,
+        domC
     )
 
     const [onKeyDown, onKeyUp, clickType] = useKey(
@@ -90,10 +101,12 @@ const APP = () => {
                     widthCount,
                     heightCount,
                     currentLine,
-                    jump: jumpLine,
+                    jumpLine,
                     tabIndex: 1,
                     onKeyDown,
                     onKeyUp,
+                    SET_currentLine,
+                    domC,
                 }}
             />
 
@@ -107,13 +120,24 @@ const APP = () => {
                 }}
             >
                 <div className='reader-helper' />
-
-                {useCallback(
+                <VGrid
+                    {...{
+                        TXT,
+                        widthCount,
+                        heightCount,
+                        currentLine,
+                        SET_currentLine,
+                        spking,
+                        OVERSCAN_top,
+                        OVERSCAN_bottom,
+                        ref: domC,
+                    }}
+                />
+                {/* {useCallback(
                     (
                         <VGrid
                             {...{
                                 TXT,
-                                txt,
                                 widthCount,
                                 heightCount,
                                 currentLine,
@@ -121,6 +145,7 @@ const APP = () => {
                                 spking,
                                 OVERSCAN_top,
                                 OVERSCAN_bottom,
+                                ref: domC,
                             }}
                         />
                     ) as any,
@@ -129,7 +154,7 @@ const APP = () => {
                         heightCount,
                         floor(currentLine / (OVERSCAN_change || 1)),
                     ]
-                )}
+                )} */}
 
                 <div className='next' onMouseOver={() => console.log}>
                     {(OVERSCAN_top + OVERSCAN_bottom + heightCount) *
@@ -298,4 +323,4 @@ function APPwrap() {
     return rt
 }
 
-export default callWithTime('APP', APP)
+export default APP

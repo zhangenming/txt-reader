@@ -4,4 +4,4 @@ const warning =
 
 const error = `＂￥㊟ℓａｄｅｇｈｉｋｌｍｎｕｏｐｒｓｖｗｙｚ：＇。・．～，！？／（）《》〉「」『』［］【】；、﹢－＝ＢＣＦＧＪＫＶＷＱＩＹＬＡＭＤＴＨＮＯＰＳＺ１２３４５６７８９０％℃`
 
-export const invalidData = [...warning, ...error]
+export const invalidData = new Set([...warning, ...error])

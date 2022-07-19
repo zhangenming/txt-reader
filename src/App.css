@@ -5,7 +5,6 @@ body {
     -webkit-font-smoothing: antialiased;
     display: flex;
     height: 100vh;
-    --size: 30px;
 }
 
 .control {
@@ -42,7 +41,7 @@ body {
     flex-grow: 1;
     justify-content: center;
     align-items: center;
-    height: var(--size);
+    height: var(--SIZE_H);
     background: yellowgreen;
 }
 .reader .next:hover {
@@ -62,7 +61,7 @@ body {
     background: cornflowerblue;
     height: fit-content;
     transition: width 1s;
-    line-height: var(--size);
+    line-height: var(--SIZE_H);
 }
 
 /* ITEM class begin begin begin begin begin begin begin begin begin begin begin begin*/
@@ -70,8 +69,10 @@ body {
     display: inline-block;
     text-align: center;
     vertical-align: bottom;
-    height: var(--size);
-    width: var(--size);
+    height: var(--SIZE_H);
+    width: var(--SIZE_W);
+    /* margin: 5px 0 5px 0; */
+
     box-sizing: border-box; /*否则last会在speaking状态下失效*/
     /* for filter */
     /* background: cornflowerblue;  */

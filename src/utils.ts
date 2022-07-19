@@ -158,7 +158,7 @@ ${_HAS}
 )`
     /* return后 有个空格 必要 不然\n失效; */
     return `
-/* css1 高亮 常亮 所有*/
+/* css1 高亮 常亮 所有 */
 ${getCss1()}
 
 
@@ -174,7 +174,7 @@ ${getCss3()}
 
 
 
-/* css4 左右联动 当hover */
+/* css4 左右联动 当hover 功耗高 */
 ${getCss4()}
 
 `
@@ -330,7 +330,7 @@ export function isInvalidWord(word: string) {
     // if (/[A-Z]/.test(word)) return 'data-upper'
     // if (error.includes(word)) return 'data-error'
     // if (warning.includes(word)) return 'data-warning'
-    return invalidData.includes(word)
+    return invalidData.has(word)
 }
 
 export function useEffectWrap(func: any = () => {}, deps?: any) {
@@ -422,3 +422,20 @@ export function getSelectionString() {
     //todo with hook effect
     return selection.toString()
 }
+
+export function chunk(arr: any[], chunkSize: number) {
+    if (chunkSize == 0) return
+
+    const rs = []
+    for (let i = 0; i < arr.length; i += chunkSize) {
+        rs.push(arr.slice(i, i + chunkSize))
+    }
+    return rs
+}
+
+export function chunkString(str: string, length: number) {
+    return str.match(new RegExp('.{1,' + length + '}', 'g'))!.map(e => [...e])
+}
+
+const features = [...new URLSearchParams(location.search).keys()]
+export const hasFeature = (f: string) => features.includes(f)

@@ -1,25 +1,461 @@
+import './App.css'
+
 import React, {
+    createContext,
+    lazy,
     memo,
+    Suspense,
+    useContext,
     useEffect,
+    useInsertionEffect,
     useLayoutEffect,
+    useMemo,
+    useReducer,
     useRef,
     useState,
+    version,
 } from 'react'
+
+// import whyDidYouRender from '@welldone-software/why-did-you-render'
+// const { default: whyDidYouRender } = await import(
+//     '@welldone-software/why-did-you-render'
+// )
+
+// whyDidYouRender(React, {
+//     // logOnDifferentValues: true,
+//     trackAllPureComponents: true,
+//     // trackHooks: true,
+// })
+
 import ReactDOM from 'react-dom/client'
-import App from './App'
+import { render } from 'react-dom'
+import APP from './App'
 import { callWithTime, callWithTime2, useEffectWrap } from './utils'
-
-// import { render } from 'react-dom'
-// render(<App />, document.getElementById('root'))
-
+import { runWithTime } from './debug'
+//todo 更新方式 打印动画更新
 setTimeout(() => {
-    const xx = !1 ? <TEST3 /> : <App />
-    ReactDOM.createRoot(document.getElementById('root')!).render(
-        <App />
-        //  <React.StrictMode>{xx}</React.StrictMode>
+    const dom = !0 ? (
+        <>
+            <APP />
+        </>
+    ) : (
+        <App2 />
     )
+
+    if (!0) {
+        ReactDOM.createRoot(document.getElementById('root')!).render(dom)
+    } else {
+        render(dom, document.getElementById('root')!)
+    }
+})
+const useUpdate = (fn, dep) => {
+    console.log('here')
+    const [count, setCount] = useState(0)
+
+    useEffect(() => {
+        if (!count) return
+        setCount(x => x + 1) // 删掉这行就不会两次执行
+    }, [dep])
+
+    useEffect(() => {
+        if (count > 1) {
+            fn()
+        }
+    }, [count])
+}
+
+const App2 = () => {
+    const [n, setN] = useState(0)
+    const add = () => {
+        setN(n + 1)
+    }
+
+    console.log('app')
+
+    useUpdate(() => console.log('n changed'), n)
+    return (
+        <div>
+            {n}
+            <button onClick={add}>+1</button>
+        </div>
+    )
+}
+let t = performance.now()
+let x = 0
+function time() {
+    window.w = (performance.now() - t) / x++
+
+    setTimeout(() => {
+        time()
+    }, 0)
+}
+function Time() {
+    window.w = (performance.now() - t) / x++
+
+    const [count, setCount] = useState(0)
+    setTimeout(() => {
+        setCount(count + 1)
+    }, 0) // 0.1 ????
+    return
+}
+
+function Aa() {
+    const d = <D />
+    // const d =
+    //     /* @__PURE__ */
+    //     _jsxDEV(
+    //         D,
+    //         {},
+    //         void 0,
+    //         false,
+    //         {
+    //             fileName: _jsxFileName,
+    //             lineNumber: 53,
+    //             columnNumber: 15,
+    //         },
+    //         this
+    //     )
+
+    // const d =  {
+    //     $$typeof: Symbol(react.element)
+    //     key: null
+    //     props: {
+    //     }
+    //     ref: null
+    //     type: D
+    // }
+    console.log(d, (<D />).type === D, D())
+    debugger
+
+    return (
+        <>
+            <B>
+                <C />
+                <D />
+            </B>
+            <D />
+        </>
+    )
+    function B({ children }) {
+        console.log('B')
+        useEffect(() => {
+            console.log('effect B')
+        })
+        return <>{children}</>
+    }
+
+    function C() {
+        console.log('C')
+        useEffect(() => {
+            console.log('effect C')
+        })
+        return <></>
+    }
+    function D() {
+        console.log('D')
+        useEffect(() => {
+            console.log('effect D')
+        })
+        return <></>
+    }
+}
+
+function App() {
+    // const q = <LargeList n={3} />
+    // const w = <LargeList n={3} />
+    // const e = <LargeList n={3} />
+    // const q = LargeList({ n: 3 })
+    // const w = LargeList({ n: 3 })
+    // const e = LargeList({ n: 3 })
+    const r = (
+        <>
+            {/* <L n={3} result={q} />
+        <L n={4} result={w} />
+        <L n={5} result={e} /> */}
+            <L n={3} result={<LargeList n={3} />} />
+            <L n={4} result={<LargeList n={4} />} />
+            <L n={5} result={<LargeList n={5} />} />
+            {/* <L result={<LargeList n={5} />} />
+            <R result={<LargeList n={5} />} /> */}
+        </>
+    )
+    return r
+    function LargeList({ n }) {
+        console.log(2)
+
+        return (
+            <div style={{ display: 'none' }}>
+                {[...Array(10 ** n)].map((_, i) => (
+                    <li>{i}</li>
+                ))}
+            </div>
+        )
+    }
+    function L({ n, result }) {
+        console.log(1)
+
+        console.time(n)
+        useEffect(() => {
+            console.timeEnd(n)
+        })
+        const [count, setCount] = useState(0)
+        return (
+            <>
+                <button onClick={() => setCount(count + 1)}>
+                    increase{count}
+                </button>
+
+                <div style={{ display: 'none' }}>{result}</div>
+            </>
+        )
+    }
+}
+const Component = ({ onClick }) => {
+    console.log('heavy component!')
+    return <button onClick={onClick}>x</button>
+}
+const PureComponent = React.memo(({ onClick }) => {
+    console.log('pure heavy component!')
+    return <button onClick={onClick}>x</button>
 })
 
+const xx = <Component />
+const Parent = () => {
+    const [count, setCount] = React.useState(0)
+
+    const r = useRef()
+    r.current = count
+    const dom = (
+        <Component onClick={() => console.log(`hi #${r.current}-${count}!`)} />
+    )
+    let X
+    X = dom
+    X = React.useMemo(() => dom, [])
+    // X = () => React.useMemo(() => dom, [])
+    // X = React.useMemo(() => () => dom, [])
+    // X = React.useCallback(() => dom, [])
+    // X = React.useCallback(dom, [])
+
+    return (
+        <>
+            {xx}
+            <button onClick={() => setCount(count + 1)}>
+                increase counter{count}
+            </button>
+        </>
+    )
+    return useMemo(
+        () => (
+            <>
+                {X}
+                <button onClick={() => setCount(count + 1)}>
+                    increase counter{count}
+                </button>
+            </>
+        ),
+        [count]
+    )
+}
+const Parent2 = () => {
+    const [count, setCount] = React.useState(0)
+    const r = useRef()
+    r.current = count
+    const handleClick = React.useCallback(
+        () => console.log(`hi #${r.current}!`),
+        []
+    )
+
+    return (
+        <>
+            <PureComponent onClick={handleClick} />
+            <button onClick={() => setCount(count + 1)}>
+                increase counter{count}
+            </button>
+        </>
+    )
+}
+function T9() {}
+function T8() {
+    const Comp = () => {
+        return <input type='text' readOnly value={Math.random()} />
+    }
+    const [count, setCount] = useState(0)
+    return (
+        <>
+            <button onClick={() => setCount(e => e + 1)}>btn{count}</button>
+            {/* 方式一,  dom diff结果是更新 整个组件 */}
+            <Comp />
+            {/* 方式二,  dom diff结果是只更新 变化了的属性 */}
+            {Comp()}
+        </>
+    )
+}
+
+function T83() {
+    const X2 = <input type='text' readOnly value={3} />
+    const X22 = () => <input type='text' readOnly value={3} />
+    // const X222 = () => X22()
+    const X3 = useMemo(() => <input type='text' readOnly value={3} />, [])
+    const X33 = () =>
+        useMemo(() => <input type='text' readOnly value={3} />, [])
+    const [count, setCount] = useState(0)
+    return (
+        <>
+            <button onClick={() => setCount(e => e + 1)}>btn{count}</button>
+
+            <input type='text' readOnly value={3} />
+
+            {/* {X1}
+            <X11 /> */}
+
+            {X2}
+            <X22 />
+            {X22()}
+
+            {/* {X3}
+            <X33 /> */}
+
+            {/* {useMemo(() => {
+                console.log(3)
+                return <X />
+            }, [count])}
+            {useMemo(() => {
+                console.log(4)
+                return X()
+            }, [count])} */}
+        </>
+    )
+}
+
+function JOKER(props) {
+    console.log('xx')
+
+    return 1
+    const [count, setCount] = useState(props.count)
+    useEffect(() => {
+        console.log("I am JOKER's useEffect--->", props.count)
+        setCount(props.count)
+    }, [props.count])
+
+    console.log("I am JOKER's  render-->", props.count, count)
+    return (
+        <div>
+            <p style={{ color: 'red' }}>JOKER: You clicked {count} times</p>
+        </div>
+    )
+}
+
+const MMJ = memo(JOKER)
+function DC() {
+    const [count, setCount] = useState(0)
+    const A = useMemo(() => <JOKER count={count} />, [count])
+
+    return (
+        <div>
+            <button
+                onClick={() => {
+                    setCount(count + 1)
+                }}
+            >
+                Click me{count}
+            </button>
+            <JOKER count={count} x={{ d: 233 }} />
+        </div>
+    )
+}
+function Test7() {
+    const [x, setX] = useState(0)
+    const [y, setY] = useState(0)
+
+    // useEffect(function R() {
+    //     requestAnimationFrame(() => {
+    //         setX(e => e + 1)
+    //         R()
+    //     })
+    // }, [])
+    useEffect(function R() {
+        setInterval(() => {
+            runWithTime(() => setX(e => e + 1), 1)
+        }, 8)
+    }, [])
+    useEffect(function R() {
+        setInterval(() => {
+            runWithTime(() => setY(e => e + 1), 2)
+        }, 32)
+    }, [])
+    return `${x}-${y}-${x / y}`
+}
+
+function Test6() {
+    const dom = useRef()
+    // const dom = useRef<HTMLDivElement>(null)
+    const [x, setX] = useState(0)
+
+    useEffect(() => {
+        console.log(1)
+        setX(1)
+    }, [])
+    useEffect(() => {
+        console.log(2)
+        setX(2)
+    }, [])
+    useEffect(() => {
+        console.log(3)
+        setX(1)
+    }, [])
+
+    return <div ref={dom}>{x}</div>
+}
+
+function Test5() {
+    const [state, setState] = useState()
+    useEffect(() => {
+        setState(1)
+    }, [])
+
+    console.log(11)
+    return (
+        <>
+            <button onClick={() => setState(state + 1)}>btn{state}</button>
+        </>
+    )
+}
+function TEST4() {
+    const [X1, setX1] = React.useState(1)
+    const [X2, setX2] = React.useState(1)
+    const [X3, setX3] = React.useState(1)
+    const [X4, setX4] = React.useState(1)
+
+    // useEffect(() => {
+    //     setX2(x => x + 1)
+    // }, [X1])
+    // useEffect(() => {
+    //     setX3(x => x + 1)
+    // }, [X2])
+    // useEffect(() => {
+    //     setX4(x => x + 1)
+    // }, [X3])
+
+    return (
+        <>
+            <button
+                onClick={() => {
+                    console.time(1)
+                    alert(X1)
+                    setX1(X1 + 5)
+                    alert(X1)
+                    console.timeEnd(1)
+                }}
+            >
+                +5
+            </button>
+            {X1}-{X2}-{X3}-{X4}
+            <button onClick={() => setX1(x => x + 1)}>add</button>
+            <button onClick={() => setX2(x => x + 1)}>add</button>
+            <button onClick={() => setX3(x => x + 1)}>add</button>
+        </>
+    )
+}
 function Aspps() {
     const inputRef = React.useRef<HTMLInputElement>(null)
 
@@ -139,23 +575,6 @@ const TEST = () => {
     return rt
 }
 
-const p = performance.now.bind(performance)
-function sleepSync(t: number) {
-    console.time()
-    const old = p()
-    while (old - p() > -t) {
-        window.x += 1
-    }
-    console.timeEnd()
-}
-function sleepSync2() {
-    console.time()
-    let i = 0
-    while (i++ < 1e6) {
-        d()
-    }
-    console.timeEnd()
-}
 // console.log(screen.width, screen.availWidth)
 // console.log(outerWidth, innerWidth)
 // console.log(
@@ -506,3 +925,4 @@ function useCountDown(targetDate) {
         return [days, hours, minutes, seconds]
     }
 }
+//usecontext传ref不会引起render

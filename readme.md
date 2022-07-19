@@ -21,3 +21,11 @@ BACKUP {
     /* 299e81 */
 }
 https://www.one-tab.com/page/IZJ6GpH6QUSm2mauLARD_A
+
+
+
+Object.entries(getComputedStyle($0)).filter(([key])=>!Number.isInteger(Number(key))).map(e=>e[1])+''
+
+
+
+        // book: 用户体验的要素

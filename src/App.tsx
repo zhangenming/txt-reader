@@ -9,48 +9,74 @@ import {
     getStyle,
     getWordCount,
     getWordPosition,
+    hasFeature,
     i2rc,
     useEffectWrap,
 } from './utils'
-import { useKey, useScroll, useSizeCount, useSpking, useTXT } from './hook'
+import {
+    useKey,
+    useKeyScroll,
+    useScroll,
+    useSizeCount,
+    useSpking,
+    useTXT,
+} from './hook'
 import Control from './comp/control'
-import VGrid from './V-Grid'
+import VG from './V-Grid'
+const VGM = memo(VG)
+
+import { Effect } from './comp/comp'
+import { runWithTime } from './debug.js'
+import { useHover, useStatePaire } from './hookUtils'
 // import { useScrollData } from './useSrollData'
+const RENDER = { app: 0, reader: 0, VG: 0 }
+;(window as any).RENDER = RENDER
 
-export const SIZE = 30
+export const SIZE_W = 25
+export const SIZE_H = 25
 const DIFF = 3
-let REDNER = 0
+
+const o = !1
+const OVERSCAN_top = o ? 0 : 10
+const OVERSCAN_bottom_ = o ? 0 : 30
+const OVERSCAN_change_ = o ? 0 : 10
+
 const APP = () => {
-    // useEffect(() => {
-    //     const f = () =>
-    //         requestAnimationFrame(() => {
-    //             domC.current.scrollTop += 0.1
-    //             f()
-    //         })
-
-    //     f()
-    // }, [])
-    const _o = 1
-    const OVERSCAN_top = !_o ? 0 : 0
-    const OVERSCAN_bottom = !_o ? 0 : 0
-    const OVERSCAN_change = !_o ? 0 : 30
-
-    // const [hook, hookSET] = useState() // for clear hook count, 本身也会引入新的计数
-    // console.log('%c --- RENDER --- ', 'background: #222; color: #bada55')
+    const showInfo = false
+    if (showInfo) {
+        console.log('\n')
+        console.log('\n')
+        console.log('↓↓↓↓↓↓↓↓↓↓↓↓')
+        console.log('%c------- render begin -------------------', 'color: red;')
+    }
+    // runWithTime(() => {}, 1)
+    RENDER.app++
+    const [OVERSCAN_bottom, SET_OVERSCAN_bottom] = useState(OVERSCAN_bottom_)
+    const [OVERSCAN_change, SET_OVERSCAN_change] = useState(OVERSCAN_change_)
 
     const { widthCount, heightCount } = useSizeCount()
 
     // const { scrolling } = useScrollData()
-    const [txt, txtLen, TXT, TXTLen] = useTXT(widthCount)
-
-    const spking = useSpking(TXT, TXTLen)
-
-    const domC = useRef<HTMLElement>(null)
-    const [currentLine, SET_currentLine, jumpLine] = useScroll(
-        txtLen,
-        heightCount,
-        domC
+    const [isAotOver, SET_isAotOver] = useState(false)
+    const [txt, txtLen, TXT, TXTLen, TXTBlock, txtDOM] = useTXT(
+        widthCount,
+        () => SET_isAotOver(true)
     )
+
+    // const spking = useSpking(TXT, TXTLen)
+    const refVG = useRef<HTMLElement>(null)
+    const [hoverRef, isHovered] = useHover()
+    useKeyScroll(refVG, isHovered)
+
+    const stopScroll = useStatePaire(false)
+    const [
+        updata,
+        setUpdata,
+        scrollTop,
+        currentLine,
+        onScrollHandle,
+        jumpLine,
+    ] = useScroll(txtLen, stopScroll)
 
     const [onKeyDown, onKeyUp, clickType] = useKey(
         OVERSCAN_bottom,
@@ -62,15 +88,12 @@ const APP = () => {
     )
 
     const [select, SET_select] = useState('')
-
     const [selectArr, SET_selectArr] = useState<item[]>(
         JSON.parse(localStorage.getItem(txtLen + 'selectArr') || '[]')
     )
-
     useEffect(() => {
         localStorage.setItem(txtLen + 'selectArr', JSON.stringify(selectArr))
     }, [selectArr])
-
     // 列表逻辑
     useEffect(() => {
         document.onselectionchange = function () {
@@ -86,80 +109,130 @@ const APP = () => {
 
     const [isTargetArr, SET_isTargetArr] = useState<number[]>([])
 
+    const [feature, setFeature] = useState(true)
+
+    showInfo &&
+        useEffect(() => {
+            console.log(
+                '%c------------------ effect OVER -------------------',
+                'color: red;'
+            )
+            // runWithTime(() => {}, 4)
+            console.log('↑↑↑↑↑↑↑↑↑↑↑↑')
+            console.log('\n')
+            console.log('\n')
+        })
+
+    const [stopControl, SET_stopControl] = useState(false)
+
+    const PROPS = {
+        control: {
+            select,
+            SET_select,
+            selectArr,
+            deleteHandle,
+            changeHandle,
+            TXT,
+            TXTLen,
+            txtLen,
+            widthCount,
+            heightCount,
+            currentLine,
+            jumpLine,
+            tabIndex: 1,
+            onKeyDown,
+            onKeyUp,
+            setUpdata,
+            OVERSCAN_change,
+            SET_OVERSCAN_change,
+            OVERSCAN_bottom,
+            SET_OVERSCAN_bottom,
+            feature,
+            setFeature,
+            RENDER,
+            scrollTop,
+            isAotOver,
+            stopControl,
+            SET_stopControl,
+            stopScroll,
+        },
+        VG: {
+            TXT,
+            widthCount,
+            heightCount,
+            currentLine,
+            // spking,
+            OVERSCAN_top,
+            OVERSCAN_bottom,
+            ref: refVG,
+            TXTBlock,
+            txtDOM,
+            feature,
+            RENDER,
+            onScrollHandle,
+            isAotOver, // 不用添加进依赖 isAotOver变化不需要主动触发VG变化, 这种需求vue怎么处理?
+        },
+    }
+
+    const ctr = <Control {...PROPS.control} ref={hoverRef} />
+    const staleCtr = useMemo(() => ctr, [stopControl])
+    const control = stopControl ? staleCtr : ctr
+
+    const deps_VG = [
+        widthCount,
+        heightCount,
+        TXT,
+        updata,
+        false && floor(currentLine / (OVERSCAN_change || 1)),
+        OVERSCAN_bottom,
+        stopScroll.get,
+    ]
+
+    const callback = useCallback(<VG {...PROPS.VG} />, deps_VG)
+    // const mm = useMemo(() => {
+    //     RENDER.VG++ // 副作用
+    //     return <VG {...PROPS.VG} />
+    // }, deps_VG)
+
+    // // memo到哪个层级?
+    // const vgm = <VGM {...useMemo(() => PROPS.VG, deps_VG)} />
+
+    // const controlmm = useMemo(() => <Control />, [currentLine])
+
     return (
         <>
-            <Control
-                {...{
-                    select,
-                    SET_select,
-                    selectArr,
-                    deleteHandle,
-                    changeHandle,
-                    TXT,
-                    TXTLen,
-                    txtLen,
-                    widthCount,
-                    heightCount,
-                    currentLine,
-                    jumpLine,
-                    tabIndex: 1,
-                    onKeyDown,
-                    onKeyUp,
-                    SET_currentLine,
-                    domC,
-                }}
+            <Effect
+                showInfo={showInfo}
+                msg='------------------ effect begin ------------------'
             />
+
+            {/* <Control /> */}
+            {/* {controlmm} */}
+            {control}
 
             <div
                 {...{
                     className: 'reader',
                     style: {
                         '--clickType': clickType,
+                        '--SIZE_H': SIZE_H + 'px',
+                        '--SIZE_W': SIZE_W + 'px',
                     },
                     onClick: GoToNextItemHandle,
                 }}
             >
                 <div className='reader-helper' />
-                <VGrid
-                    {...{
-                        TXT,
-                        widthCount,
-                        heightCount,
-                        currentLine,
-                        SET_currentLine,
-                        spking,
-                        OVERSCAN_top,
-                        OVERSCAN_bottom,
-                        ref: domC,
-                    }}
-                />
-                {/* {useCallback(
-                    (
-                        <VGrid
-                            {...{
-                                TXT,
-                                widthCount,
-                                heightCount,
-                                currentLine,
-                                SET_currentLine,
-                                spking,
-                                OVERSCAN_top,
-                                OVERSCAN_bottom,
-                                ref: domC,
-                            }}
-                        />
-                    ) as any,
-                    [
-                        widthCount,
-                        heightCount,
-                        floor(currentLine / (OVERSCAN_change || 1)),
-                    ]
-                )} */}
 
-                <div className='next' onMouseOver={() => console.log}>
+                {callback}
+
+                <div
+                    ref={hoverRef}
+                    className='next'
+                    onMouseOver={() => console.log}
+                >
                     {(OVERSCAN_top + OVERSCAN_bottom + heightCount) *
                         widthCount}
-                    +++ NEXT {++REDNER}
+                    NEXT
                     {/* -- {scrolling ? 1 : 2} */}
                 </div>
             </div>
@@ -191,30 +264,35 @@ const APP = () => {
                     })()}
                 </style> */}
 
-                {[
-                    {
-                        key: select,
-                        color: 'black',
-                        i: Date.now(),
-                        count: getWordCount(select, TXT),
-                        isPined: false,
-                    },
-                    ...selectArr,
-                ].map(({ key, color, isPined }, idx) => (
-                    <style key={key + idx} slot={key}>
-                        {getStyle(
-                            TXT,
-                            key,
-                            color,
-                            isPined || key === select,
-                            idx === 0
-                        )}
-                    </style>
-                ))}
+                {useMemo(() => {
+                    return [
+                        {
+                            key: select,
+                            color: 'black',
+                            i: Date.now(),
+                            count: getWordCount(select, TXT),
+                            isPined: false,
+                        },
+                        ...selectArr,
+                    ].map(({ key, color, isPined }, idx) => (
+                        <style key={key + idx} slot={key}>
+                            {getStyle(
+                                TXT,
+                                key,
+                                color,
+                                isPined || key === select,
+                                idx === 0
+                            )}
+                        </style>
+                    ))
+                }, [select, selectArr])}
             </div>
+            <Effect
+                showInfo={showInfo}
+                msg='------- render OVER -------------------'
+            />
         </>
     )
-
     function GoToNextItemHandle({ target, metaKey, altKey }: React.MouseEvent) {
         const selection = getSelectionString()
 

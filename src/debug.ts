@@ -7,4 +7,17 @@ Object.defineProperties(Object.prototype, {
     },
 })
 
-export const a = 1
+export function runWithTime(str: any = '', fn: Function = () => {}) {
+    console.time(str)
+    const rs = fn()
+    console.timeEnd(str)
+    return rs
+}
+
+const p = performance.now.bind(performance)
+export function sleepSync(t: number = 100) {
+    const old = p()
+    while (old - p() > -t) {
+        window.x += 1
+    }
+}

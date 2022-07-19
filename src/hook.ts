@@ -1,6 +1,18 @@
-import { useCallback, useEffect, useState } from 'react'
-import { SIZE } from './App'
-
+import {
+    createElement,
+    Dispatch,
+    RefObject,
+    SetStateAction,
+    useCallback,
+    useEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react'
+import { SIZE_H, SIZE_W } from './App'
+import { runWithTime } from './debug'
+import { paire, useWithLocalStorage } from './hookUtils'
+import { getClasses, hasFeature } from './utils'
 // const txt = JSON.parse(localStorage.getItem('txt'))
 // '三国演义'
 // '循环'
@@ -14,26 +26,36 @@ import { SIZE } from './App'
 // '图灵'
 // '圣墟'
 //
-import txt from '../txt/万历十五年'
-
-const book = decodeURI(location.hash).slice(1) || '星之继承者（全3册）'
-// const txt = (await import('../txt/' + book)).default
+// import _txt from '../txt/活着'
+// const book = decodeURI(location.hash).slice(1) || '星之继承者（全3册）'
+const forDevtool = hasFeature('short')
+const _txt = (await import('../txt/' + (forDevtool ? 'test' : '活着'))).default
+// const _txt = (await import('../txt/' + (forDevtool ? 'test' : '诡秘之主')))
+//     .default
 
 import {
+    chunk,
+    chunkString,
     floor,
     getWordCount,
     i2rc,
+    isInvalidWord,
     makeFuncCache,
     querySelector,
     useEffectWrap,
 } from './utils'
+import { geneChild } from './V-Grid'
 
 export function useSizeCount() {
     const [state, SET_state] = useState(getter)
 
     useEffect(() => {
+        let timer: number
         window.onresize = () => {
-            SET_state(getter)
+            clearTimeout(timer)
+            timer = setTimeout(function () {
+                SET_state(getter)
+            }, 200)
         }
     }, [])
 
@@ -41,32 +63,61 @@ export function useSizeCount() {
 
     function getter() {
         const min = 0
-        const width = innerWidth - 100 - min - 17 /*滚轴宽度*/
+        const width = innerWidth - 100 - min - 17 /*滚轴宽度*/ - 20
         const height = innerHeight - 30 - min
         return {
-            widthCount: floor(width / SIZE),
-            heightCount: floor(height / SIZE),
+            widthCount: floor(width / SIZE_W),
+            heightCount: floor(height / SIZE_H),
         }
     }
 }
+type react_SET<T = any> = React.Dispatch<React.SetStateAction<T>>
 
 const useTxtCache: any = {}
-export function useTXT(widthCount: number) {
+export function useTXT(widthCount: number, callback: Function) {
     // txt(with widthCount) -> TXT
-    const [state, SET_state] = useState(getter)
-
-    // const allIdx = [...new Set(txt)].sort()
-    // console.log(allIdx, getWordCount('\n', txt))
+    const [state, SET_state] = useState(getter) //慢一拍
 
     useEffect(() => {
-        SET_state(getter)
+        SET_state(getter) //再慢一拍
     }, [widthCount])
 
-    return [txt, txt.length, state, state.length] as const
+    const dom = useMemo(() => {
+        console.time()
+        requestIdleCallback(doWork)
+        // const spking = useSpking(state, state.length)
+        // return [...state].map(geneChild)
+        let idx = -1
+        const rs: any = []
+        return rs
 
-    function getter(): string {
+        function doWork(deadline: IdleDeadline) {
+            while (deadline.timeRemaining()) {
+                if (++idx > state.length) {
+                    callback()
+                    console.timeEnd()
+                    return
+                }
+                // 现在是每个字一个child, 还是每行一个?
+                rs.push(geneChild(state[idx], idx))
+            }
+            requestIdleCallback(doWork)
+        }
+    }, [state]) // todo
+
+    return [
+        _txt,
+        _txt.length,
+        state,
+        state.length,
+        // chunkString(state, widthCount),
+        1,
+        dom,
+    ] as const
+
+    function getter() {
         if (!useTxtCache[widthCount]) {
-            useTxtCache[widthCount] = txt
+            useTxtCache[widthCount] = _txt
                 .replaceAll(/    /g, '  ')
                 .replaceAll(/\n+/g, '\n')
                 .split('\n')
@@ -100,7 +151,7 @@ export function useSpking(TXT: string, TXTLen: number) {
         const results = []
 
         let isSpeaking = false
-        for (let i = 0; i < TXT.length / 10; i++) {
+        for (let i = 0; i < TXT.length; i++) {
             if (TXT[i] === '“') {
                 isSpeaking = true
                 results.push(false)
@@ -116,30 +167,58 @@ export function useSpking(TXT: string, TXTLen: number) {
     }
 }
 
-export function useScroll(txtLen: number, heightLineCount: number, domC: any) {
-    const [state, SET_state] = useState(() =>
-        Number(localStorage.getItem(txtLen + 'idx'))
-    ) // 函数形式只会执行一次
+let timer: number
+export function useScroll(txtLen: number, stopScroll: paire<boolean>) {
+    const [updata, setUpdata] = useState(0)
+    const [scrollTop, SET_scrollTop] = useWithLocalStorage('scrollTop' + txtLen)
+
+    const currentLine = getCurrentLine(scrollTop)
+    // console.log('---useScroll2', scrollTop, currentLine)
+    // runWithTime(() => {})
 
     useEffect(() => {
-        querySelector('.container').scrollTop = state * SIZE // todo, dom -> react ref?
+        // runWithTime(() => {})
+        if (querySelector('.container')) {
+            console.log('monted scrollTop', scrollTop)
+            querySelector('.container').scrollTop = scrollTop //触发 onScrollHandle
+        }
     }, [])
 
-    useEffect(() => {
-        localStorage.setItem(txtLen + 'idx', state + '')
-        console.log(333, state)
-    }, [state])
-
     return [
-        state,
-        useCallback(SET_state, [txtLen]),
-        function jumpLine(_target: number) {
-            const target = _target - floor(heightLineCount / 2)
-
-            SET_state(target)
-            querySelector('.container').scrollTop = target * SIZE
-        },
+        updata,
+        setUpdata,
+        scrollTop,
+        currentLine,
+        onScrollHandle,
+        // useCallback(onScrollHandle, [txtLen, currentLine]),
+        // useCallback/useEffect[]存在 就需注意 值过期问题
     ] as const
+
+    function onScrollHandle(e: UIEvent) {
+        if (stopScroll.get) return
+        // //isScrollByMonted
+        // if (timer === undefined) {
+        //     timer = 0
+        //     return
+        // }
+        const scrollTopNow = (e.target as HTMLElement).scrollTop
+
+        if (scrollTop === scrollTopNow) return
+
+        SET_scrollTop(scrollTopNow)
+        // console.log('scrollHadnle', scrollTopNow)
+        // console.log('scrollHadnle stale', scrollTop,  currentLine)
+
+        if (currentLine === getCurrentLine(scrollTopNow)) return
+
+        clearTimeout(timer)
+        timer = setTimeout(() => {
+            setUpdata((e: any) => e + 1)
+        }, 100)
+    }
+    function getCurrentLine(scrollTop: number) {
+        return floor(scrollTop / SIZE_H)
+    }
 }
 
 let clear: number
@@ -182,18 +261,16 @@ export function useKey(
             setTimeout(() => {
                 const x = (OVERSCAN_bottom + DIFF) * lineSize
                 const xx = `:nth-child(${x}) ~ :not([data-invalid=" "])` // magic
-                const target = Number(queryDom(xx).dataset.i)
+                const target = Number(querySelector(xx).dataset.i)
                 const rc = i2rc(target, lineSize).r
                 const rs =
                     DIFF + rc - currentLine - heightLineCount - OVERSCAN_bottom
 
-                const dom = queryDom('.reader-helper').style
-                dom.top = rs * SIZE + 'px'
+                const dom = querySelector('.reader-helper').style
+                dom.top = rs * SIZE_H + 'px'
                 dom.height = '30px'
                 dom.opacity = '0.5'
                 dom.background = 'yellowgreen'
-
-                // console.log(clear) // react
 
                 clearTimeout(clear)
 
@@ -206,4 +283,71 @@ export function useKey(
 
             jump(currentLine + OVERSCAN_bottom + heightLineCount - DIFF)
         }
+    }
+}
+function useRenderCounter() {
+    const ref = useRef()
+    useEffect(() => {
+        ref.current.textContent = Number(ref.current.textContent || '0') + 1
+    })
+    return createElement('span', {
+        ref: ref,
+    })
+    // return <span ref={ref} />
+}
+function _useCounter(ref) {
+    useEffect(() => {
+        ref.current.textContent = Number(ref.current.textContent || '0') + 1
+    })
+}
+export function useCounter(ref = useRef()) {
+    useEffect(() => {
+        ref.current.textContent = Number(ref.current.textContent || '0') + 1
+    })
+    return ref
+}
+
+export function useKeyScroll(ref: RefObject<HTMLElement>, isHovered: boolean) {
+    type refCur = { cur: number }
+
+    useEffect(() => {
+        let rAF: refCur = { cur: 0 }
+        if (isHovered) {
+            runRAF(rAF, 0.18)
+        }
+        return () => clearRaf(rAF)
+    }, [isHovered])
+
+    useEffect(() => {
+        let rAF: refCur = { cur: 0 }
+
+        document.onkeydown = e => {
+            // keydown浏览器原生 触发频率是 32ms
+            // 但现在由requestAnimationFrame触发onScrollHandle的频率是 16ms
+            const val = { w: -30, s: 30, x: 0.1, z: SIZE_H / 5 }[e.key]
+            if (val) {
+                e.preventDefault()
+                runRAF(rAF, val)
+            }
+        }
+        document.onkeyup = () => {
+            clearRaf(rAF)
+        }
+    }, [])
+
+    function runRAF(rAF: refCur, val: number) {
+        if (rAF.cur) return
+        ;(function run() {
+            rAF.cur = requestAnimationFrame(() => {
+                // todo 和useScroll2交互
+                // console.log('rAF scrollTop', scrollTop)
+                ref.current!.scrollTop += val //触发 onScrollHandle
+                run()
+            })
+        })()
+    }
+    function clearRaf(rAF: refCur) {
+        cancelAnimationFrame(rAF.cur)
+        rAF.cur = 0
+    }
 }

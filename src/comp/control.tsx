@@ -1,6 +1,6 @@
 import { forwardRef, lazy, Suspense, useEffect, useState } from 'react'
 import { SIZE_H } from '../App'
-import { useStatePaire } from '../hook'
+import { useStatePaire } from '../hookUtils'
 import { floor, getColor, getWordCount, i2rc } from '../utils'
 import Comp from './comp'
 export type item = {

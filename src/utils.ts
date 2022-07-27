@@ -3,22 +3,34 @@ import { invalidData } from './book'
 
 export const floor = Math.floor
 
-const getAllWordPositionCache: any = {}
-function getAllWordPosition(word: string, TXT: string) {
-    const key = word + TXT.length
+export const config = { TXT: '', lineSize: 0 }
+
+const getAllWordPositionCache: { [key: string]: number[] } = {}
+export function getAllWordPosition(word: string) {
+    const key = word + config.TXT.length
+    const t = Array(word.length).fill(0)
 
     if (!getAllWordPositionCache[key]) {
-        getAllWordPositionCache[key] = getWordPosition(word, TXT).flatMap(
-            (n: number) =>
-                Array(word.length)
-                    .fill(0)
-                    .map((_, i) => n + i)
-        )
+        getAllWordPositionCache[key] = getWordPosition(
+            word,
+            config.TXT
+        ).flatMap((n: number) => t.map((_, i) => n + i))
     }
     return getAllWordPositionCache[key]
 }
 
-const c: any = {}
+const getAllWordPositionWithNodeCache: { [key: string]: HTMLElement[] } = {}
+export function getAllWordPositionWithNode(word: string) {
+    const key = word + config.TXT.length
+
+    if (!getAllWordPositionWithNodeCache[key]) {
+        getAllWordPositionWithNodeCache[key] = getAllWordPosition(word).map(
+            idx => querySelector(`[data-i="${idx}"]`)
+        )
+    }
+    return getAllWordPositionWithNodeCache[key]
+}
+
 export function makeFuncCache(
     func: (..._: any) => any
     // getKey = (x: any) => JSON.stringify(x)
@@ -36,7 +48,12 @@ export function makeFuncCache(
 
 // 查找一个字符串中的所有子串的位置
 const getWordPositionCache: any = {}
-export function getWordPosition(word: string, TXT: string) {
+export function getWordPosition(
+    word: string,
+    TXT: string = config.TXT
+): number[] {
+    if (word === '') return []
+
     const key = word + TXT.length
     if (!getWordPositionCache[key]) {
         const positions = []
@@ -86,9 +103,10 @@ export function getStyle(
     word: string,
     color: string,
     isPined: boolean,
-    isSelect: boolean
+    count: number,
+    isOneScreen: boolean
 ) {
-    const count = getWordCount(word, TXT)
+    // const count = getWordCount(word, TXT)
     if (count === 0 || word === '' || word === ' ') return
 
     const justOne = count === 1
@@ -170,23 +188,21 @@ ${getCss2()}
 
 
 /* css3 高亮 当hover */
-${getCss3()}
 
 
 
 /* css4 左右联动 当hover 功耗高 */
-${getCss4()}
 
 `
 
     function getCss1() {
-        const type = justOne
+        const type = isOneScreen
             ? `\
 background: linear-gradient(#000,#000);
-  background-size: 100% 2px;
+  background-size: 100% ${justOne ? 2 : 4}px;
   background-repeat: no-repeat;
   background-position: 0px 50%;`
-            : `cursor: var(--clickType);${isPined ? 'background:#eae' : ''}`
+            : `cursor: var(--clickType);${isPined ? 'background:deeppink' : ''}`
 
         const style = `
 {
@@ -201,7 +217,7 @@ background: linear-gradient(#000,#000);
     function getCss2() {
         if (justOne) return '/* 只有一个没必要显示 */'
 
-        const allWordPosition = getAllWordPosition(word, TXT)
+        const allWordPosition = getAllWordPosition(word)
 
         const [first, ...firstNext] = allWordPosition.slice(0, wordLen)
         const lastPriv = allWordPosition.slice(allWordPosition.length - wordLen)
@@ -210,33 +226,30 @@ background: linear-gradient(#000,#000);
         return [
             {
                 selector: [first],
-                style: `${color} transparent transparent ${color}`,
+                style: `2px 0 0 2px`,
             },
-            { selector: firstNext, style: `${color} transparent transparent` },
+            { selector: firstNext, style: `2px 0 0 0` },
             {
                 selector: lastPriv,
-                style: `transparent transparent ${color} transparent`,
+                style: `0 0 2px 0`,
             },
             {
                 selector: [last],
-                style: `transparent ${color} ${color} transparent`,
+                style: `0 2px 2px 0`,
             },
         ]
-            .map(({ selector, style }) => setCss(selector, style))
+            .map(setCss)
             .join('\n')
 
-        const q = setCss([first], `${color} transparent transparent ${color}`)
-        const w = setCss(firstNext, `${color} transparent transparent`)
-        const e = setCss(
-            lastPriv,
-            `transparent transparent ${color} transparent`
-        )
-        const r = setCss([last], `transparent ${color} ${color} transparent`)
-        return [q, w, e, r].join('\n')
-
-        function setCss(l: number[], r: string) {
-            const x = l.map(e => `[data-i='${e}']`)
-            return `span:is(${x}) { border:solid; border-color:${r}; }`
+        function setCss({
+            selector,
+            style,
+        }: {
+            selector: number[]
+            style: string
+        }) {
+            const x = selector.map(e => `[data-i='${e}']`)
+            return `span:is(${x}) { border:dotted;border-width:${style}; }`
         }
     }
 
@@ -253,11 +266,11 @@ background: linear-gradient(#000,#000);
         const css1 = `${leftDom}:hover\n{color:${color};background:cornflowerblue }\n\n\n`
 
         /* hover: left ui */
-        const type2 = `${leftDom}:has(.count:hover),\n\n`
+        const type2 = `${leftDom}:hover,\n\n`
 
         /* hover: left ui 联动 right reader */
         const type3 = `\
-:has(${leftDom} .count:hover) 
+:has(${leftDom}:hover) 
 ${HAS},\n\n`
 
         /* hover: right reader 联动left ui */
@@ -304,7 +317,7 @@ ${HAS},\n\n`
 export function rc2i(r: number, c: number, lineSize: number) {
     return r * lineSize + c
 }
-export function i2rc(i: number, lineSize: number) {
+export function i2rc(i: number, lineSize: number = config.lineSize) {
     return {
         r: floor(i / lineSize),
         c: i % lineSize,
@@ -439,3 +452,10 @@ export function chunkString(str: string, length: number) {
 
 const features = [...new URLSearchParams(location.search).keys()]
 export const hasFeature = (f: string) => features.includes(f)
+export const getFeature = (f: string) =>
+    new URLSearchParams(location.search).get(f)
+
+export function getWord(ele: Element) {
+    const content = getComputedStyle(ele).content // js <-> css
+    return content === 'normal' ? undefined : content.slice(1, -1)
+}

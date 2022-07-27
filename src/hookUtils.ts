@@ -1,4 +1,11 @@
-import { useState, useRef, useEffect, Dispatch, SetStateAction } from 'react'
+import {
+    useState,
+    useRef,
+    useEffect,
+    Dispatch,
+    SetStateAction,
+    useMemo,
+} from 'react'
 
 export function useHover() {
     const [value, setValue] = useState(false)
@@ -42,8 +49,23 @@ export type paire<S> = {
 }
 export function useStatePaire<S>(initialState: S | (() => S)): paire<S> {
     const [state, SET_state] = useState(initialState)
-    return {
-        get: state,
-        set: SET_state,
-    }
+    return useMemo(
+        () => ({
+            get: state,
+            set: SET_state,
+        }),
+        [state]
+    )
+}
+
+export function usePrevious<T>(value: T): T | undefined {
+    // The ref object is a generic container whose current property is mutable ...
+    // ... and can hold any value, similar to an instance property on a class
+    const ref = useRef<T>()
+    // Store current value in ref
+    useEffect(() => {
+        ref.current = value
+    }, [value]) // Only re-run if value changes
+    // Return previous value (happens before update in useEffect above)
+    return ref.current
 }

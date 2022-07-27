@@ -49,7 +49,6 @@ setTimeout(() => {
     }
 })
 const useUpdate = (fn, dep) => {
-    console.log('here')
     const [count, setCount] = useState(0)
 
     useEffect(() => {

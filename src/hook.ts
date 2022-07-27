@@ -1,3 +1,5 @@
+const autoScrollSpeed = 1
+const updataTime = 300
 import {
     createElement,
     Dispatch,
@@ -5,14 +7,15 @@ import {
     SetStateAction,
     useCallback,
     useEffect,
+    useLayoutEffect,
     useMemo,
     useRef,
     useState,
 } from 'react'
-import { SIZE_H, SIZE_W } from './App'
+import { featureFlag, SIZE_H, SIZE_W } from './App'
 import { runWithTime } from './debug'
-import { paire, useWithLocalStorage } from './hookUtils'
-import { getClasses, hasFeature } from './utils'
+import { paire, usePrevious, useWithLocalStorage } from './hookUtils'
+import { config, getAllWordPosition, getClasses, hasFeature } from './utils'
 // const txt = JSON.parse(localStorage.getItem('txt'))
 // '三国演义'
 // '循环'
@@ -26,10 +29,10 @@ import { getClasses, hasFeature } from './utils'
 // '图灵'
 // '圣墟'
 //
-// import _txt from '../txt/活着'
+// import _txt from '../txt/围城'
 // const book = decodeURI(location.hash).slice(1) || '星之继承者（全3册）'
 const forDevtool = hasFeature('short')
-const _txt = (await import('../txt/' + (forDevtool ? 'test' : '活着'))).default
+const _txt = (await import('../txt/' + (forDevtool ? 'test' : '围城'))).default
 // const _txt = (await import('../txt/' + (forDevtool ? 'test' : '诡秘之主')))
 //     .default
 
@@ -44,7 +47,7 @@ import {
     querySelector,
     useEffectWrap,
 } from './utils'
-import { geneChild } from './V-Grid'
+import { geneChild, geneChild2 } from './V-Grid'
 
 export function useSizeCount() {
     const [state, SET_state] = useState(getter)
@@ -57,7 +60,7 @@ export function useSizeCount() {
                 SET_state(getter)
             }, 200)
         }
-    }, [])
+    }, []) // 第一次render执行了两次? 与上面的useState(getter)
 
     return state
 
@@ -65,8 +68,11 @@ export function useSizeCount() {
         const min = 0
         const width = innerWidth - 100 - min - 17 /*滚轴宽度*/ - 20
         const height = innerHeight - 30 - min
+        const widthCount = floor(width / SIZE_W)
+
+        config.lineSize = widthCount
         return {
-            widthCount: floor(width / SIZE_W),
+            widthCount,
             heightCount: floor(height / SIZE_H),
         }
     }
@@ -82,24 +88,54 @@ export function useTXT(widthCount: number, callback: Function) {
         SET_state(getter) //再慢一拍
     }, [widthCount])
 
-    const dom = useMemo(() => {
+    // const dom = useMemo(() => {
+    //     console.time()
+    //     requestIdleCallback(doWork)
+    //     // const spking = useSpking(state, state.length)
+    //     // return [...state].map(geneChild)
+    //     let idx = -1
+    //     const rs: any = []
+    //     return rs
+
+    //     function doWork(deadline: IdleDeadline) {
+    //         while (deadline.timeRemaining()) {
+    //             if (++idx > state.length) {
+    //                 callback()
+    //                 console.timeEnd()
+    //                 return
+    //             }
+    //             // 现在是每个字一个child, 还是每行一个?
+    //             rs.push(geneChild(state[idx], idx))
+    //         }
+    //         requestIdleCallback(doWork)
+    //     }
+    // }, [state]) // todo
+
+    const dom2 = useMemo(() => {
         console.time()
         requestIdleCallback(doWork)
         // const spking = useSpking(state, state.length)
         // return [...state].map(geneChild)
-        let idx = -1
+        let idx = 0
         const rs: any = []
         return rs
 
         function doWork(deadline: IdleDeadline) {
             while (deadline.timeRemaining()) {
-                if (++idx > state.length) {
+                if (idx > state.length) {
                     callback()
                     console.timeEnd()
                     return
                 }
                 // 现在是每个字一个child, 还是每行一个?
-                rs.push(geneChild(state[idx], idx))
+                rs.push(
+                    geneChild2(
+                        [...state.slice(idx, idx + widthCount)],
+                        idx,
+                        rs.length
+                    )
+                )
+                idx += widthCount
             }
             requestIdleCallback(doWork)
         }
@@ -112,26 +148,27 @@ export function useTXT(widthCount: number, callback: Function) {
         state.length,
         // chunkString(state, widthCount),
         1,
-        dom,
+        dom2,
+        // featureFlag.line ? dom : dom2,
     ] as const
 
-    function getter() {
+    function getter(): string {
         if (!useTxtCache[widthCount]) {
             useTxtCache[widthCount] = _txt
-                .replaceAll(/    /g, '  ')
-                .replaceAll(/\n+/g, '\n')
+                .replaceAll(/[　\n ]+/g, '\n  ') //去掉多余空行, 注意有两种空格
                 .split('\n')
                 .map((e: string) => {
                     const all =
                         widthCount -
-                        (e.length % widthCount || widthCount) + // 第一行空格剩余补齐
-                        widthCount // 完整第二行
+                        (e.length % widthCount || widthCount) + //第一行空格剩余补齐
+                        widthCount //完整第二行
 
                     return e + ' '.repeat(all)
                 })
                 .join('')
         }
-        return useTxtCache[widthCount]
+
+        return (config.TXT = useTxtCache[widthCount])
     }
     // todo 全局处理->局部加载
 }
@@ -179,7 +216,6 @@ export function useScroll(txtLen: number, stopScroll: paire<boolean>) {
     useEffect(() => {
         // runWithTime(() => {})
         if (querySelector('.container')) {
-            console.log('monted scrollTop', scrollTop)
             querySelector('.container').scrollTop = scrollTop //触发 onScrollHandle
         }
     }, [])
@@ -192,8 +228,12 @@ export function useScroll(txtLen: number, stopScroll: paire<boolean>) {
         onScrollHandle,
         // useCallback(onScrollHandle, [txtLen, currentLine]),
         // useCallback/useEffect[]存在 就需注意 值过期问题
+        jumpLine,
     ] as const
 
+    function jumpLine(target: number, offset: number = 0) {
+        querySelector('.container').scrollTop = target * SIZE_H - offset
+    }
     function onScrollHandle(e: UIEvent) {
         if (stopScroll.get) return
         // //isScrollByMonted
@@ -203,21 +243,46 @@ export function useScroll(txtLen: number, stopScroll: paire<boolean>) {
         // }
         const scrollTopNow = (e.target as HTMLElement).scrollTop
 
-        if (scrollTop === scrollTopNow) return
+        if (scrollTopNow === scrollTop) return
 
         SET_scrollTop(scrollTopNow)
         // console.log('scrollHadnle', scrollTopNow)
         // console.log('scrollHadnle stale', scrollTop,  currentLine)
 
-        if (currentLine === getCurrentLine(scrollTopNow)) return
+        if (getCurrentLine(scrollTopNow) === currentLine) return
 
         clearTimeout(timer)
         timer = setTimeout(() => {
             setUpdata((e: any) => e + 1)
-        }, 100)
+        }, updataTime)
     }
     function getCurrentLine(scrollTop: number) {
         return floor(scrollTop / SIZE_H)
+    }
+}
+
+const useKeyHoldRef: any = {}
+export function getHoldKey(key?: string) {
+    return key ? useKeyHoldRef[key + 'Hold'] : useKeyHoldRef
+}
+function useKeyHold(key?: string) {
+    useEffect(() => {
+        querySelector('#root').onkeydown = e => {
+            const key = getKey(e.key)
+            useKeyHoldRef[key + 'Hold'] = true
+        }
+        querySelector('#root').onkeyup = e => {
+            const key = getKey(e.key)
+            useKeyHoldRef[key + 'Hold'] = false
+        }
+    }, [])
+
+    function getKey(key: string) {
+        return (
+            {
+                Control: 'ctrl',
+            }[key] || key
+        )
     }
 }
 
@@ -230,32 +295,34 @@ export function useKey(
     heightLineCount: number,
     jump: (target: number) => void
 ) {
-    const [isMetaHold, SET_isMetaHold] = useState(false)
-    const [isAltHold, SET_isAltHold] = useState(false)
+    useKeyHold()
+    const [isCtrlHold, SET_isCtrlHold] = useState(false)
+    const [isShiftHold, SET_isShiftHold] = useState(false)
     const clickType = (() => {
-        if (isMetaHold && isAltHold) return 's-resize'
-        if (isMetaHold) return 'w-resize'
-        if (isAltHold) return 'n-resize'
-        return 'e-resize'
+        if (isCtrlHold && isShiftHold)
+            return 'url(/src/assert/last.svg) 15 15, pointer'
+        if (isCtrlHold) return 'url(/src/assert/prev.svg) 15 15, pointer'
+        if (isShiftHold) return 'url(/src/assert/first.svg) 15 15, pointer'
+        return 'url(/src/assert/next.svg) 15 15, pointer'
     })()
 
     return [keyDownHandle, keyUpHandle, clickType] as const
 
     function keyUpHandle(e: React.KeyboardEvent) {
-        if (e.key === 'Meta') {
-            SET_isMetaHold(false)
+        if (e.key === 'Control') {
+            SET_isCtrlHold(false)
         }
-        if (e.key === 'Alt') {
-            SET_isAltHold(false)
+        if (e.key === 'Shift') {
+            SET_isShiftHold(false)
         }
     }
 
     function keyDownHandle(e: React.KeyboardEvent) {
-        if (e.metaKey) {
-            SET_isMetaHold(true)
+        if (e.ctrlKey) {
+            SET_isCtrlHold(true)
         }
-        if (e.altKey) {
-            SET_isAltHold(true)
+        if (e.shiftKey) {
+            SET_isShiftHold(true)
         }
         if (e.code === 'Space') {
             setTimeout(() => {
@@ -313,7 +380,7 @@ export function useKeyScroll(ref: RefObject<HTMLElement>, isHovered: boolean) {
     useEffect(() => {
         let rAF: refCur = { cur: 0 }
         if (isHovered) {
-            runRAF(rAF, 0.18)
+            runRAF(rAF, autoScrollSpeed)
         }
         return () => clearRaf(rAF)
     }, [isHovered])
@@ -324,7 +391,14 @@ export function useKeyScroll(ref: RefObject<HTMLElement>, isHovered: boolean) {
         document.onkeydown = e => {
             // keydown浏览器原生 触发频率是 32ms
             // 但现在由requestAnimationFrame触发onScrollHandle的频率是 16ms
-            const val = { w: -30, s: 30, x: 0.1, z: SIZE_H / 5 }[e.key]
+            const val = {
+                w: -30,
+                s: 30,
+                x: 0.1,
+                z: SIZE_H / 5,
+                q: -1,
+                a: 1,
+            }[e.key]
             if (val) {
                 e.preventDefault()
                 runRAF(rAF, val)
@@ -349,5 +423,25 @@ export function useKeyScroll(ref: RefObject<HTMLElement>, isHovered: boolean) {
     function clearRaf(rAF: refCur) {
         cancelAnimationFrame(rAF.cur)
         rAF.cur = 0
+    }
+}
+
+export function useMouseHover(L: number, R: number) {
+    const [mouseHover, SET_mouseHover] = useState('')
+    const pre = usePrevious(mouseHover)
+    useLayoutEffect(() => {
+        doColor(pre, 'unset')
+        doColor(mouseHover, 'medium')
+    }, [mouseHover])
+    return [mouseHover, SET_mouseHover] as const
+
+    function doColor(word: string | undefined, color: string) {
+        getAllWordPosition(word || '')
+            .filter(idx => idx > L && idx < R)
+            .map(idx => querySelector(`[data-i="${idx}"]`))
+            .filter(e => e)
+            .forEach(e => {
+                e.style['-webkit-text-stroke-width'] = color
+            })
     }
 }

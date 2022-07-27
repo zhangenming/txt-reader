@@ -5,8 +5,11 @@ import { useState, useEffect, memo, useMemo, useCallback, useRef } from 'react'
 import {
     callWithTime,
     floor,
+    getAllWordPosition,
+    getFeature,
     getSelectionString,
     getStyle,
+    getWord,
     getWordCount,
     getWordPosition,
     hasFeature,
@@ -14,8 +17,10 @@ import {
     useEffectWrap,
 } from './utils'
 import {
+    getHoldKey,
     useKey,
     useKeyScroll,
+    useMouseHover,
     useScroll,
     useSizeCount,
     useSpking,
@@ -27,7 +32,7 @@ const VGM = memo(VG)
 
 import { Effect } from './comp/comp'
 import { runWithTime } from './debug.js'
-import { useHover, useStatePaire } from './hookUtils'
+import { useHover, useStatePaire, useWithLocalStorage } from './hookUtils'
 // import { useScrollData } from './useSrollData'
 const RENDER = { app: 0, reader: 0, VG: 0 }
 ;(window as any).RENDER = RENDER
@@ -37,9 +42,11 @@ export const SIZE_H = 25
 const DIFF = 3
 
 const o = !1
-const OVERSCAN_top = o ? 0 : 10
-const OVERSCAN_bottom_ = o ? 0 : 30
+const OVERSCAN_top_ = o ? 0 : 0
+const OVERSCAN_bottom_ = o ? 0 : 44
 const OVERSCAN_change_ = o ? 0 : 10
+
+export const featureFlag = { line: false }
 
 const APP = () => {
     const showInfo = false
@@ -51,6 +58,7 @@ const APP = () => {
     }
     // runWithTime(() => {}, 1)
     RENDER.app++
+    const [OVERSCAN_top, SET_OVERSCAN_top] = useState(OVERSCAN_top_)
     const [OVERSCAN_bottom, SET_OVERSCAN_bottom] = useState(OVERSCAN_bottom_)
     const [OVERSCAN_change, SET_OVERSCAN_change] = useState(OVERSCAN_change_)
 
@@ -125,6 +133,12 @@ const APP = () => {
 
     const [stopControl, SET_stopControl] = useState(false)
 
+    const pined = useStatePaire('')
+
+    const L = currentLine * widthCount
+    const R = (currentLine + heightCount) * widthCount
+    const [mouseHover, SET_mouseHover] = useMouseHover(L, R)
+
     const PROPS = {
         control: {
             select,
@@ -145,6 +159,8 @@ const APP = () => {
             setUpdata,
             OVERSCAN_change,
             SET_OVERSCAN_change,
+            OVERSCAN_top,
+            SET_OVERSCAN_top,
             OVERSCAN_bottom,
             SET_OVERSCAN_bottom,
             feature,
@@ -155,6 +171,8 @@ const APP = () => {
             stopControl,
             SET_stopControl,
             stopScroll,
+            pined,
+            mouseHover,
         },
         VG: {
             TXT,
@@ -171,6 +189,8 @@ const APP = () => {
             RENDER,
             onScrollHandle,
             isAotOver, // 不用添加进依赖 isAotOver变化不需要主动触发VG变化, 这种需求vue怎么处理?
+            TXTLen,
+            mouseHover,
         },
     }
 
@@ -184,6 +204,7 @@ const APP = () => {
         TXT,
         updata,
         false && floor(currentLine / (OVERSCAN_change || 1)),
+        OVERSCAN_top,
         OVERSCAN_bottom,
         stopScroll.get,
     ]
@@ -219,6 +240,11 @@ const APP = () => {
                         '--SIZE_W': SIZE_W + 'px',
                     },
                     onClick: GoToNextItemHandle,
+                    onKeyDown,
+                    onKeyUp,
+                    onMouseOver: e => {
+                        SET_mouseHover(getWord(e.target as Element) || '')
+                    },
                 }}
             >
                 <div className='reader-helper' />
@@ -265,27 +291,21 @@ const APP = () => {
                 </style> */}
 
                 {useMemo(() => {
-                    return [
-                        {
-                            key: select,
-                            color: 'black',
-                            i: Date.now(),
-                            count: getWordCount(select, TXT),
-                            isPined: false,
-                        },
-                        ...selectArr,
-                    ].map(({ key, color, isPined }, idx) => (
-                        <style key={key + idx} slot={key}>
-                            {getStyle(
-                                TXT,
-                                key,
-                                color,
-                                isPined || key === select,
-                                idx === 0
-                            )}
-                        </style>
-                    ))
-                }, [select, selectArr])}
+                    return selectArr.map(
+                        ({ key, color, count, isOneScreen }) => (
+                            <style key={key} slot={key}>
+                                {getStyle(
+                                    TXT,
+                                    key,
+                                    color,
+                                    pined.get === key,
+                                    count,
+                                    isOneScreen
+                                )}
+                            </style>
+                        )
+                    )
+                }, [pined, select, selectArr])}
             </div>
             <Effect
                 showInfo={showInfo}
@@ -293,7 +313,12 @@ const APP = () => {
             />
         </>
     )
-    function GoToNextItemHandle({ target, metaKey, altKey }: React.MouseEvent) {
+    function GoToNextItemHandle({
+        target,
+        ctrlKey,
+        shiftKey,
+        pageY,
+    }: React.MouseEvent) {
         const selection = getSelectionString()
 
         // 拉选selection状态
@@ -310,11 +335,13 @@ const APP = () => {
 
         // 点击click状态
         if (target instanceof HTMLSpanElement) {
-            // console.log('span', selection)
+            const word = getWord(target)
+            if (word === undefined) return
 
-            const content = getComputedStyle(target).content // js <-> css
-            if (content === 'normal') return
-            const word = content.slice(1, -1) //去掉引号
+            if (getHoldKey().BackspaceHold) {
+                deleteHandle(word)
+                return
+            }
 
             // 其他点击 走跳转逻辑
             const wordPosition = getWordPosition(word, TXT)
@@ -328,10 +355,10 @@ const APP = () => {
             if (clickPos === -1) return
 
             const nextPos = (() => {
-                if (altKey && metaKey) return len - 1 // 直接跳到最后一个
-                if (altKey) return 0 // 直接跳到第一个
+                if (shiftKey && ctrlKey) return len - 1 // 直接跳到最后一个
+                if (shiftKey) return 0 // 直接跳到第一个
 
-                const nextPos = clickPos + (metaKey ? -1 : 1) // meta 相反方向
+                const nextPos = clickPos + (ctrlKey ? -1 : 1) // ctrl 相反方向
                 if (nextPos === len) {
                     return 0 // 点最后一个时 跳到第一个
                 }
@@ -343,16 +370,16 @@ const APP = () => {
 
             const nextIdx = wordPosition.at(nextPos)! //从头到尾
 
-            SET_isTargetArr(
-                Array(wordLen)
-                    .fill(0)
-                    .map((_, i) => i + nextIdx)
-            )
-            setTimeout(() => {
-                SET_isTargetArr([])
-            }, 1111)
+            // SET_isTargetArr(
+            //     Array(wordLen)
+            //         .fill(0)
+            //         .map((_, i) => i + nextIdx)
+            // )
+            // setTimeout(() => {
+            //     SET_isTargetArr([])
+            // }, 1111)
 
-            jumpLine(i2rc(nextIdx, widthCount).r)
+            jumpLine(i2rc(nextIdx, widthCount).r, pageY)
         }
     }
 
@@ -361,14 +388,36 @@ const APP = () => {
             return
         }
 
+        pined.set(select)
+
+        const count = getWordPosition(select)
+        const isOneScreen = (() => {
+            const l = count.at(0)!
+            const r = count.at(-1)!
+            return l >= L && r <= R
+        })()
+
+        if (isOneScreen) {
+            setTimeout(() => {
+                deleteHandle(select)
+            }, 5000)
+        }
+        if (count.length === 1) {
+            setTimeout(() => {
+                deleteHandle(select)
+            }, 1000)
+        }
+
         SETWRAP_selectArr([
             ...selectArr,
             {
                 key: select,
                 color: 'black',
                 i: Date.now(),
-                count: getWordCount(select, TXT),
+                count: count.length,
                 isPined: false,
+                isOneScreen,
+                // isOneScreenWill
             },
         ])
 

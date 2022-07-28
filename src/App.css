@@ -1,3 +1,23 @@
+.V-Grid:hover .x{ 
+    color: red 
+    /* justforreplace */
+}
+.V-Grid:hover .x{ 
+    color: red 
+    /* justforreplace */
+}
+.V-Grid span:hover{
+    /* outline: green double 5px; */
+}
+.V-Grid span:not([data-invalid=' ']):hover{
+    /* outline: white double 5px; */
+} 
+.V-Grid span.hover{
+    color: springgreen;
+    background: dimgrey;
+    outline: double;
+}
+
 body {
     margin: 0;
 }
@@ -80,15 +100,6 @@ body {
     /* for filter */
     /* background: cornflowerblue;  */
     /* transition: color 0.1s, background-color 0.1s; */
-}
-.V-Grid:hover{
-    
-}
-.V-Grid span:hover{
-    outline: green double 5px;
-}
-.V-Grid span:not([data-invalid=' ']):hover{
-    /* outline: white double 5px; */
 }
 
 /* magic invalid*/

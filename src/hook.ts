@@ -16,26 +16,6 @@ import { featureFlag, SIZE_H, SIZE_W } from './App'
 import { runWithTime } from './debug'
 import { paire, usePrevious, useWithLocalStorage } from './hookUtils'
 import { config, getAllWordPosition, getClasses, hasFeature } from './utils'
-// const txt = JSON.parse(localStorage.getItem('txt'))
-// '三国演义'
-// '循环'
-// '白鹿原'
-// '天道'
-// '挽救计划'
-// '重生之超级战舰'
-// '诡秘之主'
-// '活着'
-// '人类大瘟疫'
-// '图灵'
-// '圣墟'
-//
-// import _txt from '../txt/围城'
-// const book = decodeURI(location.hash).slice(1) || '星之继承者（全3册）'
-const forDevtool = hasFeature('short')
-const _txt = (await import('../txt/' + (forDevtool ? 'test' : '围城'))).default
-// const _txt = (await import('../txt/' + (forDevtool ? 'test' : '诡秘之主')))
-//     .default
-
 import {
     chunk,
     chunkString,
@@ -48,6 +28,9 @@ import {
     useEffectWrap,
 } from './utils'
 import { geneChild, geneChild2 } from './V-Grid'
+
+import _txt1 from '../txt/房思琪的初恋乐园'
+const _txt = hasFeature('short') ? (await import('../txt/test')).default : _txt1
 
 export function useSizeCount() {
     const [state, SET_state] = useState(getter)
@@ -112,6 +95,7 @@ export function useTXT(widthCount: number, callback: Function) {
     // }, [state]) // todo
 
     const dom2 = useMemo(() => {
+        if (!hasFeature('read')) return
         console.time()
         requestIdleCallback(doWork)
         // const spking = useSpking(state, state.length)
@@ -155,6 +139,59 @@ export function useTXT(widthCount: number, callback: Function) {
     function getter(): string {
         if (!useTxtCache[widthCount]) {
             useTxtCache[widthCount] = _txt
+                .replaceAll(/[　\n ]+/g, '\n') //去掉多余空行, 注意有两种空格
+                .split('\n')
+                .map((e: string) => {
+                    e = e
+                        // .split(/。|，/)
+                        .split('。')
+                        .map(ee => {
+                            if (ee.length === 0) return ''
+                            const tail =
+                                widthCount -
+                                (ee.length % widthCount || widthCount)
+                            return ee + '。' + ' '.repeat(Math.max(0, tail - 1))
+                        })
+                        .join('')
+
+                    // e = e
+                    //     .split('，')
+                    //     .map(ee => {
+                    //         if (ee.length === 0) return ''
+                    //         const tail =
+                    //             widthCount -
+                    //             (ee.length % widthCount || widthCount)
+                    //         return (
+                    //             ee + '，' + '，'.repeat(Math.max(0, tail - 1))
+                    //         )
+                    //     })
+                    //     .join('')
+
+                    const all =
+                        widthCount -
+                        (e.length % widthCount || widthCount) +
+                        widthCount +
+                        widthCount +
+                        widthCount
+
+                    return e + ' '.repeat(all)
+                })
+                .join('')
+            // .split('。')
+            // .map((e: string) => {
+            //     const all =
+            //         widthCount - (e.length % widthCount || widthCount)
+
+            //     return e + ' '.repeat(all)
+            // })
+            // .join('')
+        }
+
+        return (config.TXT = useTxtCache[widthCount])
+    }
+    function getter2(): string {
+        if (!useTxtCache[widthCount]) {
+            useTxtCache[widthCount] = _txt
                 .replaceAll(/[　\n ]+/g, '\n  ') //去掉多余空行, 注意有两种空格
                 .split('\n')
                 .map((e: string) => {
@@ -166,6 +203,14 @@ export function useTXT(widthCount: number, callback: Function) {
                     return e + ' '.repeat(all)
                 })
                 .join('')
+            // .split('。')
+            // .map((e: string) => {
+            //     const all =
+            //         widthCount - (e.length % widthCount || widthCount)
+
+            //     return e + ' '.repeat(all)
+            // })
+            // .join('')
         }
 
         return (config.TXT = useTxtCache[widthCount])

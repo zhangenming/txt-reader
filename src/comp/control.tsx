@@ -15,8 +15,6 @@ export type item = {
 
 export default forwardRef(function Control(
     {
-        select,
-        SET_select,
         selectArr,
         deleteHandle,
         changeHandle,
@@ -48,8 +46,6 @@ export default forwardRef(function Control(
         mouseHover,
         mouseHoverTargets,
     }: {
-        select: string
-        SET_select: React.Dispatch<React.SetStateAction<string>>
         selectArr: item[]
         deleteHandle(key: string): void
         changeHandle(item: item): void
@@ -135,10 +131,10 @@ export default forwardRef(function Control(
             <div>{(txtLen / 10000).toFixed(2)}万</div>
             <div>{(TXTLen / 10000).toFixed(2)}万</div>
             <br />
-            {/* <div>
+            <div>
                 <div>scrollTop:</div>
                 <span>{scrollTop}</span>
-            </div> */}
+            </div>
             <div>
                 <div>currentLine:</div>
                 <span>

@@ -1,4 +1,5 @@
 import { useEffect } from 'react'
+import { doHas } from './App'
 import { invalidData } from './book'
 
 export const floor = Math.floor
@@ -152,15 +153,7 @@ export function getStyle(
 
     const base = word
         .split('')
-
-        .reduce(
-            (all, now) =>
-                all +
-                (isInvalidWord(now) ? `[data-invalid='${now}']` : `[${now}]`) +
-                '+',
-            ''
-        )
-
+        .reduce((all, now) => all + `.${now}` + '+', '')
         .slice(0, -1) //去掉末尾' +'
 
     const _HOVER = doHover(base).join(',\n')
@@ -168,8 +161,7 @@ export function getStyle(
 :has(
 ${_HOVER}
 )`
-
-    const _HAS = doHas(base).join(',\n').replaceAll(':has()', '')
+    const _HAS = doHas(wordLen, base).join(',\n').replaceAll(':has()', '')
     const HAS = `\
 :is(
 ${_HAS}
@@ -297,19 +289,14 @@ ${HAS},\n\n`
     }
 
     // [ [洛]+[萨]+[科]+[技], [洛]+[萨]+[科]:has(+[技]), [洛]+[萨]:has(+[科]+[技]), [洛]:has(+[萨]+[科]+[技]) ]
-    function doHas(base: string) {
+    function doHass(base: string) {
+        const t = base.split('+')
         return Array(wordLen) //1: word.length
             .fill(0)
-            .map((_, index, arr) => {
-                let idx = 0
-                return (
-                    base.replaceAll(/\[.*?\]/g, e => {
-                        if (++idx === arr.length - index) {
-                            return `${e}:has(`
-                        }
-                        return e
-                    }) + ')'
-                )
+            .map((_, idx) => {
+                const l = t.slice(0, idx + 1).join('+')
+                const r = t.slice(idx + 1).join('+')
+                return idx === wordLen - 1 ? l : `${l}:has(+${r})`
             })
     }
 }
@@ -335,6 +322,9 @@ export function getColor() {
 
 export function querySelector(selector: string) {
     return document.querySelector<HTMLElement>(selector)!
+}
+export function querySelectorAll(selector: string) {
+    return document.querySelectorAll<HTMLElement>(selector)!
 }
 
 export function isInvalidWord(word: string) {

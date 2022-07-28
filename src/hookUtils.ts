@@ -26,19 +26,32 @@ export function useHover() {
     return [ref, value] as const
 }
 
-const ref_wls: any = {}
-export function useWithLocalStorage(flag: string) {
-    const [state, SET_state] = useState(() =>
-        Number(localStorage.getItem(flag))
-    )
-
-    ref_wls.current = state
-
-    useEffect(() => {
-        window.onunload = () => {
-            localStorage.setItem(flag, String(ref_wls.current))
+window.onbeforeunload = () => {
+    Object.entries(refWLS).forEach(([key, val]) => {
+        if (key.includes('globalWords')) {
+            localStorage.setItem(key, JSON.stringify(Array.from(val)))
+        } else if (key.includes('selectArr')) {
+            localStorage.setItem(key, JSON.stringify(val) || '[]')
+        } else {
+            localStorage.setItem(key, val)
         }
-    }, [])
+    })
+}
+
+const refWLS: any = {}
+export function useWithLocalStorage<T>(flag: string) {
+    const [state, SET_state] = useState<T>(() => {
+        let rs = JSON.parse(localStorage.getItem(flag))
+        if (flag.includes('globalWords')) {
+            rs = new Set(rs)
+        }
+        if (flag.includes('selectArr')) {
+            rs = rs || []
+        }
+        return rs
+    })
+
+    refWLS[flag] = state
 
     return [state, SET_state] as const
 }
@@ -59,13 +72,9 @@ export function useStatePaire<S>(initialState: S | (() => S)): paire<S> {
 }
 
 export function usePrevious<T>(value: T): T | undefined {
-    // The ref object is a generic container whose current property is mutable ...
-    // ... and can hold any value, similar to an instance property on a class
     const ref = useRef<T>()
-    // Store current value in ref
     useEffect(() => {
         ref.current = value
-    }, [value]) // Only re-run if value changes
-    // Return previous value (happens before update in useEffect above)
+    }, [value])
     return ref.current
 }

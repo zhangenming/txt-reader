@@ -14,6 +14,9 @@ import {
     getWordPosition,
     hasFeature,
     i2rc,
+    isInvalidWord,
+    querySelector,
+    querySelectorAll,
     useEffectWrap,
 } from './utils'
 import {
@@ -43,12 +46,14 @@ const DIFF = 3
 
 const o = !1
 const OVERSCAN_top_ = o ? 0 : 0
-const OVERSCAN_bottom_ = o ? 0 : 44
+const OVERSCAN_bottom_ = o ? 0 : 0
 const OVERSCAN_change_ = o ? 0 : 10
 
 export const featureFlag = { line: false }
 
 const APP = () => {
+    const [globalWords, SET_globalWords] = useWithLocalStorage('_globalWords')
+
     const showInfo = false
     if (showInfo) {
         console.log('\n')
@@ -64,7 +69,6 @@ const APP = () => {
 
     const { widthCount, heightCount } = useSizeCount()
 
-    // const { scrolling } = useScrollData()
     const [isAotOver, SET_isAotOver] = useState(false)
     const [txt, txtLen, TXT, TXTLen, TXTBlock, txtDOM] = useTXT(
         widthCount,
@@ -95,13 +99,10 @@ const APP = () => {
         jumpLine
     )
 
-    const [select, SET_select] = useState('')
-    const [selectArr, SET_selectArr] = useState<item[]>(
-        JSON.parse(localStorage.getItem(txtLen + 'selectArr') || '[]')
+    const [selectArr, SET_selectArr] = useWithLocalStorage<item[]>(
+        'selectArr' + txtLen
     )
-    useEffect(() => {
-        localStorage.setItem(txtLen + 'selectArr', JSON.stringify(selectArr))
-    }, [selectArr])
+
     // 列表逻辑
     useEffect(() => {
         document.onselectionchange = function () {
@@ -141,8 +142,6 @@ const APP = () => {
 
     const PROPS = {
         control: {
-            select,
-            SET_select,
             selectArr,
             deleteHandle,
             changeHandle,
@@ -219,7 +218,7 @@ const APP = () => {
     // const vgm = <VGM {...useMemo(() => PROPS.VG, deps_VG)} />
 
     // const controlmm = useMemo(() => <Control />, [currentLine])
-
+    let hoverWord: string
     return (
         <>
             <Effect
@@ -242,8 +241,59 @@ const APP = () => {
                     onClick: GoToNextItemHandle,
                     onKeyDown,
                     onKeyUp,
+                    // onMouseOver: e => {
+                    //     SET_mouseHover(getWord(e.target as Element) || '')
+                    //     e.target.style['outline'] = 'double'
+                    // },
+                    // onMouseOut(e) {
+                    //     e.target.style['outline'] = 'unset'
+                    // },
+                    ...(() => {
+                        return {}
+                        let tmp //cache
+                        return {
+                            onMouseOver: e => {
+                                tmp = getAllWordPosition(
+                                    getWord(e.target as Element) || ''
+                                )
+                                    .filter(idx => idx > L && idx < R)
+                                    .map(idx =>
+                                        querySelector(`[data-i="${idx}"]`)
+                                    )
+                                    .filter(e => e)
+
+                                tmp.forEach(e => {
+                                    e.style['-webkit-text-stroke-width'] =
+                                        'medium'
+                                })
+                            },
+                            onMouseOut(e) {
+                                tmp?.forEach(e => {
+                                    e.style['-webkit-text-stroke-width'] =
+                                        'unset'
+                                })
+                            },
+                        }
+                    })(),
+
                     onMouseOver: e => {
-                        SET_mouseHover(getWord(e.target as Element) || '')
+                        document
+                            .querySelectorAll('.hover')
+                            .forEach(e => e.classList.remove('hover'))
+
+                        const word = getWord(e.target as Element)!
+                        // ||   (e.target as Element).className
+
+                        if ([' ', ',', '。', undefined].includes(word)) return
+
+                        // 局部匹配
+                        selectArr.map(e => {
+                            if (e.key.includes(word) || word.includes(e.key)) {
+                                document
+                                    .querySelectorAll(geneSelector(e.key))
+                                    .forEach(e => e.classList.add('hover'))
+                            }
+                        })
                     },
                 }}
             >
@@ -305,7 +355,7 @@ const APP = () => {
                             </style>
                         )
                     )
-                }, [pined, select, selectArr])}
+                }, [pined, selectArr])}
             </div>
             <Effect
                 showInfo={showInfo}
@@ -388,6 +438,7 @@ const APP = () => {
             return
         }
 
+        SET_globalWords(e => new Set([...e, select]))
         pined.set(select)
 
         const count = getWordPosition(select)
@@ -451,3 +502,33 @@ function APPwrap() {
 }
 
 export default APP
+
+function geneSelector(word: string) {
+    if (word.length === 1) {
+        return '.V-Grid ' + getCls(word)
+    }
+    const base = word
+        .split('')
+        .reduce((all, now) => all + getCls(now) + '+', '')
+        .slice(0, -1) //去掉末尾' +'
+
+    const _HAS = doHas(word.length, base).join(',\n').replaceAll(':has()', '')
+    const HAS = `:is(${_HAS})`
+
+    return '.V-Grid ' + HAS
+
+    function getCls(word: string) {
+        if (' 0123456789'.includes(word)) return `[class="${word}"]`
+        return `.${word}`
+    }
+}
+export function doHas(wordLen: number, base: string) {
+    const t = base.split('+')
+    return Array(wordLen)
+        .fill(0)
+        .map((_, idx) => {
+            const l = t.slice(0, idx + 1).join('+')
+            const r = t.slice(idx + 1).join('+')
+            return idx === wordLen - 1 ? l : `${l}:has(+${r})`
+        })
+}

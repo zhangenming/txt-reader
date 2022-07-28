@@ -120,12 +120,14 @@ export function geneChild2(words: string[], idx: number, key: number) {
     return (
         <Fragment key={key}>
             {words.map((word, i) => (
+                // word的原子的 how to cache?
                 <span
                     {...{
                         key: idx + i,
                         children: word,
                         'data-i': idx + i,
-                        [isInvalidWord(word) ? 'data-invalid' : word]: word,
+                        // [isInvalidWord(word) ? 'data-invalid' : word]: word,
+                        className: word,
                     }}
                 />
             ))}
@@ -139,7 +141,8 @@ export function geneChild(word: string, idx: number) {
                 key: idx,
                 children: word,
                 'data-i': idx,
-                [isInvalidWord(word) ? 'data-invalid' : word]: word,
+                // [isInvalidWord(word) ? 'data-invalid' : word]: word,
+                className: word,
                 // style: {
                 //     background: mouseHoverTargets?.includes(idx) ? 'red' : '',
                 // },

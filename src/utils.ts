@@ -1,10 +1,20 @@
 import { useEffect } from 'react'
-import { doHas } from './App'
+import { doHas, SIZE_H } from './App'
 import { invalidData } from './book'
+import { geneLine } from './V-Grid'
 
 export const floor = Math.floor
 
-export const config = { TXT: '', lineSize: 0 }
+export const config = {
+    txtLen: 0,
+    TXTLen: 0,
+    txt: '',
+    TXT: [''], // line by line
+    TXTDom: [],
+    allLinesCount: 0,
+    allLinesTXT: [''],
+    allLinesTXTDom: [],
+}
 
 const getAllWordPositionCache: { [key: string]: number[] } = {}
 export function getAllWordPosition(word: string) {
@@ -49,35 +59,22 @@ export function makeFuncCache(
 
 // 查找一个字符串中的所有子串的位置
 const getWordPositionCache: any = {}
-export function getWordPosition(
-    word: string,
-    TXT: string = config.TXT
-): number[] {
+export function getWordPosition(word: string): number[] {
     if (word === '') return []
 
-    const key = word + TXT.length
+    const txt = config.txt
+    const key = word + txt.length
     if (!getWordPositionCache[key]) {
         const positions = []
-        let pos = TXT.indexOf(word)
+        let pos = txt.indexOf(word)
         while (pos != -1) {
             positions.push(pos)
-            pos = TXT.indexOf(word, pos + word.length)
+            pos = txt.indexOf(word, pos + word.length)
         }
 
         getWordPositionCache[key] = positions
     }
     return getWordPositionCache[key]
-
-    if (word === '') return Array(TXT.length)
-
-    const positions = []
-    let pos = TXT.indexOf(word)
-    while (pos != -1) {
-        positions.push(pos)
-        pos = TXT.indexOf(word, pos + word.length)
-    }
-
-    return positions
 }
 
 const getWordCountCache: any = {}
@@ -100,47 +97,45 @@ export function getClasses(classes: object) {
 }
 
 export function getStyle(
-    TXT: string,
     word: string,
     color: string,
     isPined: boolean,
     count: number,
     isOneScreen: boolean
 ) {
-    // const count = getWordCount(word, TXT)
     if (count === 0 || word === '' || word === ' ') return
 
     const justOne = count === 1
 
     // 自动联想
-    word = (function test2() {
-        if (justOne) return word
+    // word = (function test2() {
+    //     if (justOne) return word
 
-        const wordPosition = getWordPosition(word, TXT)
+    //     const wordPosition = getWordPosition(word, TXT)
 
-        let left = 1
-        while (arrIsOne(wordPosition.map(getWordLeft))) {
-            word = getWordLeft(wordPosition[0]) + word
-            left++
-        }
-        let right = 1 + word.length - left
-        while (arrIsOne(wordPosition.map(getWordRight))) {
-            word = word + getWordRight(wordPosition[0])
-            right++
-        }
+    //     let left = 1
+    //     while (arrIsOne(wordPosition.map(getWordLeft))) {
+    //         word = getWordLeft(wordPosition[0]) + word
+    //         left++
+    //     }
+    //     let right = 1 + word.length - left
+    //     while (arrIsOne(wordPosition.map(getWordRight))) {
+    //         word = word + getWordRight(wordPosition[0])
+    //         right++
+    //     }
 
-        return word
+    //     return word
 
-        function getWordLeft(idx: number) {
-            return TXT[idx - left]
-        }
-        function getWordRight(idx: number) {
-            return TXT[idx + right]
-        }
-        function arrIsOne(arr: string[]) {
-            return [...new Set(arr)].length === 1
-        }
-    })()
+    //     function getWordLeft(idx: number) {
+    //         return TXT[idx - left]
+    //     }
+    //     function getWordRight(idx: number) {
+    //         return TXT[idx + right]
+    //     }
+    //     function arrIsOne(arr: string[]) {
+    //         return [...new Set(arr)].length === 1
+    //     }
+    // })()
 
     const wordLen = word.length
 
@@ -423,7 +418,7 @@ export function callWithTime2(name: string, func: any) {
 const selection = document.getSelection()!
 export function getSelectionString() {
     //todo with hook effect
-    return selection.toString()
+    return selection.toString().replaceAll(/\n/g, '')
 }
 
 export function chunk(arr: any[], chunkSize: number) {
@@ -436,8 +431,13 @@ export function chunk(arr: any[], chunkSize: number) {
     return rs
 }
 
-export function chunkString(str: string, length: number) {
-    return str.match(new RegExp('.{1,' + length + '}', 'g'))!.map(e => [...e])
+export function chunkString(line: string, len: number) {
+    const s = 0
+    if (line.length < len - s) {
+        return line
+    }
+
+    return line.match(new RegExp('.{1,' + (len - s) + '}', 'g'))!
 }
 
 const features = [...new URLSearchParams(location.search).keys()]

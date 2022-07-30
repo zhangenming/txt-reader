@@ -1,51 +1,53 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-        <title>Document</title>
-    </head>
-    <body>
-        <button id="popup-trigger">Click for popup</button>
 
-        <div id="popup">Click outisde the box to close</div>
-        <style>
-            body {
-                text-align: center;
-                padding-top: 50px;
-            }
-            #popup {
-                position: absolute;
-                top: 90px;
-                right: 0;
-                left: 0;
-                box-shadow: 0px 3px 3px -2px rgba(0, 0, 0, 0.2),
-                    0px 3px 4px 0px rgba(0, 0, 0, 0.14),
-                    0px 1px 8px 0px rgba(0, 0, 0, 0.12);
-                width: 250px;
-                margin: auto;
-                z-index: 3;
-                overflow: hidden;
-                border-radius: 4px;
-                display: none;
-                padding: 8px;
-                text-align: center;
-            }
-            #popup.show {
-                display: block;
-            }
-        </style>
-        <script>
-            const popupEl = document.querySelector('#popup')
-            const popupBttn = document.querySelector('#popup-trigger')
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
 
-            popupBttn.addEventListener('click', e => {
-                popupEl.classList.toggle('show')
-            })
-            document.addEventListener('click', e => {
-                console.log(e, e.target.closest('#popup'))
-            })
-        </script>
-    </body>
+<body>
+    <div id="x"></div>
+    <script>
+        const arr = Array(1e5).fill()
+        // run('a') // 200 
+        // run('b') // 70 解构比concat还快?
+        run('c') // 0.4 push快的也太离谱了吧
+        run('d') // 6
+        run('e') // 6
+        function run(type) {
+            const t = performance.now()
+            const map = {
+                a(acc, now) {
+                    return acc.concat(1)
+                },
+                b(acc, now) {
+                    return [...acc, 1]
+                },
+                c(acc, now) {
+                    acc.push(1)
+                    return acc
+                },
+                d(acc, now) {
+                    acc.unshift(1)
+                    return acc
+                },
+                e(acc, now) {
+                    acc.splice(0, 0, 1)
+                    return acc
+                },
+
+            }
+            arr.reduce(map[type], [])
+
+            const p = document.createElement('p')
+            p.innerText = performance.now() - t
+            x.appendChild(p)
+        }
+
+    </script>
+</body>
+
 </html>

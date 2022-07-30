@@ -12,6 +12,7 @@ import { featureFlag, SIZE_H, SIZE_W } from './App'
 import { usePrevious } from './hookUtils'
 import {
     callWithTime,
+    config,
     floor,
     getAllWordPosition,
     getAllWordPositionWithNode,
@@ -31,25 +32,16 @@ export default forwardRef(function VGrid(
         heightCount,
         currentLine,
         spking,
-        OVERSCAN_top,
-        OVERSCAN_bottom,
-        TXTBlock,
-        txtDOM,
         feature,
         RENDER,
         onScrollHandle,
-        isAotOver,
-        TXTLen,
-        mouseHover,
+        overscan,
     }: {
-        TXT: string
+        TXT: string[]
         widthCount: number
         heightCount: number
         currentLine: number
         spking: boolean[]
-        OVERSCAN_top: number
-        OVERSCAN_bottom: number
-        TXTBlock: string[][]
     },
     ref: any
     // ref: React.MutableRefObject<HTMLDivElement>
@@ -59,62 +51,98 @@ export default forwardRef(function VGrid(
     //     console.log('effect VG')
     // })
 
-    // OVERSCAN_top = OVERSCAN_bottom = 0
-
-    const beginLine = Math.max(0, currentLine - OVERSCAN_top)
-
-    const L = beginLine * widthCount
+    const L = Math.max(0, currentLine - overscan.top)
     const R = Math.min(
-        TXTLen,
-        (currentLine + OVERSCAN_bottom + heightCount) * widthCount
+        config.allLinesCount,
+        currentLine + overscan.bot + heightCount
     )
 
     return (
         <>
             <div
                 className='container'
-                onScroll={onScrollHandle}
-                tabIndex={1}
                 style={{
                     height: heightCount * SIZE_H,
                 }}
+                onScroll={onScrollHandle}
+                tabIndex={1}
                 ref={ref}
             >
                 <div
                     className='V-Grid'
                     style={{
                         width: widthCount * SIZE_W,
-                        paddingTop: beginLine * SIZE_H,
-                        height: (TXTLen / widthCount) * SIZE_H,
+                        paddingTop: L * SIZE_H,
+                        height: config.allLinesCount * SIZE_H,
                     }}
                 >
-                    {(() => {
-                        console.time('render reader')
-                        // console.log('render VG')
-                        // useEffect(() => {
-                        //     console.log('effect VG')
-                        // })
-                        RENDER.reader++
-
-                        const rs = isAotOver //todo
-                            ? featureFlag.line
-                                ? txtDOM.slice(L, R)
-                                : txtDOM.slice(L / widthCount, R / widthCount)
-                            : [...TXT.slice(L, R)].map((word, i) =>
-                                  geneChild(word, i + L)
-                              )
-                        // 滚动一行 domdiff 部分更新比全量更新好(key->domdiff)
-                        // 滚动全屏 domdiff 删除key直接更新属性 比删除dom新建dom好
-                        console.timeEnd('render reader')
-
-                        return rs
-                    })()}
+                    {/* // 滚动一行 domdiff 部分更新比全量更新好(key->domdiff) */}
+                    {/* // 滚动全屏 domdiff 删除key直接更新属性 比删除dom新建dom好 */}
+                    {/* {TXT.slice(L, R).map((line, i) => geneLine(line, L + i))} */}
+                    {config.allLinesTXTDom.slice(L, R)}
                 </div>
             </div>
         </>
     )
 })
-// dom6 key4 invalid3
+
+export function geneLine(line: string, key: number) {
+    return (
+        <div data-line={key} key={key}>
+            {[...line].map(geneItem)}
+        </div>
+    )
+}
+
+let isSpeaking = false
+function geneItem(word: string, i: number) {
+    if (word === '”') {
+        isSpeaking = false
+    }
+
+    const rt = (
+        <span
+            {...{
+                i: i + 1,
+                key: i,
+                children: word,
+                className: word,
+                style: {
+                    background: isSpeaking && 'teal',
+                },
+            }}
+        />
+    )
+
+    if (word === '“') {
+        isSpeaking = true
+    }
+
+    return rt
+}
+
+export function geneChild(word: string, idx: number) {
+    if (word === '”') {
+        isSpeaking = false
+    }
+
+    const rt = (
+        <span
+            {...{
+                key: idx,
+                children: word,
+                className: word,
+                style: { background: isSpeaking && 'teal' },
+            }}
+        />
+    )
+
+    if (word === '“') {
+        isSpeaking = true
+    }
+
+    return rt
+}
 
 export function geneChild2(words: string[], idx: number, key: number) {
     return (
@@ -125,28 +153,10 @@ export function geneChild2(words: string[], idx: number, key: number) {
                     {...{
                         key: idx + i,
                         children: word,
-                        'data-i': idx + i,
-                        // [isInvalidWord(word) ? 'data-invalid' : word]: word,
                         className: word,
                     }}
                 />
             ))}
         </Fragment>
-    )
-}
-export function geneChild(word: string, idx: number) {
-    return (
-        <span
-            {...{
-                key: idx,
-                children: word,
-                'data-i': idx,
-                // [isInvalidWord(word) ? 'data-invalid' : word]: word,
-                className: word,
-                // style: {
-                //     background: mouseHoverTargets?.includes(idx) ? 'red' : '',
-                // },
-            }}
-        />
     )
 }

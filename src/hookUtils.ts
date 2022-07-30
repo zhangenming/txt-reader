@@ -6,6 +6,7 @@ import {
     SetStateAction,
     useMemo,
 } from 'react'
+import { config } from './utils'
 
 export function useHover() {
     const [value, setValue] = useState(false)
@@ -39,7 +40,9 @@ window.onbeforeunload = () => {
 }
 
 const refWLS: any = {}
-export function useWithLocalStorage<T>(flag: string) {
+export function useStateWithLS<T>(key: string) {
+    const flag = `${key} - ${config.txtLen}`
+
     const [state, SET_state] = useState<T>(() => {
         let rs = JSON.parse(localStorage.getItem(flag))
         if (flag.includes('globalWords')) {
@@ -77,4 +80,15 @@ export function usePrevious<T>(value: T): T | undefined {
         ref.current = value
     }, [value])
     return ref.current
+}
+
+export function useDidMountEffect(func: Function, deps: any[]) {
+    const firstUpdate = useRef(true)
+    useEffect(() => {
+        if (firstUpdate.current) {
+            firstUpdate.current = false
+        } else {
+            func()
+        }
+    }, deps)
 }

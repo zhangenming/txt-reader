@@ -1,8 +1,16 @@
 import { forwardRef, lazy, Suspense, useEffect, useMemo, useState } from 'react'
 import { featureFlag, SIZE_H } from '../App'
-import { getHoldKey } from '../hook'
+import { getHoldingKey } from '../hook'
 import { useStatePaire } from '../hookUtils'
-import { floor, getColor, getWordCount, getWordPosition, i2rc } from '../utils'
+import { scrollToNext } from '../reader'
+import {
+    config,
+    floor,
+    getColor,
+    getWordCount,
+    getWordPosition,
+    i2rc,
+} from '../utils'
 import Comp from './comp'
 export type item = {
     key: string
@@ -18,9 +26,6 @@ export default forwardRef(function Control(
         selectArr,
         deleteHandle,
         changeHandle,
-        TXT,
-        TXTLen,
-        txtLen,
         widthCount,
         heightCount,
         currentLine,
@@ -28,12 +33,7 @@ export default forwardRef(function Control(
         onKeyUp,
         onKeyDown,
         setUpdata,
-        OVERSCAN_change,
-        SET_OVERSCAN_change,
-        OVERSCAN_top,
-        SET_OVERSCAN_top,
-        OVERSCAN_bottom,
-        SET_OVERSCAN_bottom,
+        overscan,
         feature,
         setFeature,
         RENDER,
@@ -43,15 +43,11 @@ export default forwardRef(function Control(
         SET_stopControl,
         stopScroll,
         pined,
-        mouseHover,
-        mouseHoverTargets,
     }: {
         selectArr: item[]
         deleteHandle(key: string): void
         changeHandle(item: item): void
         TXT: string
-        TXTLen: number
-        txtLen: number
         widthCount: number
         heightCount: number
         currentLine: number
@@ -108,28 +104,36 @@ export default forwardRef(function Control(
             <input
                 type='text'
                 onInput={e =>
-                    SET_OVERSCAN_top(Number((e.target as unknown as any).value))
+                    overscan.set(o => ({
+                        ...o,
+                        top: Number((e.target as any).value),
+                    }))
                 }
-                value={OVERSCAN_top}
+                value={overscan.get.top}
             />
             bottom
             <input
                 type='text'
                 onInput={e =>
-                    SET_OVERSCAN_bottom(
-                        Number((e.target as unknown as any).value)
-                    )
+                    overscan.set(o => ({
+                        ...o,
+                        bot: Number((e.target as any).value),
+                    }))
                 }
-                value={OVERSCAN_bottom}
+                value={overscan.get.bot}
             />
             {/*  */}
             <br />
             <div>
-                {widthCount}-{heightCount}
+                宽: {widthCount}- 高:{heightCount}
             </div>
+            {/*
+            
+            
+            
+            */}
             <br />
-            <div>{(txtLen / 10000).toFixed(2)}万</div>
-            <div>{(TXTLen / 10000).toFixed(2)}万</div>
+            <div>{(config.txtLen / 10000).toFixed(2)}万</div>
             <br />
             <div>
                 <div>scrollTop:</div>
@@ -139,7 +143,8 @@ export default forwardRef(function Control(
                 <div>currentLine:</div>
                 <span>
                     {currentLine}(
-                    {((currentLine / (TXTLen / widthCount)) * 100).toFixed(2)}%)
+                    {((currentLine / config.allLinesCount) * 100).toFixed(2)}
+                    %)
                 </span>
             </div>
             <br />
@@ -159,9 +164,9 @@ export default forwardRef(function Control(
                 onKeyDown={e => e.stopPropagation()}
             /> */}
             <div>
-                {selectArr.map((item, idx) => {
+                {selectArr.map(item => {
                     const { key, count, isOneScreen } = item
-                    if (count === 1 || isOneScreen) return
+                    // if (count === 1 || isOneScreen) return
                     return (
                         <div
                             className='selectItem'
@@ -174,7 +179,9 @@ export default forwardRef(function Control(
                             <span
                                 className='key'
                                 children={key}
-                                onClick={() => handleJump(key)}
+                                onClick={() => {
+                                    scrollToNext(currentLine + 2, key)
+                                }}
                                 title={key}
                             />
                             <span
@@ -182,11 +189,11 @@ export default forwardRef(function Control(
                                 children={count}
                                 onClick={() => {
                                     // react 会不会每个span都新建了一个函数事件
-                                    // changeHandle({
-                                    //     ...item,
-                                    //     color: getColor(),
-                                    // })
-                                    deleteHandle(item.key)
+                                    changeHandle({
+                                        ...item,
+                                        isPined: !item.isPined,
+                                    })
+                                    // deleteHandle(item.key)
                                 }}
                             />
                         </div>
@@ -195,32 +202,6 @@ export default forwardRef(function Control(
             </div>
         </div>
     )
-
-    function handleJump(key: string) {
-        const [firstLine, nextLine, nextLine2] = getNextLine(key)
-        if (getHoldKey('ctrl')) {
-            console.log(22, nextLine2)
-            jumpLine(nextLine2)
-            return
-        }
-        if (pined.get !== key) {
-            pined.set(key)
-            jumpLine(firstLine)
-        } else {
-            jumpLine(nextLine)
-        }
-    }
-
-    function getNextLine(key: string) {
-        const all = getWordPosition(key).map(i => i2rc(i).r)
-        const firstLine = all[0]
-        const nextLine =
-            all.find(e => e > currentLine + heightCount) || firstLine // last->first
-
-        const nextLine2 = all.find(e => e > currentLine) || firstLine // last->first
-
-        return [firstLine - 2, nextLine - 2, nextLine2]
-    }
 })
 // const Lazy = lazy(() => {
 //     return new Promise(resolve => {

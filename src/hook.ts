@@ -1,5 +1,5 @@
 const autoScrollSpeed = 1
-const updataTime = 300
+const updataTime = 0
 import {
     createElement,
     Dispatch,
@@ -14,7 +14,12 @@ import {
 } from 'react'
 import { featureFlag, SIZE_H, SIZE_W } from './App'
 import { runWithTime } from './debug'
-import { paire, usePrevious, useWithLocalStorage } from './hookUtils'
+import {
+    paire,
+    useDidMountEffect,
+    usePrevious,
+    useStateWithLS,
+} from './hookUtils'
 import { config, getAllWordPosition, getClasses, hasFeature } from './utils'
 import {
     chunk,
@@ -27,10 +32,12 @@ import {
     querySelector,
     useEffectWrap,
 } from './utils'
-import { geneChild, geneChild2 } from './V-Grid'
+import { geneChild, geneChild2, geneLine } from './V-Grid'
 
-import _txt1 from '../txt/房思琪的初恋乐园'
-const _txt = hasFeature('short') ? (await import('../txt/test')).default : _txt1
+import _txt from '../txt/房思琪的初恋乐园'
+const txt = hasFeature('test') ? (await import('../txt/test')).default : _txt
+
+type react_SET<T = any> = React.Dispatch<React.SetStateAction<T>>
 
 export function useSizeCount() {
     const [state, SET_state] = useState(getter)
@@ -43,7 +50,7 @@ export function useSizeCount() {
                 SET_state(getter)
             }, 200)
         }
-    }, []) // 第一次render执行了两次? 与上面的useState(getter)
+    }, [])
 
     return state
 
@@ -52,47 +59,20 @@ export function useSizeCount() {
         const width = innerWidth - 100 - min - 17 /*滚轴宽度*/ - 20
         const height = innerHeight - 30 - min
         const widthCount = floor(width / SIZE_W)
+        const heightCount = floor(height / SIZE_W)
 
-        config.lineSize = widthCount
-        return {
-            widthCount,
-            heightCount: floor(height / SIZE_H),
-        }
+        return [widthCount, heightCount]
     }
 }
-type react_SET<T = any> = React.Dispatch<React.SetStateAction<T>>
 
-const useTxtCache: any = {}
-export function useTXT(widthCount: number, callback: Function) {
-    // txt(with widthCount) -> TXT
+export function useTXT(widthCount: number) {
     const [state, SET_state] = useState(getter) //慢一拍
 
-    useEffect(() => {
+    useDidMountEffect(() => {
         SET_state(getter) //再慢一拍
     }, [widthCount])
 
-    // const dom = useMemo(() => {
-    //     console.time()
-    //     requestIdleCallback(doWork)
-    //     // const spking = useSpking(state, state.length)
-    //     // return [...state].map(geneChild)
-    //     let idx = -1
-    //     const rs: any = []
-    //     return rs
-
-    //     function doWork(deadline: IdleDeadline) {
-    //         while (deadline.timeRemaining()) {
-    //             if (++idx > state.length) {
-    //                 callback()
-    //                 console.timeEnd()
-    //                 return
-    //             }
-    //             // 现在是每个字一个child, 还是每行一个?
-    //             rs.push(geneChild(state[idx], idx))
-    //         }
-    //         requestIdleCallback(doWork)
-    //     }
-    // }, [state]) // todo
+    const [isAotOver, SET_isAotOver] = useState(false)
 
     const dom2 = useMemo(() => {
         if (!hasFeature('read')) return
@@ -107,7 +87,7 @@ export function useTXT(widthCount: number, callback: Function) {
         function doWork(deadline: IdleDeadline) {
             while (deadline.timeRemaining()) {
                 if (idx > state.length) {
-                    callback()
+                    SET_isAotOver(true)
                     console.timeEnd()
                     return
                 }
@@ -123,143 +103,82 @@ export function useTXT(widthCount: number, callback: Function) {
             }
             requestIdleCallback(doWork)
         }
-    }, [state]) // todo
+    }, [state]) // todo?  todo what?
 
-    return [
-        _txt,
-        _txt.length,
-        state,
-        state.length,
-        // chunkString(state, widthCount),
-        1,
-        dom2,
-        // featureFlag.line ? dom : dom2,
-    ] as const
+    return [state, isAotOver] as const
 
-    function getter(): string {
-        if (!useTxtCache[widthCount]) {
-            useTxtCache[widthCount] = _txt
-                .replaceAll(/[　\n ]+/g, '\n') //去掉多余空行, 注意有两种空格
-                .split('\n')
-                .map((e: string) => {
-                    e = e
-                        // .split(/。|，/)
-                        .split('。')
-                        .map(ee => {
-                            if (ee.length === 0) return ''
-                            const tail =
-                                widthCount -
-                                (ee.length % widthCount || widthCount)
-                            return ee + '。' + ' '.repeat(Math.max(0, tail - 1))
-                        })
-                        .join('')
+    function getter(): string[] {
+        config.txt = txt
+        config.txtLen = txt.length
+        config.allLinesTXT = config.TXT = config.TXTLines = getLines()
+        config.allLinesTXTDom = config.allLinesTXT.map(geneLine)
+        config.allLinesCount = config.allLinesTXT.length
 
-                    // e = e
-                    //     .split('，')
-                    //     .map(ee => {
-                    //         if (ee.length === 0) return ''
-                    //         const tail =
-                    //             widthCount -
-                    //             (ee.length % widthCount || widthCount)
-                    //         return (
-                    //             ee + '，' + '，'.repeat(Math.max(0, tail - 1))
-                    //         )
-                    //     })
-                    //     .join('')
+        return config.TXT
 
-                    const all =
-                        widthCount -
-                        (e.length % widthCount || widthCount) +
-                        widthCount +
-                        widthCount +
-                        widthCount
-
-                    return e + ' '.repeat(all)
-                })
-                .join('')
-            // .split('。')
-            // .map((e: string) => {
-            //     const all =
-            //         widthCount - (e.length % widthCount || widthCount)
-
-            //     return e + ' '.repeat(all)
-            // })
-            // .join('')
+        function getLines() {
+            return (
+                txt
+                    // 段落
+                    .replaceAll(/\n\n/g, '\n\n\n\n')
+                    // 句号
+                    .replaceAll(/(?<!“[^“”]*?)(。|？|！)/g, '$1\n\n')
+                    .replaceAll(/(。|？|！)”/g, '$1”\n\n')
+                    // 逗号
+                    .replaceAll(/(?<!“[^“”]*?)，/g, '，\n')
+                    .split('\n')
+                    .map(e => '  ' + e)
+                    // split and join
+                    .flatMap(function lineMaybeSplit(line) {
+                        return chunkString(line, widthCount)
+                    })
+                    .reduce(function lineMaybeJoin(
+                        accLine: string[],
+                        nowLine,
+                        idx,
+                        arr
+                    ) {
+                        if (hasFeature('x')) {
+                            if (nowLine.includes('种种种种')) {
+                                // debugger
+                            }
+                            const preLine = accLine.at(-1)
+                            const nextLine = arr[idx + 1]
+                            if (
+                                preLine?.includes('，') &&
+                                preLine?.startsWith('  ') &&
+                                preLine?.length + nowLine.length <
+                                    widthCount / 2 &&
+                                preLine?.length + nowLine.length >
+                                    nowLine.length + nextLine.length &&
+                                nowLine !== '  '
+                            ) {
+                                // nowLine.ll
+                                accLine[accLine.length - 1] += nowLine.slice(2)
+                            } else {
+                                accLine.push(nowLine)
+                            }
+                        } else {
+                            accLine.push(nowLine)
+                        }
+                        return accLine
+                        // return [...accLine, nowLine]
+                        // return accLine.concat(nowLine)
+                    },
+                    [])
+            )
         }
-
-        return (config.TXT = useTxtCache[widthCount])
-    }
-    function getter2(): string {
-        if (!useTxtCache[widthCount]) {
-            useTxtCache[widthCount] = _txt
-                .replaceAll(/[　\n ]+/g, '\n  ') //去掉多余空行, 注意有两种空格
-                .split('\n')
-                .map((e: string) => {
-                    const all =
-                        widthCount -
-                        (e.length % widthCount || widthCount) + //第一行空格剩余补齐
-                        widthCount //完整第二行
-
-                    return e + ' '.repeat(all)
-                })
-                .join('')
-            // .split('。')
-            // .map((e: string) => {
-            //     const all =
-            //         widthCount - (e.length % widthCount || widthCount)
-
-            //     return e + ' '.repeat(all)
-            // })
-            // .join('')
-        }
-
-        return (config.TXT = useTxtCache[widthCount])
-    }
-    // todo 全局处理->局部加载
-}
-
-export function useSpking(TXT: string, TXTLen: number) {
-    // todo 全局处理->局部加载
-    const call = useCallback(makeFuncCache(getter), [TXTLen])
-    const [state, SET_state] = useState(call)
-
-    useEffect(() => {
-        SET_state(call)
-    }, [TXTLen])
-
-    return state
-
-    function getter() {
-        const results = []
-
-        let isSpeaking = false
-        for (let i = 0; i < TXT.length; i++) {
-            if (TXT[i] === '“') {
-                isSpeaking = true
-                results.push(false)
-            } else if (TXT[i] === '”') {
-                isSpeaking = false
-                results.push(false)
-            } else {
-                results.push(isSpeaking)
-            }
-        }
-
-        return results
     }
 }
 
 let timer: number
-export function useScroll(txtLen: number, stopScroll: paire<boolean>) {
+export function useScroll(stopScroll: paire<boolean>) {
     const [updata, setUpdata] = useState(0)
-    const [scrollTop, SET_scrollTop] = useWithLocalStorage('scrollTop' + txtLen)
+    const [scrollTop, SET_scrollTop] = useStateWithLS('scrollTop')
 
     const currentLine = getCurrentLine(scrollTop)
-    // console.log('---useScroll2', scrollTop, currentLine)
-    // runWithTime(() => {})
 
     useEffect(() => {
-        // runWithTime(() => {})
         if (querySelector('.container')) {
             querySelector('.container').scrollTop = scrollTop //触发 onScrollHandle
         }
@@ -271,10 +190,9 @@ export function useScroll(txtLen: number, stopScroll: paire<boolean>) {
         scrollTop,
         currentLine,
         onScrollHandle,
-        // useCallback(onScrollHandle, [txtLen, currentLine]),
-        // useCallback/useEffect[]存在 就需注意 值过期问题
         jumpLine,
     ] as const
+    // useCallback/useEffect[]存在 就需注意 值过期问题
 
     function jumpLine(target: number, offset: number = 0) {
         querySelector('.container').scrollTop = target * SIZE_H - offset
@@ -291,8 +209,6 @@ export function useScroll(txtLen: number, stopScroll: paire<boolean>) {
         if (scrollTopNow === scrollTop) return
 
         SET_scrollTop(scrollTopNow)
-        // console.log('scrollHadnle', scrollTopNow)
-        // console.log('scrollHadnle stale', scrollTop,  currentLine)
 
         if (getCurrentLine(scrollTopNow) === currentLine) return
 
@@ -307,28 +223,18 @@ export function useScroll(txtLen: number, stopScroll: paire<boolean>) {
 }
 
 const useKeyHoldRef: any = {}
-export function getHoldKey(key?: string) {
-    return key ? useKeyHoldRef[key + 'Hold'] : useKeyHoldRef
+export function getHoldingKey(key?: string) {
+    return key ? useKeyHoldRef[key] : useKeyHoldRef
 }
-function useKeyHold(key?: string) {
+function useKeyHold() {
     useEffect(() => {
         querySelector('#root').onkeydown = e => {
-            const key = getKey(e.key)
-            useKeyHoldRef[key + 'Hold'] = true
+            useKeyHoldRef[e.key] = true
         }
         querySelector('#root').onkeyup = e => {
-            const key = getKey(e.key)
-            useKeyHoldRef[key + 'Hold'] = false
+            useKeyHoldRef[e.key] = false
         }
     }, [])
-
-    function getKey(key: string) {
-        return (
-            {
-                Control: 'ctrl',
-            }[key] || key
-        )
-    }
 }
 
 let clear: number

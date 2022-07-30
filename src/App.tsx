@@ -1,9 +1,15 @@
+const _overscan = {
+    top: 5,
+    bot: 5,
+}
+
 import './App.css'
 import './debug.js'
 import type { item } from './comp/control'
 import { useState, useEffect, memo, useMemo, useCallback, useRef } from 'react'
 import {
     callWithTime,
+    config,
     floor,
     getAllWordPosition,
     getFeature,
@@ -20,13 +26,12 @@ import {
     useEffectWrap,
 } from './utils'
 import {
-    getHoldKey,
+    getHoldingKey,
     useKey,
     useKeyScroll,
     useMouseHover,
     useScroll,
     useSizeCount,
-    useSpking,
     useTXT,
 } from './hook'
 import Control from './comp/control'
@@ -35,7 +40,8 @@ const VGM = memo(VG)
 
 import { Effect } from './comp/comp'
 import { runWithTime } from './debug.js'
-import { useHover, useStatePaire, useWithLocalStorage } from './hookUtils'
+import { useHover, useStatePaire, useStateWithLS } from './hookUtils'
+import { scrollToNext } from './reader'
 // import { useScrollData } from './useSrollData'
 const RENDER = { app: 0, reader: 0, VG: 0 }
 ;(window as any).RENDER = RENDER
@@ -44,15 +50,10 @@ export const SIZE_W = 25
 export const SIZE_H = 25
 const DIFF = 3
 
-const o = !1
-const OVERSCAN_top_ = o ? 0 : 0
-const OVERSCAN_bottom_ = o ? 0 : 0
-const OVERSCAN_change_ = o ? 0 : 10
-
 export const featureFlag = { line: false }
 
 const APP = () => {
-    const [globalWords, SET_globalWords] = useWithLocalStorage('_globalWords')
+    const [globalWords, SET_globalWords] = useStateWithLS('_globalWords')
 
     const showInfo = false
     if (showInfo) {
@@ -63,19 +64,12 @@ const APP = () => {
     }
     // runWithTime(() => {}, 1)
     RENDER.app++
-    const [OVERSCAN_top, SET_OVERSCAN_top] = useState(OVERSCAN_top_)
-    const [OVERSCAN_bottom, SET_OVERSCAN_bottom] = useState(OVERSCAN_bottom_)
-    const [OVERSCAN_change, SET_OVERSCAN_change] = useState(OVERSCAN_change_)
+    const overscan = useStatePaire(_overscan)
 
-    const { widthCount, heightCount } = useSizeCount()
+    const [widthCount, heightCount] = useSizeCount()
 
-    const [isAotOver, SET_isAotOver] = useState(false)
-    const [txt, txtLen, TXT, TXTLen, TXTBlock, txtDOM] = useTXT(
-        widthCount,
-        () => SET_isAotOver(true)
-    )
+    const [TXT, isAotOver] = useTXT(widthCount)
 
-    // const spking = useSpking(TXT, TXTLen)
     const refVG = useRef<HTMLElement>(null)
     const [hoverRef, isHovered] = useHover()
     useKeyScroll(refVG, isHovered)
@@ -88,10 +82,10 @@ const APP = () => {
         currentLine,
         onScrollHandle,
         jumpLine,
-    ] = useScroll(txtLen, stopScroll)
+    ] = useScroll(stopScroll)
 
     const [onKeyDown, onKeyUp, clickType] = useKey(
-        OVERSCAN_bottom,
+        overscan.get.bot,
         DIFF,
         widthCount,
         currentLine,
@@ -99,9 +93,10 @@ const APP = () => {
         jumpLine
     )
 
-    const [selectArr, SET_selectArr] = useWithLocalStorage<item[]>(
-        'selectArr' + txtLen
-    )
+    const [selectArr, SET_selectArr] = useStateWithLS<item[]>('selectArr')
+    const [feature, setFeature] = useState(true)
+    const [stopControl, SET_stopControl] = useState(false)
+    const pined = useStatePaire('')
 
     // 列表逻辑
     useEffect(() => {
@@ -116,10 +111,6 @@ const APP = () => {
         }
     }, [])
 
-    const [isTargetArr, SET_isTargetArr] = useState<number[]>([])
-
-    const [feature, setFeature] = useState(true)
-
     showInfo &&
         useEffect(() => {
             console.log(
@@ -132,22 +123,11 @@ const APP = () => {
             console.log('\n')
         })
 
-    const [stopControl, SET_stopControl] = useState(false)
-
-    const pined = useStatePaire('')
-
-    const L = currentLine * widthCount
-    const R = (currentLine + heightCount) * widthCount
-    const [mouseHover, SET_mouseHover] = useMouseHover(L, R)
-
     const PROPS = {
         control: {
             selectArr,
             deleteHandle,
             changeHandle,
-            TXT,
-            TXTLen,
-            txtLen,
             widthCount,
             heightCount,
             currentLine,
@@ -156,12 +136,7 @@ const APP = () => {
             onKeyDown,
             onKeyUp,
             setUpdata,
-            OVERSCAN_change,
-            SET_OVERSCAN_change,
-            OVERSCAN_top,
-            SET_OVERSCAN_top,
-            OVERSCAN_bottom,
-            SET_OVERSCAN_bottom,
+            overscan,
             feature,
             setFeature,
             RENDER,
@@ -171,25 +146,18 @@ const APP = () => {
             SET_stopControl,
             stopScroll,
             pined,
-            mouseHover,
         },
         VG: {
             TXT,
             widthCount,
             heightCount,
             currentLine,
-            // spking,
-            OVERSCAN_top,
-            OVERSCAN_bottom,
+            overscan: overscan.get,
             ref: refVG,
-            TXTBlock,
-            txtDOM,
             feature,
             RENDER,
             onScrollHandle,
             isAotOver, // 不用添加进依赖 isAotOver变化不需要主动触发VG变化, 这种需求vue怎么处理?
-            TXTLen,
-            mouseHover,
         },
     }
 
@@ -197,16 +165,7 @@ const APP = () => {
     const staleCtr = useMemo(() => ctr, [stopControl])
     const control = stopControl ? staleCtr : ctr
 
-    const deps_VG = [
-        widthCount,
-        heightCount,
-        TXT,
-        updata,
-        false && floor(currentLine / (OVERSCAN_change || 1)),
-        OVERSCAN_top,
-        OVERSCAN_bottom,
-        stopScroll.get,
-    ]
+    const deps_VG = [widthCount, heightCount, TXT, updata, stopScroll.get]
 
     const callback = useCallback(<VG {...PROPS.VG} />, deps_VG)
     // const mm = useMemo(() => {
@@ -218,7 +177,6 @@ const APP = () => {
     // const vgm = <VGM {...useMemo(() => PROPS.VG, deps_VG)} />
 
     // const controlmm = useMemo(() => <Control />, [currentLine])
-    let hoverWord: string
     return (
         <>
             <Effect
@@ -241,59 +199,29 @@ const APP = () => {
                     onClick: GoToNextItemHandle,
                     onKeyDown,
                     onKeyUp,
-                    // onMouseOver: e => {
-                    //     SET_mouseHover(getWord(e.target as Element) || '')
-                    //     e.target.style['outline'] = 'double'
-                    // },
-                    // onMouseOut(e) {
-                    //     e.target.style['outline'] = 'unset'
-                    // },
-                    ...(() => {
-                        return {}
-                        let tmp //cache
-                        return {
-                            onMouseOver: e => {
-                                tmp = getAllWordPosition(
-                                    getWord(e.target as Element) || ''
-                                )
-                                    .filter(idx => idx > L && idx < R)
-                                    .map(idx =>
-                                        querySelector(`[data-i="${idx}"]`)
-                                    )
-                                    .filter(e => e)
-
-                                tmp.forEach(e => {
-                                    e.style['-webkit-text-stroke-width'] =
-                                        'medium'
-                                })
-                            },
-                            onMouseOut(e) {
-                                tmp?.forEach(e => {
-                                    e.style['-webkit-text-stroke-width'] =
-                                        'unset'
-                                })
-                            },
-                        }
-                    })(),
-
                     onMouseOver: e => {
                         document
                             .querySelectorAll('.hover')
-                            .forEach(e => e.classList.remove('hover'))
+                            .forEach(node => node.classList.toggle('hover'))
 
                         const word = getWord(e.target as Element)!
-                        // ||   (e.target as Element).className
+                        // ||
+                        // (e.target as Element).className
 
                         if ([' ', ',', '。', undefined].includes(word)) return
 
                         // 局部匹配
-                        selectArr.map(e => {
-                            if (e.key.includes(word) || word.includes(e.key)) {
-                                document
-                                    .querySelectorAll(geneSelector(e.key))
-                                    .forEach(e => e.classList.add('hover'))
-                            }
-                        })
+                        // selectArr.map(e => {
+                        //     if (e.key.includes(word) || word.includes(e.key)) {
+                        //         document
+                        //             .querySelectorAll(geneSelector(e.key))
+                        //             .forEach(e => e.classList.add('hover'))
+                        //     }
+                        // })
+
+                        document
+                            .querySelectorAll(geneSelector(word))
+                            .forEach(node => node.classList.toggle('hover'))
                     },
                 }}
             >
@@ -306,10 +234,7 @@ const APP = () => {
                     className='next'
                     onMouseOver={() => console.log}
                 >
-                    {(OVERSCAN_top + OVERSCAN_bottom + heightCount) *
-                        widthCount}
                     NEXT
-                    {/* -- {scrolling ? 1 : 2} */}
                 </div>
             </div>
 
@@ -342,13 +267,12 @@ const APP = () => {
 
                 {useMemo(() => {
                     return selectArr.map(
-                        ({ key, color, count, isOneScreen }) => (
+                        ({ key, color, count, isOneScreen, isPined }) => (
                             <style key={key} slot={key}>
                                 {getStyle(
-                                    TXT,
                                     key,
                                     color,
-                                    pined.get === key,
+                                    isPined || pined.get === key,
                                     count,
                                     isOneScreen
                                 )}
@@ -363,19 +287,10 @@ const APP = () => {
             />
         </>
     )
-    function GoToNextItemHandle({
-        target,
-        ctrlKey,
-        shiftKey,
-        pageY,
-    }: React.MouseEvent) {
-        const selection = getSelectionString()
-
+    function GoToNextItemHandle({ target, ctrlKey, altKey }: React.MouseEvent) {
         // 拉选selection状态
         if (target instanceof HTMLDivElement) {
-            // console.log('div', selection)
-
-            // 拉取存在值 从列表删除
+            const selection = getSelectionString()
             if (selectArr.find(e => e.key === selection)) {
                 deleteHandle(selection)
             } else {
@@ -388,48 +303,17 @@ const APP = () => {
             const word = getWord(target)
             if (word === undefined) return
 
-            if (getHoldKey().BackspaceHold) {
-                deleteHandle(word)
-                return
+            // 删除
+            if (getHoldingKey().BackspaceHold) {
+                return deleteHandle(word)
             }
 
-            // 其他点击 走跳转逻辑
-            const wordPosition = getWordPosition(word, TXT)
-            const len = wordPosition.length
-            const wordLen = word.length
-
-            const clickIdx = Number(target.dataset.i)
-            const clickPos = wordPosition.findIndex(
-                (pos: number) => Math.abs(pos - clickIdx) < wordLen
+            // 跳转
+            const clickLine = Number(
+                querySelector('.V-Grid div:hover').dataset.line // js <-> html
             )
-            if (clickPos === -1) return
 
-            const nextPos = (() => {
-                if (shiftKey && ctrlKey) return len - 1 // 直接跳到最后一个
-                if (shiftKey) return 0 // 直接跳到第一个
-
-                const nextPos = clickPos + (ctrlKey ? -1 : 1) // ctrl 相反方向
-                if (nextPos === len) {
-                    return 0 // 点最后一个时 跳到第一个
-                }
-                if (nextPos === -1) {
-                    return len - 1 // 点最后一个时 跳到第一个
-                }
-                return nextPos
-            })()
-
-            const nextIdx = wordPosition.at(nextPos)! //从头到尾
-
-            // SET_isTargetArr(
-            //     Array(wordLen)
-            //         .fill(0)
-            //         .map((_, i) => i + nextIdx)
-            // )
-            // setTimeout(() => {
-            //     SET_isTargetArr([])
-            // }, 1111)
-
-            jumpLine(i2rc(nextIdx, widthCount).r, pageY)
+            scrollToNext(clickLine, word)
         }
     }
 
@@ -443,21 +327,24 @@ const APP = () => {
 
         const count = getWordPosition(select)
         const isOneScreen = (() => {
+            const L = currentLine
+            const R = currentLine + heightCount
+
             const l = count.at(0)!
             const r = count.at(-1)!
             return l >= L && r <= R
         })()
 
-        if (isOneScreen) {
-            setTimeout(() => {
-                deleteHandle(select)
-            }, 5000)
-        }
-        if (count.length === 1) {
-            setTimeout(() => {
-                deleteHandle(select)
-            }, 1000)
-        }
+        // if (isOneScreen) {
+        //     setTimeout(() => {
+        //         deleteHandle(select)
+        //     }, 5000)
+        // }
+        // if (count.length === 1) {
+        //     setTimeout(() => {
+        //         deleteHandle(select)
+        //     }, 1000)
+        // }
 
         SETWRAP_selectArr([
             ...selectArr,
@@ -467,7 +354,7 @@ const APP = () => {
                 i: Date.now(),
                 count: count.length,
                 isPined: false,
-                isOneScreen,
+                isOneScreen: false,
                 // isOneScreenWill
             },
         ])
@@ -518,7 +405,7 @@ function geneSelector(word: string) {
     return '.V-Grid ' + HAS
 
     function getCls(word: string) {
-        if (' 0123456789'.includes(word)) return `[class="${word}"]`
+        if ('- 0123456789'.includes(word)) return `[class="${word}"]`
         return `.${word}`
     }
 }

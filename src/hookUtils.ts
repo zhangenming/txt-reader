@@ -41,7 +41,7 @@ window.onbeforeunload = () => {
 
 const refWLS: any = {}
 export function useStateWithLS<T>(key: string) {
-    const flag = `${key} - ${config.txtLen}`
+    const flag = `${key} - ${config.txt.length}`
 
     const [state, SET_state] = useState<T>(() => {
         let rs = JSON.parse(localStorage.getItem(flag))

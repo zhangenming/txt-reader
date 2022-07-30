@@ -34,8 +34,9 @@ import {
 } from './utils'
 import { geneChild, geneChild2, geneLine } from './V-Grid'
 
-import _txt from '../txt/房思琪的初恋乐园'
+import _txt from '../txt/mc'
 const txt = hasFeature('test') ? (await import('../txt/test')).default : _txt
+config.txt = txt
 
 type react_SET<T = any> = React.Dispatch<React.SetStateAction<T>>
 
@@ -66,108 +67,81 @@ export function useSizeCount() {
 }
 
 export function useTXT(widthCount: number) {
-    const [state, SET_state] = useState(getter) //慢一拍
+    useMemo(() => {
+        config.JIT = getLines()
+        config.AOT = []
 
-    useDidMountEffect(() => {
-        SET_state(getter) //再慢一拍
-    }, [widthCount])
-
-    const [isAotOver, SET_isAotOver] = useState(false)
-
-    const dom2 = useMemo(() => {
-        if (!hasFeature('read')) return
-        console.time()
+        let wip = -1
+        console.time('AOT')
         requestIdleCallback(doWork)
-        // const spking = useSpking(state, state.length)
-        // return [...state].map(geneChild)
-        let idx = 0
-        const rs: any = []
-        return rs
 
         function doWork(deadline: IdleDeadline) {
             while (deadline.timeRemaining()) {
-                if (idx > state.length) {
-                    SET_isAotOver(true)
-                    console.timeEnd()
+                if (++wip === config.JIT.length) {
+                    console.timeEnd('AOT')
                     return
                 }
-                // 现在是每个字一个child, 还是每行一个?
-                rs.push(
-                    geneChild2(
-                        [...state.slice(idx, idx + widthCount)],
-                        idx,
-                        rs.length
-                    )
-                )
-                idx += widthCount
+                config.AOT.push(geneLine(config.JIT[wip], wip))
             }
             requestIdleCallback(doWork)
         }
-    }, [state]) // todo?  todo what?
+    }, [widthCount])
 
-    return [state, isAotOver] as const
+    return [config.JIT]
 
-    function getter(): string[] {
-        config.txt = txt
-        config.txtLen = txt.length
-        config.allLinesTXT = config.TXT = config.TXTLines = getLines()
-        config.allLinesTXTDom = config.allLinesTXT.map(geneLine)
-        config.allLinesCount = config.allLinesTXT.length
+    // useEffect deps也能达到缓存减少rerender目的? 和useMemo什么区别?
 
-        return config.TXT
-
-        function getLines() {
-            return (
-                txt
-                    // 段落
-                    .replaceAll(/\n\n/g, '\n\n\n\n')
-                    // 句号
-                    .replaceAll(/(?<!“[^“”]*?)(。|？|！)/g, '$1\n\n')
-                    .replaceAll(/(。|？|！)”/g, '$1”\n\n')
-                    // 逗号
-                    .replaceAll(/(?<!“[^“”]*?)，/g, '，\n')
-                    .split('\n')
-                    .map(e => '  ' + e)
-                    // split and join
-                    .flatMap(function lineMaybeSplit(line) {
-                        return chunkString(line, widthCount)
-                    })
-                    .reduce(function lineMaybeJoin(
-                        accLine: string[],
-                        nowLine,
-                        idx,
-                        arr
-                    ) {
-                        if (hasFeature('x')) {
-                            if (nowLine.includes('种种种种')) {
-                                // debugger
-                            }
-                            const preLine = accLine.at(-1)
-                            const nextLine = arr[idx + 1]
-                            if (
-                                preLine?.includes('，') &&
-                                preLine?.startsWith('  ') &&
-                                preLine?.length + nowLine.length <
-                                    widthCount / 2 &&
-                                preLine?.length + nowLine.length >
-                                    nowLine.length + nextLine.length &&
-                                nowLine !== '  '
-                            ) {
-                                // nowLine.ll
-                                accLine[accLine.length - 1] += nowLine.slice(2)
-                            } else {
-                                accLine.push(nowLine)
-                            }
+    function getLines() {
+        return (
+            txt
+                // 段落
+                .replaceAll(/\n\n/g, '\n\n\n\n')
+                // 句号
+                // .replaceAll(/(?<!“[^“”]*?)(。|？|！)/g, '$1\n\n')
+                // // 下引号
+                // .replaceAll(/(。|？|！)”/g, '$1”\n\n')
+                // // 逗号
+                // .replaceAll(/(?<!“[^“”]*?)，/g, '，\n')
+                .split('\n')
+                .map(e => '  ' + e)
+                // split and join
+                .flatMap(function lineMaybeSplit(line) {
+                    return chunkString(line, widthCount)
+                })
+                .reduce(function lineMaybeJoin(
+                    accLine: string[],
+                    nowLine,
+                    idx,
+                    arr
+                ) {
+                    if (hasFeature('x')) {
+                        if (nowLine.includes('种种种种')) {
+                            // debugger
+                        }
+                        const preLine = accLine.at(-1)
+                        const nextLine = arr[idx + 1]
+                        if (
+                            preLine?.includes('，') &&
+                            preLine?.startsWith('  ') &&
+                            preLine?.length + nowLine.length < widthCount / 2 &&
+                            preLine?.length + nowLine.length >
+                                nowLine.length + nextLine.length &&
+                            nowLine !== '  '
+                        ) {
+                            // nowLine.ll
+                            accLine[accLine.length - 1] += nowLine.slice(2)
                         } else {
                             accLine.push(nowLine)
                         }
-                        return accLine
-                        // return [...accLine, nowLine]
-                        // return accLine.concat(nowLine)
-                    },
-                    [])
-            )
-        }
+                    } else {
+                        accLine.push(nowLine)
+                    }
+                    return accLine
+                    // return [...accLine, nowLine]
+                    // return accLine.concat(nowLine)
+                },
+                [])
+        )
     }
 }
 

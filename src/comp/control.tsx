@@ -38,7 +38,6 @@ export default forwardRef(function Control(
         setFeature,
         RENDER,
         scrollTop,
-        isAotOver,
         stopControl,
         SET_stopControl,
         stopScroll,
@@ -71,7 +70,7 @@ export default forwardRef(function Control(
             <span onClick={() => ctrX.set((v: any) => v + 1)}>
                 <span key={ctrX.get}> ctrX:{ctrX.get}</span>
             </span>
-            isAotOver:{String(isAotOver)}
+            isAotOver:{String(config.AOT.length === config.JIT.length)}
             <button onClick={() => SET_stopControl((v: any) => !v)}>
                 stopControl:{String(stopControl)}
             </button>
@@ -133,7 +132,7 @@ export default forwardRef(function Control(
             
             */}
             <br />
-            <div>{(config.txtLen / 10000).toFixed(2)}万</div>
+            <div>{(config.txt.length / 10000).toFixed(2)}万</div>
             <br />
             <div>
                 <div>scrollTop:</div>
@@ -143,7 +142,7 @@ export default forwardRef(function Control(
                 <div>currentLine:</div>
                 <span>
                     {currentLine}(
-                    {((currentLine / config.allLinesCount) * 100).toFixed(2)}
+                    {((currentLine / config.JIT.length) * 100).toFixed(2)}
                     %)
                 </span>
             </div>

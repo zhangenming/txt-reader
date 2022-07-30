@@ -5,6 +5,18 @@ Object.defineProperties(Object.prototype, {
             return this
         },
     },
+    lls: {
+        get() {
+            console.time()
+            return this
+        },
+    },
+    lle: {
+        get() {
+            console.timeEnd()
+            return this
+        },
+    },
 })
 
 export function runWithTime(str: any = '', fn: Function = () => {}) {

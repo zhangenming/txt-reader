@@ -9,7 +9,6 @@ import type { item } from './comp/control'
 import { useState, useEffect, memo, useMemo, useCallback, useRef } from 'react'
 import {
     callWithTime,
-    config,
     floor,
     getAllWordPosition,
     getFeature,
@@ -68,7 +67,7 @@ const APP = () => {
 
     const [widthCount, heightCount] = useSizeCount()
 
-    const [TXT, isAotOver] = useTXT(widthCount)
+    useTXT(widthCount)
 
     const refVG = useRef<HTMLElement>(null)
     const [hoverRef, isHovered] = useHover()
@@ -141,14 +140,12 @@ const APP = () => {
             setFeature,
             RENDER,
             scrollTop,
-            isAotOver,
             stopControl,
             SET_stopControl,
             stopScroll,
             pined,
         },
         VG: {
-            TXT,
             widthCount,
             heightCount,
             currentLine,
@@ -157,7 +154,7 @@ const APP = () => {
             feature,
             RENDER,
             onScrollHandle,
-            isAotOver, // 不用添加进依赖 isAotOver变化不需要主动触发VG变化, 这种需求vue怎么处理?
+            // 不用添加进依赖 isAotOver变化不需要主动触发VG变化, 这种需求vue怎么处理?
         },
     }
 
@@ -165,18 +162,6 @@ const APP = () => {
     const staleCtr = useMemo(() => ctr, [stopControl])
     const control = stopControl ? staleCtr : ctr
 
-    const deps_VG = [widthCount, heightCount, TXT, updata, stopScroll.get]
-
-    const callback = useCallback(<VG {...PROPS.VG} />, deps_VG)
-    // const mm = useMemo(() => {
-    //     RENDER.VG++ // 副作用
-    //     return <VG {...PROPS.VG} />
-    // }, deps_VG)
-
-    // // memo到哪个层级?
-    // const vgm = <VGM {...useMemo(() => PROPS.VG, deps_VG)} />
-
-    // const controlmm = useMemo(() => <Control />, [currentLine])
     return (
         <>
             <Effect
@@ -227,7 +212,7 @@ const APP = () => {
             >
                 <div className='reader-helper' />
 
-                {callback}
+                <VG {...PROPS.VG} />
 
                 <div
                     ref={hoverRef}

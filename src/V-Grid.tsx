@@ -27,7 +27,6 @@ let timer: number
 // memo后不是函数形式的组件了
 export default forwardRef(function VGrid(
     {
-        TXT,
         widthCount,
         heightCount,
         currentLine,
@@ -37,7 +36,6 @@ export default forwardRef(function VGrid(
         onScrollHandle,
         overscan,
     }: {
-        TXT: string[]
         widthCount: number
         heightCount: number
         currentLine: number
@@ -51,11 +49,10 @@ export default forwardRef(function VGrid(
     //     console.log('effect VG')
     // })
 
+    const { JIT, AOT } = config
+
     const L = Math.max(0, currentLine - overscan.top)
-    const R = Math.min(
-        config.allLinesCount,
-        currentLine + overscan.bot + heightCount
-    )
+    const R = Math.min(JIT.length, currentLine + overscan.bot + heightCount)
 
     return (
         <>
@@ -73,13 +70,17 @@ export default forwardRef(function VGrid(
                     style={{
                         width: widthCount * SIZE_W,
                         paddingTop: L * SIZE_H,
-                        height: config.allLinesCount * SIZE_H,
+                        height: JIT.length * SIZE_H,
                     }}
                 >
                     {/* // 滚动一行 domdiff 部分更新比全量更新好(key->domdiff) */}
                     {/* // 滚动全屏 domdiff 删除key直接更新属性 比删除dom新建dom好 */}
-                    {/* {TXT.slice(L, R).map((line, i) => geneLine(line, L + i))} */}
-                    {config.allLinesTXTDom.slice(L, R)}
+                    {/* 滑动的时候卡 能不能滑动的时候暂时只新建dom  删除dom稍后操作 */}
+                    {AOT.length === JIT.length
+                        ? AOT.slice(L, R)
+                        : JIT.slice(L, R).map((line, i) =>
+                              geneLine(line, L + i)
+                          )}
                 </div>
             </div>
         </>

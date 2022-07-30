@@ -4,7 +4,7 @@ import { config, querySelector } from './utils'
 
 export function scrollToNext(incept: number, word: string) {
     const nextLine = (() => {
-        const allLine = config.allLinesTXT
+        const allLine = config.JIT
         const { Control, Alt } = getHoldingKey()
 
         if (Control && Alt) {

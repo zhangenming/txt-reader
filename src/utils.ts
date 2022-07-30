@@ -5,34 +5,33 @@ import { geneLine } from './V-Grid'
 
 export const floor = Math.floor
 
-export const config = {
-    txtLen: 0,
-    TXTLen: 0,
+export const config: {
+    txt: string
+    JIT: string[]
+    AOT: JSX.Element[]
+} = {
     txt: '',
-    TXT: [''], // line by line
-    TXTDom: [],
-    allLinesCount: 0,
-    allLinesTXT: [''],
-    allLinesTXTDom: [],
+    JIT: [], // line by line
+    AOT: [],
 }
+window.config = config
 
 const getAllWordPositionCache: { [key: string]: number[] } = {}
 export function getAllWordPosition(word: string) {
-    const key = word + config.TXT.length
+    const key = word + config.JIT.length
     const t = Array(word.length).fill(0)
 
     if (!getAllWordPositionCache[key]) {
-        getAllWordPositionCache[key] = getWordPosition(
-            word,
-            config.TXT
-        ).flatMap((n: number) => t.map((_, i) => n + i))
+        getAllWordPositionCache[key] = getWordPosition(word).flatMap(
+            (n: number) => t.map((_, i) => n + i)
+        )
     }
     return getAllWordPositionCache[key]
 }
 
 const getAllWordPositionWithNodeCache: { [key: string]: HTMLElement[] } = {}
 export function getAllWordPositionWithNode(word: string) {
-    const key = word + config.TXT.length
+    const key = word + config.JIT.length
 
     if (!getAllWordPositionWithNodeCache[key]) {
         getAllWordPositionWithNodeCache[key] = getAllWordPosition(word).map(

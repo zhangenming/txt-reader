@@ -1,20 +1,7 @@
 import './App.css'
+import './debug.js'
 
-import React, {
-    createContext,
-    lazy,
-    memo,
-    Suspense,
-    useContext,
-    useEffect,
-    useInsertionEffect,
-    useLayoutEffect,
-    useMemo,
-    useReducer,
-    useRef,
-    useState,
-    version,
-} from 'react'
+import React, { memo, useEffect, useMemo, useRef, useState } from 'react'
 
 // import whyDidYouRender from '@welldone-software/why-did-you-render'
 // const { default: whyDidYouRender } = await import(

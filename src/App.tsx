@@ -1,49 +1,33 @@
 const _overscan = {
-    top: 5,
-    bot: 5,
+    top: 2,
+    bot: 2,
 }
+const RENDER = { app: 0, reader: 0, VG: 0 }
+;(window as any).RENDER = RENDER
 
-import './App.css'
-import './debug.js'
 import type { item } from './comp/control'
-import { useState, useEffect, memo, useMemo, useCallback, useRef } from 'react'
+import { useState, useEffect, useMemo, useRef } from 'react'
 import {
-    callWithTime,
-    floor,
-    getAllWordPosition,
-    getFeature,
     getSelectionString,
     getStyle,
     getWord,
-    getWordCount,
     getWordPosition,
-    hasFeature,
-    i2rc,
-    isInvalidWord,
     querySelector,
-    querySelectorAll,
-    useEffectWrap,
 } from './utils'
 import {
     getHoldingKey,
     useKey,
     useKeyScroll,
-    useMouseHover,
     useScroll,
     useSizeCount,
     useTXT,
 } from './hook'
 import Control from './comp/control'
 import VG from './V-Grid'
-const VGM = memo(VG)
 
 import { Effect } from './comp/comp'
-import { runWithTime } from './debug.js'
 import { useHover, useStatePaire, useStateWithLS } from './hookUtils'
 import { scrollToNext } from './reader'
-// import { useScrollData } from './useSrollData'
-const RENDER = { app: 0, reader: 0, VG: 0 }
-;(window as any).RENDER = RENDER
 
 export const SIZE_W = 25
 export const SIZE_H = 25

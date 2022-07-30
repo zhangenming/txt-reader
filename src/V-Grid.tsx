@@ -1,28 +1,7 @@
-import {
-    memo,
-    useState,
-    SetStateAction,
-    UIEvent,
-    forwardRef,
-    useEffect,
-    Fragment,
-    useLayoutEffect,
-} from 'react'
-import { featureFlag, SIZE_H, SIZE_W } from './App'
-import { usePrevious } from './hookUtils'
-import {
-    callWithTime,
-    config,
-    floor,
-    getAllWordPosition,
-    getAllWordPositionWithNode,
-    getClasses,
-    hasFeature,
-    isInvalidWord,
-    querySelector,
-} from './utils'
+import { forwardRef, Fragment } from 'react'
+import { SIZE_H, SIZE_W } from './App'
+import { config } from './utils'
 
-let timer: number
 // Row是行， column是列
 // memo后不是函数形式的组件了
 export default forwardRef(function VGrid(
@@ -30,9 +9,6 @@ export default forwardRef(function VGrid(
         widthCount,
         heightCount,
         currentLine,
-        spking,
-        feature,
-        RENDER,
         onScrollHandle,
         overscan,
     }: {

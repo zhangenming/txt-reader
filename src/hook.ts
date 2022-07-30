@@ -2,37 +2,18 @@ const autoScrollSpeed = 1
 const updataTime = 0
 import {
     createElement,
-    Dispatch,
     RefObject,
-    SetStateAction,
-    useCallback,
     useEffect,
     useLayoutEffect,
     useMemo,
     useRef,
     useState,
 } from 'react'
-import { featureFlag, SIZE_H, SIZE_W } from './App'
-import { runWithTime } from './debug'
-import {
-    paire,
-    useDidMountEffect,
-    usePrevious,
-    useStateWithLS,
-} from './hookUtils'
-import { config, getAllWordPosition, getClasses, hasFeature } from './utils'
-import {
-    chunk,
-    chunkString,
-    floor,
-    getWordCount,
-    i2rc,
-    isInvalidWord,
-    makeFuncCache,
-    querySelector,
-    useEffectWrap,
-} from './utils'
-import { geneChild, geneChild2, geneLine } from './V-Grid'
+import { SIZE_H, SIZE_W } from './App'
+import { paire, usePrevious, useStateWithLS } from './hookUtils'
+import { config, getAllWordPosition, hasFeature } from './utils'
+import { chunkString, floor, i2rc, querySelector } from './utils'
+import { geneLine } from './V-Grid'
 
 import _txt from '../txt/mc'
 const txt = hasFeature('test') ? (await import('../txt/test')).default : _txt
@@ -73,7 +54,7 @@ export function useTXT(widthCount: number) {
 
         let wip = -1
         console.time('AOT')
-        requestIdleCallback(doWork)
+        // requestIdleCallback(doWork)
 
         function doWork(deadline: IdleDeadline) {
             while (deadline.timeRemaining()) {
@@ -93,13 +74,15 @@ export function useTXT(widthCount: number) {
 
     function getLines() {
         return (
-            txt
-                // 段落
-                .replaceAll(/\n\n/g, '\n\n\n\n')
+            txt //去掉多余空行, 注意有两种空格
+                .replaceAll(/[　\n ]+/g, '\n')
+                // .replaceAll(/\n　　/g, '\n')
+                // // 段落
+                .replaceAll(/\n/g, '\n\n')
                 // 句号
-                // .replaceAll(/(?<!“[^“”]*?)(。|？|！)/g, '$1\n\n')
+                .replaceAll(/(?<!“[^“”]*?)(。|？|！)/g, '$1\n\n')
                 // // 下引号
-                // .replaceAll(/(。|？|！)”/g, '$1”\n\n')
+                .replaceAll(/(。|？|！)”/g, '$1”\n\n')
                 // // 逗号
                 // .replaceAll(/(?<!“[^“”]*?)，/g, '，\n')
                 .split('\n')

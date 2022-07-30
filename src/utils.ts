@@ -1,7 +1,6 @@
 import { useEffect } from 'react'
-import { doHas, SIZE_H } from './App'
+import { doHas } from './App'
 import { invalidData } from './book'
-import { geneLine } from './V-Grid'
 
 export const floor = Math.floor
 

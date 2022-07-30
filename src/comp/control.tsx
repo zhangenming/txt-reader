@@ -1,17 +1,8 @@
-import { forwardRef, lazy, Suspense, useEffect, useMemo, useState } from 'react'
-import { featureFlag, SIZE_H } from '../App'
-import { getHoldingKey } from '../hook'
+import { forwardRef } from 'react'
+import { featureFlag } from '../App'
 import { useStatePaire } from '../hookUtils'
 import { scrollToNext } from '../reader'
-import {
-    config,
-    floor,
-    getColor,
-    getWordCount,
-    getWordPosition,
-    i2rc,
-} from '../utils'
-import Comp from './comp'
+import { config } from '../utils'
 export type item = {
     key: string
     color: string
@@ -24,14 +15,10 @@ export type item = {
 export default forwardRef(function Control(
     {
         selectArr,
-        deleteHandle,
         changeHandle,
         widthCount,
         heightCount,
         currentLine,
-        jumpLine,
-        onKeyUp,
-        onKeyDown,
         setUpdata,
         overscan,
         feature,

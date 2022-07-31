@@ -8,16 +8,13 @@ export const config: {
     txt: string
     JIT: string[]
     AOT: JSX.Element[]
-} = {
-    txt: '',
-    JIT: [], // line by line
-    AOT: [],
-}
-window.config = config
-
+    LINE: string[]
+    line2Block: number[]
+} = {}
+config.ll
 const getAllWordPositionCache: { [key: string]: number[] } = {}
 export function getAllWordPosition(word: string) {
-    const key = word + config.JIT.length
+    const key = word + config.line2Block.length
     const t = Array(word.length).fill(0)
 
     if (!getAllWordPositionCache[key]) {
@@ -30,7 +27,7 @@ export function getAllWordPosition(word: string) {
 
 const getAllWordPositionWithNodeCache: { [key: string]: HTMLElement[] } = {}
 export function getAllWordPositionWithNode(word: string) {
-    const key = word + config.JIT.length
+    const key = word + config.line2Block.length
 
     if (!getAllWordPositionWithNodeCache[key]) {
         getAllWordPositionWithNodeCache[key] = getAllWordPosition(word).map(

@@ -19,7 +19,8 @@
 }
 .V-Grid >div{
     display: flex;
-    height: var(--SIZE_H);
+    /* height: var(--SIZE_H); */
+    flex-wrap: wrap;
 }
 div.bg1{
     background: salmon;

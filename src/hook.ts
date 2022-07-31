@@ -1,5 +1,4 @@
 const autoScrollSpeed = 1
-const updataTime = 0
 import {
     createElement,
     RefObject,
@@ -10,10 +9,10 @@ import {
     useState,
 } from 'react'
 import { SIZE_H, SIZE_W } from './App'
-import { paire, usePrevious, useStateWithLS } from './hookUtils'
+import { paire, usePrevious, useStatePaire, useStateWithLS } from './hookUtils'
 import { config, getAllWordPosition, hasFeature } from './utils'
 import { chunkString, floor, i2rc, querySelector } from './utils'
-import { geneLine } from './V-Grid'
+import { geneBlock } from './V-Grid'
 
 import _txt from '../txt/mc'
 const txt = hasFeature('test') ? (await import('../txt/test')).default : _txt
@@ -48,31 +47,25 @@ export function useSizeCount() {
 }
 
 export function useTXT(widthCount: number) {
+    // useEffect deps也能达到缓存减少rerender目的? 和useMemo什么区别?
     useMemo(() => {
-        config.JIT = getLines()
-        config.AOT = []
-
-        let wip = -1
-        console.time('AOT')
-        // requestIdleCallback(doWork)
-
-        function doWork(deadline: IdleDeadline) {
-            while (deadline.timeRemaining()) {
-                if (++wip === config.JIT.length) {
-                    console.timeEnd('AOT')
-                    return
+        config.JIT = getJIT()
+        config.AOT = getAOT()
+        config.LINE = getLines()
+        config.line2Block = (() => {
+            let block = -1
+            return config.LINE.map(line => {
+                if (line.startsWith(' ')) {
+                    block++
                 }
-                config.AOT.push(geneLine(config.JIT[wip], wip))
-            }
-            requestIdleCallback(doWork)
-        }
+                return block
+            })
+        })()
     }, [widthCount])
 
-    return [config.JIT]
+    function LR2lr(L: number, R: number) {}
 
-    // useEffect deps也能达到缓存减少rerender目的? 和useMemo什么区别?
-
-    function getLines() {
+    function getJIT() {
         return (
             txt //去掉多余空行, 注意有两种空格
                 .replaceAll(/[　\n ]+/g, '\n')
@@ -80,99 +73,126 @@ export function useTXT(widthCount: number) {
                 // // 段落
                 .replaceAll(/\n/g, '\n\n')
                 // 句号
-                .replaceAll(/(?<!“[^“”]*?)(。|？|！)/g, '$1\n\n')
+                // .replaceAll(/(?<!“[^“”]*?)(。|？|！)/g, '$1\n\n')
                 // // 下引号
-                .replaceAll(/(。|？|！)”/g, '$1”\n\n')
+                // .replaceAll(/(。|？|！)”/g, '$1”\n\n')
                 // // 逗号
                 // .replaceAll(/(?<!“[^“”]*?)，/g, '，\n')
                 .split('\n')
-                .map(e => '  ' + e)
-                // split and join
-                .flatMap(function lineMaybeSplit(line) {
-                    return chunkString(line, widthCount)
-                })
-                .reduce(function lineMaybeJoin(
-                    accLine: string[],
-                    nowLine,
-                    idx,
-                    arr
-                ) {
-                    if (hasFeature('x')) {
-                        if (nowLine.includes('种种种种')) {
-                            // debugger
-                        }
-                        const preLine = accLine.at(-1)
-                        const nextLine = arr[idx + 1]
-                        if (
-                            preLine?.includes('，') &&
-                            preLine?.startsWith('  ') &&
-                            preLine?.length + nowLine.length < widthCount / 2 &&
-                            preLine?.length + nowLine.length >
-                                nowLine.length + nextLine.length &&
-                            nowLine !== '  '
-                        ) {
-                            // nowLine.ll
-                            accLine[accLine.length - 1] += nowLine.slice(2)
-                        } else {
-                            accLine.push(nowLine)
-                        }
-                    } else {
-                        accLine.push(nowLine)
-                    }
-                    return accLine
-                    // return [...accLine, nowLine]
-                    // return accLine.concat(nowLine)
-                },
-                [])
+                .map(block => '  ' + block)
         )
+    }
+    function getLines() {
+        return (
+            config.JIT
+                // split and join
+                .flatMap(function lineMaybeSplit(block) {
+                    return chunkString(block, widthCount)
+                })
+            // .reduce(function lineMaybeJoin(
+            //     accLine: string[],
+            //     nowLine,
+            //     idx,
+            //     arr
+            // ) {
+            //     if (hasFeature('x')) {
+            //         if (nowLine.includes('种种种种')) {
+            //             // debugger
+            //         }
+            //         const preLine = accLine.at(-1)
+            //         const nextLine = arr[idx + 1]
+            //         if (
+            //             preLine?.includes('，') &&
+            //             preLine?.startsWith('  ') &&
+            //             preLine?.length + nowLine.length < widthCount / 2 &&
+            //             preLine?.length + nowLine.length >
+            //                 nowLine.length + nextLine.length &&
+            //             nowLine !== '  '
+            //         ) {
+            //             // nowLine.ll
+            //             accLine[accLine.length - 1] += nowLine.slice(2)
+            //         } else {
+            //             accLine.push(nowLine)
+            //         }
+            //     } else {
+            //         accLine.push(nowLine)
+            //     }
+            //     return accLine
+            //     // return [...accLine, nowLine]
+            //     // return accLine.concat(nowLine)
+            // },
+            // [])
+        )
+    }
+    function getAOT() {
+        if (hasFeature('aot')) {
+            console.time('AOT done')
+            requestIdleCallback(doWork)
+        }
+        return []
+
+        function doWork(deadline: IdleDeadline) {
+            const { JIT, AOT } = config // 这时候AOT拿到的是return []的[]
+            while (deadline.timeRemaining()) {
+                if (AOT.length === JIT.length) {
+                    console.timeEnd('AOT done')
+                    return
+                }
+                AOT.push(geneBlock(JIT[AOT.length], AOT.length))
+            }
+            requestIdleCallback(doWork)
+        }
     }
 }
 
-let timer: number
-export function useScroll(stopScroll: paire<boolean>) {
+export function useScroll(
+    _overscan: {
+        top: number
+        bot: number
+    },
+    heightCount: number
+) {
+    const stopScroll = useStatePaire(false)
+    const overscan = useStatePaire(_overscan)
+
     const [updata, setUpdata] = useState(0)
     const [scrollTop, SET_scrollTop] = useStateWithLS('scrollTop')
-
-    const currentLine = getCurrentLine(scrollTop)
-
     useEffect(() => {
         if (querySelector('.container')) {
             querySelector('.container').scrollTop = scrollTop //触发 onScrollHandle
         }
     }, [])
 
+    const currentLine = getCurrentLine(scrollTop)
+    const { LINE, line2Block } = config
+    const L = Math.max(0, currentLine - overscan.get.top)
+    const R = Math.min(
+        LINE.length,
+        currentLine + overscan.get.bot + heightCount
+    )
+
+    const blockL = line2Block[L]
+    const blockR = line2Block[R] + 1
+
     return [
-        updata,
-        setUpdata,
         scrollTop,
         currentLine,
+        blockL,
+        blockR,
         onScrollHandle,
-        jumpLine,
+        setUpdata,
+        stopScroll,
+        overscan,
     ] as const
     // useCallback/useEffect[]存在 就需注意 值过期问题
 
-    function jumpLine(target: number, offset: number = 0) {
-        querySelector('.container').scrollTop = target * SIZE_H - offset
-    }
     function onScrollHandle(e: UIEvent) {
         if (stopScroll.get) return
-        // //isScrollByMonted
-        // if (timer === undefined) {
-        //     timer = 0
-        //     return
-        // }
-        const scrollTopNow = (e.target as HTMLElement).scrollTop
 
+        const scrollTopNow = (e.target as HTMLElement).scrollTop
         if (scrollTopNow === scrollTop) return
 
         SET_scrollTop(scrollTopNow)
-
-        if (getCurrentLine(scrollTopNow) === currentLine) return
-
-        clearTimeout(timer)
-        timer = setTimeout(() => {
-            setUpdata((e: any) => e + 1)
-        }, updataTime)
     }
     function getCurrentLine(scrollTop: number) {
         return floor(scrollTop / SIZE_H)
@@ -200,8 +220,7 @@ export function useKey(
     DIFF: number,
     lineSize: number,
     currentLine: number,
-    heightLineCount: number,
-    jump: (target: number) => void
+    heightLineCount: number
 ) {
     useKeyHold()
     const [isCtrlHold, SET_isCtrlHold] = useState(false)
@@ -256,7 +275,7 @@ export function useKey(
                 }, 1111)
             })
 
-            jump(currentLine + OVERSCAN_bottom + heightLineCount - DIFF)
+            // jump(currentLine + OVERSCAN_bottom + heightLineCount - DIFF)
         }
     }
 }

@@ -29,6 +29,8 @@ export default forwardRef(function Control(
         SET_stopControl,
         stopScroll,
         pined,
+        L,
+        R,
     }: {
         selectArr: item[]
         deleteHandle(key: string): void
@@ -37,7 +39,6 @@ export default forwardRef(function Control(
         widthCount: number
         heightCount: number
         currentLine: number
-        jumpLine: (target: number) => void
         onKeyUp: (e: React.KeyboardEvent<Element>) => void
         onKeyDown: (e: React.KeyboardEvent<Element>) => void
     },
@@ -54,18 +55,35 @@ export default forwardRef(function Control(
                 // 两种方式空格连续按着时 原生不卡 自己实现卡
             }}
         >
+            <div>{(config.txt.length / 10000).toFixed(2)}万</div>
+            <br />
+            {/* <div>
+                <div>scrollTop:</div>
+                <span>{scrollTop}</span>
+            </div> */}
+            <div>
+                <div>currentLine:</div>
+                <span>
+                    {currentLine}(
+                    {((currentLine / config.LINE.length) * 100).toFixed(2)}
+                    %)
+                </span>
+            </div>
+            <span>L{L}</span>
+            <span>BLOCK{config.line2Block[L]}</span>
+            {/* <span>R{R}</span> */}
             <span onClick={() => ctrX.set((v: any) => v + 1)}>
                 <span key={ctrX.get}> ctrX:{ctrX.get}</span>
             </span>
-            isAotOver:{String(config.AOT.length === config.JIT.length)}
+            {/* isAotOver:{String(config.AOT.length === config.JIT.length)} */}
             <button onClick={() => SET_stopControl((v: any) => !v)}>
                 stopControl:{String(stopControl)}
             </button>
             <button onClick={() => stopScroll.set((v: any) => !v)}>
                 stopScroll:{String(stopScroll.get)}
             </button>
-            <span>APP:{RENDER.app}</span>
-            <span>VG: {RENDER.VG}</span>
+            {/* <span>APP:{RENDER.app}</span>
+            <span>VG: {RENDER.VG}</span> */}
             <button
                 onClick={() => {
                     setUpdata((e: number) => e + 1)
@@ -119,20 +137,6 @@ export default forwardRef(function Control(
             
             */}
             <br />
-            <div>{(config.txt.length / 10000).toFixed(2)}万</div>
-            <br />
-            <div>
-                <div>scrollTop:</div>
-                <span>{scrollTop}</span>
-            </div>
-            <div>
-                <div>currentLine:</div>
-                <span>
-                    {currentLine}(
-                    {((currentLine / config.JIT.length) * 100).toFixed(2)}
-                    %)
-                </span>
-            </div>
             <br />
             {/* <div className='count'>
                 <span

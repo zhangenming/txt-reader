@@ -8,6 +8,7 @@ const RENDER = { app: 0, reader: 0, VG: 0 }
 import type { item } from './comp/control'
 import { useState, useEffect, useMemo, useRef } from 'react'
 import {
+    config,
     getSelectionString,
     getStyle,
     getWord,
@@ -47,33 +48,30 @@ const APP = () => {
     }
     // runWithTime(() => {}, 1)
     RENDER.app++
-    const overscan = useStatePaire(_overscan)
 
     const [widthCount, heightCount] = useSizeCount()
-
     useTXT(widthCount)
+    const [
+        scrollTop,
+        currentLine,
+        L,
+        R,
+        onScrollHandle,
+        setUpdata,
+        stopScroll,
+        overscan,
+    ] = useScroll(_overscan, heightCount)
 
     const refVG = useRef<HTMLElement>(null)
     const [hoverRef, isHovered] = useHover()
     useKeyScroll(refVG, isHovered)
-
-    const stopScroll = useStatePaire(false)
-    const [
-        updata,
-        setUpdata,
-        scrollTop,
-        currentLine,
-        onScrollHandle,
-        jumpLine,
-    ] = useScroll(stopScroll)
 
     const [onKeyDown, onKeyUp, clickType] = useKey(
         overscan.get.bot,
         DIFF,
         widthCount,
         currentLine,
-        heightCount,
-        jumpLine
+        heightCount
     )
 
     const [selectArr, SET_selectArr] = useStateWithLS<item[]>('selectArr')
@@ -108,13 +106,14 @@ const APP = () => {
 
     const PROPS = {
         control: {
+            L,
+            R,
             selectArr,
             deleteHandle,
             changeHandle,
             widthCount,
             heightCount,
             currentLine,
-            jumpLine,
             tabIndex: 1,
             onKeyDown,
             onKeyUp,
@@ -130,10 +129,10 @@ const APP = () => {
             pined,
         },
         VG: {
+            L,
+            R,
             widthCount,
             heightCount,
-            currentLine,
-            overscan: overscan.get,
             ref: refVG,
             feature,
             RENDER,
@@ -196,7 +195,12 @@ const APP = () => {
             >
                 <div className='reader-helper' />
 
-                <VG {...PROPS.VG} />
+                {useMemo(
+                    () => (
+                        <VG {...PROPS.VG} />
+                    ),
+                    [L, R]
+                )}
 
                 <div
                     ref={hoverRef}

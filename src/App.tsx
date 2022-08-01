@@ -260,7 +260,7 @@ const APP = () => {
             />
         </>
     )
-    function GoToNextItemHandle({ target, ctrlKey, altKey }: React.MouseEvent) {
+    function GoToNextItemHandle({ target }: React.MouseEvent) {
         // 拉选selection状态
         if (target instanceof HTMLDivElement) {
             const selection = getSelectionString()
@@ -277,16 +277,21 @@ const APP = () => {
             if (word === undefined) return
 
             // 删除
-            if (getHoldingKey().BackspaceHold) {
+            if (getHoldingKey().Backspace) {
                 return deleteHandle(word)
             }
 
             // 跳转
-            const clickLine = Number(
-                querySelector('.V-Grid div:hover').dataset.line // js <-> html
+            const clickBlock = Number(
+                querySelector('.V-Grid div:hover').dataset.blockIdx // js <-> html
             )
-
-            scrollToNext(clickLine, word)
+            const clickLineBase = config.block2Line(clickBlock)
+            const clickLineoffset = Math.floor(
+                ([...target.parentNode!.childNodes.values()].indexOf(target) +
+                    1) /
+                    widthCount
+            )
+            scrollToNext(clickLineBase + clickLineoffset, word)
         }
     }
 

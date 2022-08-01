@@ -23,7 +23,7 @@ export default forwardRef(function VGrid(
     //     console.log('effect VG')
     // })
 
-    const { JIT, AOT, line2Block } = config
+    const { JIT, AOT, line2Block, block2Line } = config
 
     return (
         <>
@@ -40,8 +40,7 @@ export default forwardRef(function VGrid(
                     className='V-Grid'
                     style={{
                         width: widthCount * SIZE_W,
-                        paddingTop:
-                            config.line2Block.findIndex(e => e === L) * SIZE_H,
+                        paddingTop: block2Line(L) * SIZE_H,
                         height: line2Block.length * SIZE_H,
                     }}
                 >
@@ -60,15 +59,15 @@ export default forwardRef(function VGrid(
         </>
     )
 })
+
 let isSpeaking = 0
 const itemMap: any = {}
-
 const noop = [...'  '].map(geneItem)
 export function geneBlock(line: string, key: number) {
     return line === '  ' ? (
         <div key={key}>{noop}</div>
     ) : (
-        <div key={key} data-key={key} data-str={line}>
+        <div key={key} data-block-idx={key} data-str={line}>
             {[...line].map(geneItem)}
         </div>
     )

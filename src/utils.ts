@@ -10,6 +10,7 @@ export const config: {
     AOT: JSX.Element[]
     LINE: string[]
     line2Block: number[]
+    block2Line: (block: number) => number
 } = {}
 config.ll
 const getAllWordPositionCache: { [key: string]: number[] } = {}

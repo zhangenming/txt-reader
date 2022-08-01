@@ -61,6 +61,8 @@ export function useTXT(widthCount: number) {
                 return block
             })
         })()
+        config.block2Line = block =>
+            config.line2Block.findIndex(e => e === block)
     }, [widthCount])
 
     function LR2lr(L: number, R: number) {}

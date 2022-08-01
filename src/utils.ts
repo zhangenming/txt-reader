@@ -1,8 +1,8 @@
 import { useEffect } from 'react'
 import { doHas } from './App'
-import { invalidData } from './book'
 
 export const floor = Math.floor
+// console.log('utils TS')
 
 export const config: {
     txt: string
@@ -73,15 +73,8 @@ export function getWordPosition(word: string): number[] {
     return getWordPositionCache[key]
 }
 
-const getWordCountCache: any = {}
-export function getWordCount(word: string, TXT: string) {
-    const key = word + TXT.length
-
-    if (!getWordCountCache[key]) {
-        getWordCountCache[key] =
-            word === '' ? TXT.length : TXT.split(word).length - 1
-    }
-    return getWordCountCache[key]
+export function getWordCount(word: string) {
+    return config.txt.split(word).length - 1
 }
 
 export function getClasses(classes: object) {
@@ -196,8 +189,37 @@ background: linear-gradient(#000,#000);
 
         return _HAS + style
     }
-
     function getCss2() {
+        if (justOne) return '/* 只有一个没必要显示 */'
+
+        const first = getSelector('findIndex', 'find', 'indexOf', 0)
+        const last = getSelector(
+            'findLastIndex',
+            'findLast',
+            'lastIndexOf',
+            word.length - 1
+        )
+        return (
+            first +
+            '{box-shadow: -3px -3px 0px 0px #973636, -3px 3px 0px 0px #973636;}\n' +
+            last +
+            '{box-shadow: 3px -3px 0px 0px #973636, 3px 3px 0px 0px #973636;}'
+        )
+        function getSelector(
+            findIdx: string,
+            find: string,
+            idxOf: string,
+            offset: number
+        ) {
+            const arr = config.BLOCK_STR_JIT
+            const BlockIdx = arr[findIdx](e => e.includes(word))
+            const ItemIdx =
+                arr[find](e => e.includes(word))![idxOf](word) + 1 + offset
+            return `.V-Grid div[data-block-idx="${BlockIdx}"] span:nth-child(${ItemIdx})`
+        }
+    }
+
+    function getCss2s() {
         if (justOne) return '/* 只有一个没必要显示 */'
 
         const allWordPosition = getAllWordPosition(word)
@@ -318,15 +340,6 @@ export function querySelectorAll(selector: string) {
     return document.querySelectorAll<HTMLElement>(selector)!
 }
 
-export function isInvalidWord(word: string) {
-    // if (/[0-9]/.test(word)) return 'data-num'
-    // if (/[a-z]/.test(word)) return 'data-lower'
-    // if (/[A-Z]/.test(word)) return 'data-upper'
-    // if (error.includes(word)) return 'data-error'
-    // if (warning.includes(word)) return 'data-warning'
-    return invalidData.has(word)
-}
-
 export function useEffectWrap(func: any = () => {}, deps?: any) {
     if (!0) {
         const name = new Error()
@@ -444,4 +457,21 @@ export const getFeature = (f: string) =>
 export function getWord(ele: Element) {
     const content = getComputedStyle(ele).content // js <-> css
     return content === 'normal' ? undefined : content.slice(1, -1)
+}
+export function getBlocks(txt: string) {
+    return (
+        txt //去掉多余空行, 注意有两种空格
+            .replaceAll(/[　\n ]+/g, '\n')
+            // .replaceAll(/\n　　/g, '\n')
+            // // 段落
+            .replaceAll(/\n/g, '\n\n')
+            // 句号
+            // .replaceAll(/(?<!“[^“”]*?)(。|？|！)/g, '$1\n\n')
+            // // 下引号
+            // .replaceAll(/(。|？|！)”/g, '$1”\n\n')
+            // // 逗号
+            // .replaceAll(/(?<!“[^“”]*?)，/g, '，\n')
+            .split('\n')
+            .map(block => '  ' + block)
+    )
 }

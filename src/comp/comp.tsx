@@ -1,5 +1,5 @@
 import { lazy, memo, Suspense, useEffect, useState } from 'react'
-import { runWithTime, sleepSync } from '../debug'
+// console.log('COMP....')
 
 export default function Comp({ RENDER }: any) {
     const { reader, app } = RENDER

@@ -4,6 +4,7 @@ const _overscan = {
 }
 const RENDER = { app: 0, reader: 0, VG: 0 }
 ;(window as any).RENDER = RENDER
+// console.log('APP TSX')
 
 import type { item } from './comp/control'
 import { useState, useEffect, useMemo, useRef } from 'react'
@@ -15,6 +16,7 @@ import {
     getWordPosition,
     querySelector,
 } from './utils'
+import { Effect } from './comp/comp'
 import {
     getHoldingKey,
     useKey,
@@ -26,7 +28,6 @@ import {
 import Control from './comp/control'
 import VG from './V-Grid'
 
-import { Effect } from './comp/comp'
 import { useHover, useStatePaire, useStateWithLS } from './hookUtils'
 import { scrollToNext } from './reader'
 

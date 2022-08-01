@@ -1,5 +1,6 @@
 import { forwardRef } from 'react'
 import { featureFlag } from '../App'
+import { getHoldingKey } from '../hook'
 import { useStatePaire } from '../hookUtils'
 import { scrollToNext } from '../reader'
 import { config } from '../utils'
@@ -11,6 +12,7 @@ export type item = {
     isPined: boolean
     isOneScreen: boolean
 }
+// console.log('control')
 
 export default forwardRef(function Control(
     {
@@ -31,6 +33,7 @@ export default forwardRef(function Control(
         pined,
         L,
         R,
+        deleteHandle,
     }: {
         selectArr: item[]
         deleteHandle(key: string): void
@@ -179,10 +182,14 @@ export default forwardRef(function Control(
                                 children={count}
                                 onClick={() => {
                                     // react 会不会每个span都新建了一个函数事件
+                                    if (getHoldingKey().Backspace) {
+                                        return deleteHandle(item.key)
+                                    }
                                     changeHandle({
                                         ...item,
                                         isPined: !item.isPined,
                                     })
+
                                     // deleteHandle(item.key)
                                 }}
                             />
@@ -193,6 +200,7 @@ export default forwardRef(function Control(
         </div>
     )
 })
+
 // const Lazy = lazy(() => {
 //     return new Promise(resolve => {
 //         setTimeout(() => {

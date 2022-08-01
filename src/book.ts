@@ -1,3 +1,5 @@
+console.log('book')
+
 const warning =
     'ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`' +
     `	②①③○©×+─―—-–~≈÷=*“”"　  ·?,.•°%‘’⋯…!<>()/@&;|0123456789∪'`

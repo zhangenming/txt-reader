@@ -10,9 +10,10 @@ import {
 } from 'react'
 import { SIZE_H, SIZE_W } from './App'
 import { paire, usePrevious, useStatePaire, useStateWithLS } from './hookUtils'
-import { config, getAllWordPosition, hasFeature } from './utils'
+import { config, getAllWordPosition, getBlocks, hasFeature } from './utils'
 import { chunkString, floor, i2rc, querySelector } from './utils'
 import { geneBlock } from './V-Grid'
+// console.log('HOOK')
 
 import _txt from '../txt/mc'
 const txt = hasFeature('test') ? (await import('../txt/test')).default : _txt
@@ -49,7 +50,7 @@ export function useSizeCount() {
 export function useTXT(widthCount: number) {
     // useEffect deps也能达到缓存减少rerender目的? 和useMemo什么区别?
     useMemo(() => {
-        config.BLOCK_STR_JIT = getJIT()
+        config.BLOCK_STR_JIT = getBlocks(txt)
         config.BLOCK_ELE_AOT = getAOT()
         config.LINE = getLines()
         config.line2Block = (() => {
@@ -67,23 +68,6 @@ export function useTXT(widthCount: number) {
 
     function LR2lr(L: number, R: number) {}
 
-    function getJIT() {
-        return (
-            txt //去掉多余空行, 注意有两种空格
-                .replaceAll(/[　\n ]+/g, '\n')
-                // .replaceAll(/\n　　/g, '\n')
-                // // 段落
-                .replaceAll(/\n/g, '\n\n')
-                // 句号
-                // .replaceAll(/(?<!“[^“”]*?)(。|？|！)/g, '$1\n\n')
-                // // 下引号
-                // .replaceAll(/(。|？|！)”/g, '$1”\n\n')
-                // // 逗号
-                // .replaceAll(/(?<!“[^“”]*?)，/g, '，\n')
-                .split('\n')
-                .map(block => '  ' + block)
-        )
-    }
     function getLines() {
         return (
             config.BLOCK_STR_JIT

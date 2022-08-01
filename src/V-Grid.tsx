@@ -2,6 +2,7 @@ import { forwardRef, Fragment, useMemo } from 'react'
 import { SIZE_H, SIZE_W } from './App'
 import { config, hasFeature } from './utils'
 
+// console.log('VG TSX ')
 // Row是行， column是列
 // memo后不是函数形式的组件了
 export default forwardRef(function VGrid(

@@ -287,8 +287,7 @@ const APP = () => {
             )
             const clickLineBase = config.block2Line(clickBlock)
             const clickLineoffset = Math.floor(
-                ([...target.parentNode!.childNodes.values()].indexOf(target) +
-                    1) /
+                [...target.parentNode!.childNodes.values()].indexOf(target) /
                     widthCount
             )
             scrollToNext(clickLineBase + clickLineoffset, word)

@@ -49,8 +49,8 @@ export function useSizeCount() {
 export function useTXT(widthCount: number) {
     // useEffect deps也能达到缓存减少rerender目的? 和useMemo什么区别?
     useMemo(() => {
-        config.JIT = getJIT()
-        config.AOT = getAOT()
+        config.BLOCK_STR_JIT = getJIT()
+        config.BLOCK_ELE_AOT = getAOT()
         config.LINE = getLines()
         config.line2Block = (() => {
             let block = -1
@@ -86,7 +86,7 @@ export function useTXT(widthCount: number) {
     }
     function getLines() {
         return (
-            config.JIT
+            config.BLOCK_STR_JIT
                 // split and join
                 .flatMap(function lineMaybeSplit(block) {
                     return chunkString(block, widthCount)
@@ -134,7 +134,7 @@ export function useTXT(widthCount: number) {
         return []
 
         function doWork(deadline: IdleDeadline) {
-            const { JIT, AOT } = config // 这时候AOT拿到的是return []的[]
+            const { BLOCK_STR_JIT: JIT, BLOCK_ELE_AOT: AOT } = config // 这时候AOT拿到的是return []的[]
             while (deadline.timeRemaining()) {
                 if (AOT.length === JIT.length) {
                     console.timeEnd('AOT done')

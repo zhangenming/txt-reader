@@ -23,7 +23,12 @@ export default forwardRef(function VGrid(
     //     console.log('effect VG')
     // })
 
-    const { JIT, AOT, line2Block, block2Line } = config
+    const {
+        BLOCK_STR_JIT: JIT,
+        BLOCK_ELE_AOT: AOT,
+        line2Block,
+        block2Line,
+    } = config
 
     return (
         <>

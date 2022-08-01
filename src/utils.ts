@@ -6,9 +6,9 @@ export const floor = Math.floor
 
 export const config: {
     txt: string
-    JIT: string[]
-    AOT: JSX.Element[]
-    LINE: string[]
+    BLOCK_STR_JIT: string[] // block string
+    BLOCK_ELE_AOT: JSX.Element[] // block element
+    LINE: string[] // line string
     line2Block: number[]
     block2Line: (block: number) => number
 } = {}

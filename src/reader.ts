@@ -27,9 +27,16 @@ export function scrollToNext(clickLine: number, word: string) {
         const next = allLine.slice(clickLine + 1).findIndex(findNextWord)
         return next === -1 ? getFirst() : clickLine + 1 + next
 
-        function findNextWord(line: any, idx: number, arr: string[]) {
-            const nextLine = arr[idx + 1] // 防止词被隔断到两行
-            return (line + nextLine).includes(word)
+        function findNextWord(line1: string, idx: number, arr: string[]) {
+            return line1.includes(word) || willFindWithDouble()
+            function willFindWithDouble() {
+                const line2 = arr[idx + 1]
+                if (!line2) return
+
+                const len = word.length - 1
+                const line = line1.slice(-len) + line2.slice(0, len)
+                return line.includes(word)
+            }
         }
         function getFirst() {
             return allLine.findIndex(findNextWord)

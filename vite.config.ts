@@ -5,7 +5,7 @@ import react from '@vitejs/plugin-react'
 export default defineConfig({
     plugins: [
         react({
-            // jsxImportSource: '@welldone-software/why-did-you-render', 
+            // jsxImportSource: '@welldone-software/why-did-you-render',
         }),
     ],
 
@@ -17,4 +17,6 @@ export default defineConfig({
         sourcemap: true,
         target: 'esnext',
     },
+
+    base: '/txt-reader/',
 })

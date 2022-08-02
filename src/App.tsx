@@ -6,6 +6,8 @@ const RENDER = { app: 0, reader: 0, VG: 0 }
 ;(window as any).RENDER = RENDER
 // console.log('APP TSX')
 
+document.title = 'reader'
+
 import type { item } from './comp/control'
 import { useState, useEffect, useMemo, useRef } from 'react'
 import {

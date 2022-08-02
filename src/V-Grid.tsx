@@ -10,8 +10,8 @@ export default forwardRef(function VGrid(
         widthCount,
         heightCount,
         onScrollHandle,
-        L,
-        R,
+        blockL,
+        blockR,
     }: {
         widthCount: number
         heightCount: number
@@ -31,13 +31,11 @@ export default forwardRef(function VGrid(
         block2Line,
     } = config
 
+    const paddingTop = block2Line(blockL) * SIZE_H
     return (
         <>
             <div
                 className='container'
-                style={{
-                    height: heightCount * SIZE_H,
-                }}
                 onScroll={onScrollHandle}
                 tabIndex={1}
                 ref={ref}
@@ -45,9 +43,7 @@ export default forwardRef(function VGrid(
                 <div
                     className='V-Grid'
                     style={{
-                        width: widthCount * SIZE_W,
-                        paddingTop: block2Line(L) * SIZE_H,
-                        height: line2Block.length * SIZE_H,
+                        paddingTop,
                     }}
                 >
                     {/* // 滚动一行 domdiff 部分更新比全量更新好(key->domdiff) */}
@@ -55,9 +51,9 @@ export default forwardRef(function VGrid(
                     {/* 滑动的时候卡 能不能滑动的时候暂时只新建dom  删除dom稍后操作 */}
 
                     {AOT.length === JIT.length
-                        ? AOT.slice(L, R)
-                        : JIT.slice(L, R).map((block, i) =>
-                              geneBlock(block, L + i)
+                        ? AOT.slice(blockL, blockR)
+                        : JIT.slice(blockL, blockR).map((block, i) =>
+                              geneBlock(block, blockL + i)
                           )}
                     {/* // todo remove just temp value JIT */}
                 </div>
@@ -68,10 +64,10 @@ export default forwardRef(function VGrid(
 
 let isSpeaking = 0
 const itemMap: any = {}
-const noop = [...'  '].map(geneItem)
 export function geneBlock(line: string, key: number) {
     return line === '  ' ? (
-        <div key={key}>{noop}</div>
+        // <i key={key} />
+        ''
     ) : (
         <div key={key} data-block-idx={key} data-str={line}>
             {[...line].map(geneItem)}

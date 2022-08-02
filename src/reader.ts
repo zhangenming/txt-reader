@@ -1,5 +1,5 @@
 import { SIZE_H } from './App'
-import { getHoldingKey } from './hook'
+import { getHoldingKey } from './hookUtils'
 import { config, querySelector } from './utils'
 // console.log('reader TS')
 

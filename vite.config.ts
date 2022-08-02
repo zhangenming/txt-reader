@@ -18,5 +18,5 @@ export default defineConfig({
         target: 'esnext',
     },
 
-    base: '/txt-reader/dist/',
+    // base: '/txt-reader/dist/',
 })

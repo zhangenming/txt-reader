@@ -1,9 +1,8 @@
 import { forwardRef } from 'react'
 import { featureFlag } from '../App'
-import { getHoldingKey } from '../hook'
-import { useStatePaire } from '../hookUtils'
+import { getHoldingKey, useStatePaire } from '../hookUtils'
 import { scrollToNext } from '../reader'
-import { config } from '../utils'
+import { config, querySelector } from '../utils'
 export type item = {
     key: string
     color: string
@@ -14,39 +13,35 @@ export type item = {
 }
 // console.log('control')
 
-export default forwardRef(function Control(
-    {
-        selectArr,
-        changeHandle,
-        widthCount,
-        heightCount,
-        currentLine,
-        setUpdata,
-        overscan,
-        feature,
-        setFeature,
-        RENDER,
-        scrollTop,
-        stopControl,
-        SET_stopControl,
-        stopScroll,
-        pined,
-        L,
-        R,
-        deleteHandle,
-    }: {
-        selectArr: item[]
-        deleteHandle(key: string): void
-        changeHandle(item: item): void
-        TXT: string
-        widthCount: number
-        heightCount: number
-        currentLine: number
-        onKeyUp: (e: React.KeyboardEvent<Element>) => void
-        onKeyDown: (e: React.KeyboardEvent<Element>) => void
-    },
-    ref
-) {
+export default function Control({
+    selectArr,
+    changeHandle,
+    widthCount,
+    heightCount,
+    currentLine,
+    setUpdata,
+    overscan,
+    feature,
+    setFeature,
+    RENDER,
+    scrollTop,
+    stopControl,
+    SET_stopControl,
+    stopScroll,
+    pined,
+    blockL,
+    deleteHandle,
+}: {
+    selectArr: item[]
+    deleteHandle(key: string): void
+    changeHandle(item: item): void
+    TXT: string
+    widthCount: number
+    heightCount: number
+    currentLine: number
+    onKeyUp: (e: React.KeyboardEvent<Element>) => void
+    onKeyDown: (e: React.KeyboardEvent<Element>) => void
+}) {
     // console.log('render Control')
     const ctrX = useStatePaire(0)
 
@@ -58,22 +53,29 @@ export default forwardRef(function Control(
                 // 两种方式空格连续按着时 原生不卡 自己实现卡
             }}
         >
-            <div>{(config.txt.length / 10000).toFixed(2)}万</div>
-            <br />
+            <button
+                onClick={() => (querySelector('.container').scrollTop -= 1)}
+            >
+                up
+            </button>
+            <button
+                onClick={() => (querySelector('.container').scrollTop += 1)}
+            >
+                down
+            </button>
             {/* <div>
                 <div>scrollTop:</div>
                 <span>{scrollTop}</span>
             </div> */}
             <div>
-                <div>currentLine:</div>
+                <div>Line:</div>
                 <span>
                     {currentLine}(
                     {((currentLine / config.LINE.length) * 100).toFixed(2)}
                     %)
                 </span>
             </div>
-            <span>L{L}</span>
-            <span>BLOCK{config.line2Block[L]}</span>
+            <span>BLCOK: {blockL}</span>
             {/* <span>R{R}</span> */}
             <span onClick={() => ctrX.set((v: any) => v + 1)}>
                 <span key={ctrX.get}> ctrX:{ctrX.get}</span>
@@ -105,6 +107,8 @@ export default forwardRef(function Control(
             >
                 实验 toggle
             </button>
+            <div>{(config.txt.length / 10000).toFixed(2)}万</div>
+            <br />
             {/*  */}
             <br />
             元素覆盖 TOP
@@ -199,7 +203,7 @@ export default forwardRef(function Control(
             </div>
         </div>
     )
-})
+}
 
 // const Lazy = lazy(() => {
 //     return new Promise(resolve => {

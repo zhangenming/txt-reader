@@ -6,7 +6,7 @@ import {
     SetStateAction,
     useMemo,
 } from 'react'
-import { config } from './utils'
+import { config, querySelector } from './utils'
 config.ll
 // console.log('hookUtils TS')
 
@@ -93,4 +93,19 @@ export function useDidMountEffect(func: Function, deps: any[]) {
             func()
         }
     }, deps)
+}
+
+const useKeyHoldRef: any = {}
+export function getHoldingKey(key?: string) {
+    return key ? useKeyHoldRef[key] : useKeyHoldRef
+}
+export function useKeyHold() {
+    useEffect(() => {
+        querySelector('#root').onkeydown = e => {
+            useKeyHoldRef[e.key] = true
+        }
+        querySelector('#root').onkeyup = e => {
+            useKeyHoldRef[e.key] = false
+        }
+    }, [])
 }

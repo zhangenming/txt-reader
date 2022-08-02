@@ -17,10 +17,21 @@
     background: dimgrey;
     outline: double;
 }
+.V-Grid{
+    overflow:hidden;
+    /* padding: 1px; */
+}
 .V-Grid >div{
     display: flex;
-    /* height: var(--SIZE_H); */
     flex-wrap: wrap;
+    /* padding: 25px 0; */
+}
+.V-Grid div:first-child{
+    /* padding-top: 0; */
+}
+.V-Grid >i{
+    display: block;
+    height: var(--SIZE_H);
 }
 div.bg1{
     background: salmon;
@@ -79,6 +90,7 @@ body {
     background: steelblue;
 }
 .container {
+    height: var(--readerHight);
     display: flex;
     flex-shrink: 0;
     justify-content: center;
@@ -89,8 +101,9 @@ body {
     outline: none;
 }
 .V-Grid {
-    /* background: cornflowerblue; */
-    height: fit-content;
+    background: cornflowerblue;
+    width: var(--VG_width);
+    height: var(--VG_height);
     transition: width 1s;
     line-height: var(--SIZE_H);
     box-sizing: border-box;

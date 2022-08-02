@@ -472,6 +472,7 @@ export function getBlocks(txt: string) {
             // // 逗号
             // .replaceAll(/(?<!“[^“”]*?)，/g, '，\n')
             .split('\n')
-            .map(block => '  ' + block)
+            // .ll.filter(e => e !== '')
+            .map(block => '  ' + block).ll
     )
 }

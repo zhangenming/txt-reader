@@ -1,6 +1,6 @@
 const _overscan = {
-    top: 2,
-    bot: 2,
+    top: 0,
+    bot: 0,
 }
 const RENDER = { app: 0, reader: 0, VG: 0 }
 ;(window as any).RENDER = RENDER
@@ -17,20 +17,14 @@ import {
     getWord,
     getWordPosition,
     querySelector,
+    querySelectorAll,
 } from './utils'
 import { Effect } from './comp/comp'
-import {
-    getHoldingKey,
-    useKey,
-    useKeyScroll,
-    useScroll,
-    useSizeCount,
-    useTXT,
-} from './hook'
+import { useKey, useKeyScroll, useScroll, useSizeCount, useTXT } from './hook'
 import Control from './comp/control'
 import VG from './V-Grid'
 
-import { useHover, useStatePaire, useStateWithLS } from './hookUtils'
+import { getHoldingKey, useStatePaire, useStateWithLS } from './hookUtils'
 import { scrollToNext } from './reader'
 
 export const SIZE_W = 25
@@ -57,17 +51,15 @@ const APP = () => {
     const [
         scrollTop,
         currentLine,
-        L,
-        R,
+        blockL,
+        blockR,
         onScrollHandle,
-        setUpdata,
         stopScroll,
         overscan,
+        setUpdata,
     ] = useScroll(_overscan, heightCount)
 
-    const refVG = useRef<HTMLElement>(null)
-    const [hoverRef, isHovered] = useHover()
-    useKeyScroll(refVG, isHovered)
+    const [refVG, hoverRef] = useKeyScroll()
 
     const [onKeyDown, onKeyUp, clickType] = useKey(
         overscan.get.bot,
@@ -109,8 +101,7 @@ const APP = () => {
 
     const PROPS = {
         control: {
-            L,
-            R,
+            blockL,
             selectArr,
             deleteHandle,
             changeHandle,
@@ -132,8 +123,8 @@ const APP = () => {
             pined,
         },
         VG: {
-            L,
-            R,
+            blockL,
+            blockR,
             widthCount,
             heightCount,
             ref: refVG,
@@ -144,7 +135,7 @@ const APP = () => {
         },
     }
 
-    const ctr = <Control {...PROPS.control} ref={hoverRef} />
+    const ctr = <Control {...PROPS.control} />
     const staleCtr = useMemo(() => ctr, [stopControl])
     const control = stopControl ? staleCtr : ctr
 
@@ -166,14 +157,17 @@ const APP = () => {
                         '--clickType': clickType,
                         '--SIZE_H': SIZE_H + 'px',
                         '--SIZE_W': SIZE_W + 'px',
+                        '--VG_width': widthCount * SIZE_W + 'px',
+                        '--VG_height': config.line2Block.length * SIZE_H + 'px',
+                        '--readerHight': heightCount * SIZE_H + 'px',
                     },
                     onClick: GoToNextItemHandle,
                     onKeyDown,
                     onKeyUp,
                     onMouseOver: e => {
-                        document
-                            .querySelectorAll('.hover')
-                            .forEach(node => node.classList.toggle('hover'))
+                        querySelectorAll('.hover').forEach(node =>
+                            node.classList.toggle('hover')
+                        )
 
                         const word = getWord(e.target as Element)!
                         // ||
@@ -190,9 +184,9 @@ const APP = () => {
                         //     }
                         // })
 
-                        document
-                            .querySelectorAll(geneSelector(word))
-                            .forEach(node => node.classList.toggle('hover'))
+                        querySelectorAll(geneSelector(word)).forEach(node =>
+                            node.classList.toggle('hover')
+                        )
                     },
                 }}
             >
@@ -202,16 +196,16 @@ const APP = () => {
                     () => (
                         <VG {...PROPS.VG} />
                     ),
-                    [L, R]
+                    [blockL, blockR]
                 )}
 
-                <div
+                {/* <div
                     ref={hoverRef}
                     className='next'
                     onMouseOver={() => console.log}
                 >
                     NEXT
-                </div>
+                </div> */}
             </div>
 
             <div className='styles'>

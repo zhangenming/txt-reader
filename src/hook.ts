@@ -9,7 +9,13 @@ import {
     useState,
 } from 'react'
 import { SIZE_H, SIZE_W } from './App'
-import { paire, usePrevious, useStatePaire, useStateWithLS } from './hookUtils'
+import {
+    useHover,
+    useKeyHold,
+    usePrevious,
+    useStatePaire,
+    useStateWithLS,
+} from './hookUtils'
 import { config, getAllWordPosition, getBlocks, hasFeature } from './utils'
 import { chunkString, floor, i2rc, querySelector } from './utils'
 import { geneBlock } from './V-Grid'
@@ -65,8 +71,6 @@ export function useTXT(widthCount: number) {
         config.block2Line = block =>
             config.line2Block.findIndex(e => e === block)
     }, [widthCount])
-
-    function LR2lr(L: number, R: number) {}
 
     function getLines() {
         return (
@@ -140,25 +144,24 @@ export function useScroll(
 ) {
     const stopScroll = useStatePaire(false)
     const overscan = useStatePaire(_overscan)
-
     const [updata, setUpdata] = useState(0)
+    const { LINE, line2Block, BLOCK_STR_JIT } = config
+
     const [scrollTop, SET_scrollTop] = useStateWithLS('scrollTop')
+    const currentLine = floor(scrollTop / SIZE_H)
+    const lineL = Math.max(0, currentLine - overscan.get.top)
+    const lineR = Math.min(
+        LINE.length - 1,
+        currentLine + overscan.get.bot + heightCount
+    )
+    const blockL = line2Block[lineL]
+    const blockR = line2Block[lineR] + 1
+
     useEffect(() => {
         if (querySelector('.container')) {
             querySelector('.container').scrollTop = scrollTop //触发 onScrollHandle
         }
     }, [])
-
-    const currentLine = getCurrentLine(scrollTop)
-    const { LINE, line2Block } = config
-    const L = Math.max(0, currentLine - overscan.get.top)
-    const R = Math.min(
-        LINE.length,
-        currentLine + overscan.get.bot + heightCount
-    )
-
-    const blockL = line2Block[L]
-    const blockR = line2Block[R] + 1
 
     return [
         scrollTop,
@@ -166,9 +169,9 @@ export function useScroll(
         blockL,
         blockR,
         onScrollHandle,
-        setUpdata,
         stopScroll,
         overscan,
+        setUpdata,
     ] as const
     // useCallback/useEffect[]存在 就需注意 值过期问题
 
@@ -180,24 +183,6 @@ export function useScroll(
 
         SET_scrollTop(scrollTopNow)
     }
-    function getCurrentLine(scrollTop: number) {
-        return floor(scrollTop / SIZE_H)
-    }
-}
-
-const useKeyHoldRef: any = {}
-export function getHoldingKey(key?: string) {
-    return key ? useKeyHoldRef[key] : useKeyHoldRef
-}
-function useKeyHold() {
-    useEffect(() => {
-        querySelector('#root').onkeydown = e => {
-            useKeyHoldRef[e.key] = true
-        }
-        querySelector('#root').onkeyup = e => {
-            useKeyHoldRef[e.key] = false
-        }
-    }, [])
 }
 
 let clear: number
@@ -287,7 +272,10 @@ export function useCounter(ref = useRef()) {
     return ref
 }
 
-export function useKeyScroll(ref: RefObject<HTMLElement>, isHovered: boolean) {
+export function useKeyScroll() {
+    const refVG = useRef<HTMLElement>(null)
+    const [hoverRef, isHovered] = useHover()
+
     type refCur = { cur: number }
 
     useEffect(() => {
@@ -322,13 +310,15 @@ export function useKeyScroll(ref: RefObject<HTMLElement>, isHovered: boolean) {
         }
     }, [])
 
+    return [refVG, hoverRef]
+
     function runRAF(rAF: refCur, val: number) {
         if (rAF.cur) return
         ;(function run() {
             rAF.cur = requestAnimationFrame(() => {
                 // todo 和useScroll2交互
                 // console.log('rAF scrollTop', scrollTop)
-                ref.current!.scrollTop += val //触发 onScrollHandle
+                refVG.current!.scrollTop += val //触发 onScrollHandle
                 run()
             })
         })()

@@ -48,5 +48,5 @@ export function scrollToNext(clickLine: number, word: string) {
     })()
 
     // 赋值scrollTop会触发onscroll event
-    querySelector('.container').scrollTop += (nextLine - clickLine) * SIZE_H
+    querySelector('.reader').scrollTop += (nextLine - clickLine) * SIZE_H
 }

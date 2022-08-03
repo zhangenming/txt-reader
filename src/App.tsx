@@ -127,7 +127,6 @@ const APP = () => {
             blockR,
             widthCount,
             heightCount,
-            ref: refVG,
             feature,
             RENDER,
             onScrollHandle,
@@ -145,11 +144,9 @@ const APP = () => {
                 showInfo={showInfo}
                 msg='------------------ effect begin ------------------'
             />
-
             {/* <Control /> */}
             {/* {controlmm} */}
             {control}
-
             <div
                 {...{
                     className: 'reader',
@@ -161,6 +158,9 @@ const APP = () => {
                         '--VG_height': config.line2Block.length * SIZE_H + 'px',
                         '--readerHight': heightCount * SIZE_H + 'px',
                     },
+                    tabIndex: 1,
+                    ref: refVG,
+                    onScroll: onScrollHandle,
                     onClick: GoToNextItemHandle,
                     onKeyDown,
                     onKeyUp,
@@ -190,7 +190,7 @@ const APP = () => {
                     },
                 }}
             >
-                <div className='reader-helper' />
+                {/* <div className='reader-helper' /> */}
 
                 {useMemo(
                     () => (
@@ -207,7 +207,6 @@ const APP = () => {
                     NEXT
                 </div> */}
             </div>
-
             <div className='styles'>
                 {/* <style>
         {
@@ -280,7 +279,7 @@ const APP = () => {
 
             // 跳转
             const clickBlock = Number(
-                querySelector('.V-Grid div:hover').dataset.blockIdx // js <-> html
+                querySelector('.V-Grid div:hover').dataset.block // js <-> html
             )
             const clickLineBase = config.block2Line(clickBlock)
             const clickLineoffset = Math.floor(

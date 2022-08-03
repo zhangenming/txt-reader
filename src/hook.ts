@@ -158,8 +158,8 @@ export function useScroll(
     const blockR = line2Block[lineR] + 1
 
     useEffect(() => {
-        if (querySelector('.container')) {
-            querySelector('.container').scrollTop = scrollTop //触发 onScrollHandle
+        if (querySelector('.reader')) {
+            querySelector('.reader').scrollTop = scrollTop //触发 onScrollHandle
         }
     }, [])
 
@@ -175,7 +175,7 @@ export function useScroll(
     ] as const
     // useCallback/useEffect[]存在 就需注意 值过期问题
 
-    function onScrollHandle(e: UIEvent) {
+    function onScrollHandle(e: React.UIEvent<HTMLDivElement, UIEvent>) {
         if (stopScroll.get) return
 
         const scrollTopNow = (e.target as HTMLElement).scrollTop

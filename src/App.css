@@ -58,7 +58,6 @@ body {
 }
 .reader {
     display: flex;
-    flex-direction: column;
     flex-grow: 1;
     background: steelblue;
     color: aliceblue;
@@ -66,6 +65,10 @@ body {
     font-family: fangsong;
     /* todo */
     overflow: hidden;
+    flex-shrink: 0;
+    justify-content: center;
+    overflow-y: scroll;
+    transition: height 0.4s;
 }
 .reader .reader-helper {
     position: absolute;
@@ -90,12 +93,6 @@ body {
     background: steelblue;
 }
 .container {
-    height: var(--readerHight);
-    display: flex;
-    flex-shrink: 0;
-    justify-content: center;
-    overflow-y: scroll;
-    transition: height 0.4s;
 }
 .container:focus-visible {
     outline: none;

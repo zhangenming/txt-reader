@@ -53,14 +53,10 @@ export default function Control({
                 // 两种方式空格连续按着时 原生不卡 自己实现卡
             }}
         >
-            <button
-                onClick={() => (querySelector('.container').scrollTop -= 1)}
-            >
+            <button onClick={() => (querySelector('.reader').scrollTop -= 1)}>
                 up
             </button>
-            <button
-                onClick={() => (querySelector('.container').scrollTop += 1)}
-            >
+            <button onClick={() => (querySelector('.reader').scrollTop += 1)}>
                 down
             </button>
             {/* <div>

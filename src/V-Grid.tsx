@@ -5,11 +5,10 @@ import { config, hasFeature } from './utils'
 // console.log('VG TSX ')
 // Row是行， column是列
 // memo后不是函数形式的组件了
-export default forwardRef(function VGrid(
+export default function VGrid(
     {
         widthCount,
         heightCount,
-        onScrollHandle,
         blockL,
         blockR,
     }: {
@@ -35,41 +34,34 @@ export default forwardRef(function VGrid(
     return (
         <>
             <div
-                className='container'
-                onScroll={onScrollHandle}
-                tabIndex={1}
-                ref={ref}
+                className='V-Grid'
+                style={{
+                    paddingTop,
+                }}
             >
-                <div
-                    className='V-Grid'
-                    style={{
-                        paddingTop,
-                    }}
-                >
-                    {/* // 滚动一行 domdiff 部分更新比全量更新好(key->domdiff) */}
-                    {/* // 滚动全屏 domdiff 删除key直接更新属性 比删除dom新建dom好 */}
-                    {/* 滑动的时候卡 能不能滑动的时候暂时只新建dom  删除dom稍后操作 */}
+                {/* // 滚动一行 domdiff 部分更新比全量更新好(key->domdiff) */}
+                {/* // 滚动全屏 domdiff 删除key直接更新属性 比删除dom新建dom好 */}
+                {/* 滑动的时候卡 能不能滑动的时候暂时只新建dom  删除dom稍后操作 */}
 
-                    {AOT.length === JIT.length
-                        ? AOT.slice(blockL, blockR)
-                        : JIT.slice(blockL, blockR).map((block, i) =>
-                              geneBlock(block, blockL + i)
-                          )}
-                    {/* // todo remove just temp value JIT */}
-                </div>
+                {AOT.length === JIT.length
+                    ? AOT.slice(blockL, blockR)
+                    : JIT.slice(blockL, blockR).map((block, i) =>
+                          geneBlock(block, blockL + i)
+                      )}
+                {/* // todo remove just temp value JIT */}
             </div>
         </>
     )
-})
+}
 
 let isSpeaking = 0
 const itemMap: any = {}
 export function geneBlock(line: string, key: number) {
     return line === '  ' ? (
-        // <i key={key} />
-        ''
+        <i key={key} />
     ) : (
-        <div key={key} data-block-idx={key} data-str={line}>
+        // todo delete this
+        <div key={key} data-block={key} data-str={line}>
             {[...line].map(geneItem)}
         </div>
     )

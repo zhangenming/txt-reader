@@ -215,7 +215,7 @@ background: linear-gradient(#000,#000);
             const BlockIdx = arr[findIdx](e => e.includes(word))
             const ItemIdx =
                 arr[find](e => e.includes(word))![idxOf](word) + 1 + offset
-            return `.V-Grid div[data-block-idx="${BlockIdx}"] span:nth-child(${ItemIdx})`
+            return `.V-Grid div[data-block="${BlockIdx}"] span:nth-child(${ItemIdx})`
         }
     }
 

@@ -6,10 +6,9 @@ const RENDER = { app: 0, reader: 0, VG: 0 }
 ;(window as any).RENDER = RENDER
 // console.log('APP TSX')
 
-document.title = 'reader'
-
 import type { item } from './comp/control'
-import { useState, useEffect, useMemo, useRef } from 'react'
+import { useState, useEffect, useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import {
     config,
     getSelectionString,
@@ -144,29 +143,20 @@ const APP = () => {
                 showInfo={showInfo}
                 msg='------------------ effect begin ------------------'
             />
-            {/* <Control /> */}
-            {/* {controlmm} */}
-            {control}
+            <div className='control'>{control}</div>
+
             <div
+                className='reader'
+                ref={refVG}
                 {...{
-                    className: 'reader',
-                    style: {
-                        '--clickType': clickType,
-                        '--SIZE_H': SIZE_H + 'px',
-                        '--SIZE_W': SIZE_W + 'px',
-                        '--VG_width': widthCount * SIZE_W + 'px',
-                        '--VG_height': config.line2Block.length * SIZE_H + 'px',
-                        '--readerHight': heightCount * SIZE_H + 'px',
-                    },
                     tabIndex: 1,
-                    ref: refVG,
                     onScroll: onScrollHandle,
                     onClick: GoToNextItemHandle,
                     onKeyDown,
                     onKeyUp,
                     onMouseOver: e => {
-                        querySelectorAll('.hover').forEach(node =>
-                            node.classList.toggle('hover')
+                        querySelectorAll('.hoverByJs').forEach(node =>
+                            node.classList.toggle('hoverByJs')
                         )
 
                         const word = getWord(e.target as Element)!
@@ -180,12 +170,12 @@ const APP = () => {
                         //     if (e.key.includes(word) || word.includes(e.key)) {
                         //         document
                         //             .querySelectorAll(geneSelector(e.key))
-                        //             .forEach(e => e.classList.add('hover'))
+                        //             .forEach(e => e.classList.add('hoverByJs'))
                         //     }
                         // })
 
                         querySelectorAll(geneSelector(word)).forEach(node =>
-                            node.classList.toggle('hover')
+                            node.classList.toggle('hoverByJs')
                         )
                     },
                 }}
@@ -207,49 +197,63 @@ const APP = () => {
                     NEXT
                 </div> */}
             </div>
-            <div className='styles'>
-                {/* <style>
-        {
-            Array(columnCount)
-                .fill(null)
-                .map((_, i) => `span:hover ${'+span '.repeat(i)}`)
-                .join(',\n') + '{background:yellowgreen}'
-            // // // // // //
-            // aot 卡, 使用jit
-            // span:hover,
-            // span:hover + span,
-            // span:hover + span + span,
-            // span:hover + span + span + span {
-            //     background: yellowgreen;
-            // }
-        }
-    </style> */}
 
-                {/* <style>
-                    {(() => {
-                        const first = OVERSCAN_top * widthCount + 1
-                        const last = OVERSCAN_bottom * widthCount + 1
-                        const selector = `.V-Grid span:is(:nth-child(${first}), :nth-last-child(${last}))`
-                        return selector + ` \n\n {background: steelblue;}`
-                    })()}
-                </style> */}
+            <div
+                className='autoScrolling'
+                onMouseOver={() => console.log}
+            ></div>
+
+            <>
+                <style>
+                    {
+                        // Array(6)
+                        //     .fill(null)
+                        //     .map((_, i) => `span:hover ${'+span '.repeat(i)}`)
+                        //     .join(',\n') + '{background:yellowgreen}'
+                        // aot 卡, 使用jit
+                    }
+                </style>
 
                 {useMemo(() => {
-                    return selectArr.map(
-                        ({ key, color, count, isOneScreen, isPined }) => (
-                            <style key={key} slot={key}>
-                                {getStyle(
-                                    key,
-                                    color,
-                                    isPined || pined.get === key,
-                                    count,
-                                    isOneScreen
-                                )}
-                            </style>
-                        )
+                    const styles = {
+                        '--clickType': clickType,
+                        '--SIZE_H': SIZE_H + 'px',
+                        '--SIZE_W': SIZE_W + 'px',
+                        '--readerHight': heightCount * SIZE_H + 'px',
+                        '--VG_width': widthCount * SIZE_W + 'px',
+                        '--VG_height': config.line2Block.length * SIZE_H + 'px',
+                    }
+                    const vals = Object.entries(styles).reduce(
+                        (all, [key, val]) => (all += `${key}: ${val};\n`),
+                        '\n'
+                    )
+
+                    return createPortal(
+                        <style slot='--变量'>{`:root {${vals}}`}</style>,
+                        document.head
+                    )
+                }, [])}
+
+                {useMemo(() => {
+                    return createPortal(
+                        selectArr.map(
+                            ({ key, color, count, isOneScreen, isPined }) => (
+                                <style key={key} slot={key}>
+                                    {getStyle(
+                                        key,
+                                        color,
+                                        isPined || pined.get === key,
+                                        count,
+                                        isOneScreen
+                                    )}
+                                </style>
+                            )
+                        ),
+                        document.head
                     )
                 }, [pined, selectArr])}
-            </div>
+            </>
+
             <Effect
                 showInfo={showInfo}
                 msg='------- render OVER -------------------'

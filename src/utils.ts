@@ -11,8 +11,10 @@ export const config: {
     LINE: string[] // line string
     line2Block: number[]
     block2Line: (block: number) => number
-} = {}
-config.ll
+    currentLine: number
+} = {} as any
+console.log(config)
+
 const getAllWordPositionCache: { [key: string]: number[] } = {}
 export function getAllWordPosition(word: string) {
     const key = word + config.line2Block.length
@@ -473,6 +475,6 @@ export function getBlocks(txt: string) {
             // .replaceAll(/(?<!“[^“”]*?)，/g, '，\n')
             .split('\n')
             // .ll.filter(e => e !== '')
-            .map(block => '  ' + block).ll
+            .map(block => '  ' + block)
     )
 }

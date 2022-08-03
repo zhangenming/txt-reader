@@ -1,44 +1,33 @@
-import { forwardRef, Fragment, useMemo } from 'react'
-import { SIZE_H, SIZE_W } from './App'
+import { Fragment } from 'react'
+import { SIZE_H } from './App'
 import { config, hasFeature } from './utils'
 
 // console.log('VG TSX ')
 // Row是行， column是列
 // memo后不是函数形式的组件了
-export default function VGrid(
-    {
-        widthCount,
-        heightCount,
-        blockL,
-        blockR,
-    }: {
-        widthCount: number
-        heightCount: number
-    },
-    ref: any
-    // ref: React.MutableRefObject<HTMLDivElement>
-) {
+export default function VGrid({
+    blockL,
+    blockR,
+}: {
+    blockL: number
+    blockR: number
+}) {
     // console.log('render VG')
     // useEffect(() => {
     //     console.log('effect VG')
     // })
 
-    const {
-        BLOCK_STR_JIT: JIT,
-        BLOCK_ELE_AOT: AOT,
-        line2Block,
-        block2Line,
-    } = config
+    const { BLOCK_STR_JIT: JIT, BLOCK_ELE_AOT: AOT, block2Line } = config
 
-    const paddingTop = block2Line(blockL) * SIZE_H
     return (
         <>
-            <div
-                className='V-Grid'
-                style={{
-                    paddingTop,
-                }}
-            >
+            <div className='V-Grid'>
+                <div
+                    role='占位符'
+                    style={{
+                        height: block2Line(blockL) * SIZE_H,
+                    }}
+                />
                 {/* // 滚动一行 domdiff 部分更新比全量更新好(key->domdiff) */}
                 {/* // 滚动全屏 domdiff 删除key直接更新属性 比删除dom新建dom好 */}
                 {/* 滑动的时候卡 能不能滑动的时候暂时只新建dom  删除dom稍后操作 */}
@@ -46,7 +35,7 @@ export default function VGrid(
                 {AOT.length === JIT.length
                     ? AOT.slice(blockL, blockR)
                     : JIT.slice(blockL, blockR).map((block, i) =>
-                          geneBlock(block, blockL + i)
+                          geneBlock(block, blockL + i, block2Line(blockL + i))
                       )}
                 {/* // todo remove just temp value JIT */}
             </div>
@@ -56,49 +45,45 @@ export default function VGrid(
 
 let isSpeaking = 0
 const itemMap: any = {}
-export function geneBlock(line: string, key: number) {
+export function geneBlock(line: string, blockIdx: number, lineIdx: number) {
     return line === '  ' ? (
-        <i key={key} />
+        <div key={blockIdx} data-line={lineIdx} />
     ) : (
-        // todo delete this
-        <div key={key} data-block={key} data-str={line}>
+        // ''
+        // doing fail
+        <div
+            key={blockIdx}
+            data-line={lineIdx}
+            data-block={blockIdx}
+            data-str={
+                line.length < 20
+                    ? line
+                    : line.slice(0, 10) + '...' + line.slice(-10)
+            }
+        >
             {[...line].map(geneItem)}
         </div>
     )
 }
 
 function geneItem(word: string) {
-    if (word === '”') {
-        isSpeaking = 0
-    }
-
-    if (!hasFeature('cache')) {
-        return (
-            <span
-                {...{
-                    children: word,
-                    className: word,
-                    style: {
-                        background: isSpeaking && 'teal',
-                    },
-                }}
-            />
-        )
-    }
-
     if (!itemMap[word]) {
+        // console.log(1)
+
         itemMap[word] = [
-            <span className={word}>{word}</span>,
+            <span className={word} children={word} />,
             <span
-                {...{
-                    children: word,
-                    className: word,
-                    style: {
-                        background: 'teal',
-                    },
+                className={word}
+                children={word}
+                style={{
+                    background: 'teal',
                 }}
             />,
         ]
+    }
+
+    if (word === '”') {
+        isSpeaking = 0
     }
 
     const spk = isSpeaking

@@ -1,54 +1,80 @@
-.V-Grid:hover .x{ 
-    color: red 
-    /* justforreplace */
+.V-Grid {
+    overflow: hidden;
+    /* display: flex;
+    flex-direction: column;
+    gap: 25px; */
+    /* padding: 1px; */
 }
-.V-Grid:hover .x{ 
-    color: red 
-    /* justforreplace */
+
+/* BLOCK */
+/* BLOCK */
+/* BLOCK */
+.V-Grid > div {
+    min-height: 25px;
+    /* display: flex;
+    flex-wrap: wrap; */
+    /* padding-bottom: 25px; */
 }
-.V-Grid span:hover{
-    /* outline: green double 5px; */
+.V-Grid > div:hover {
+    /* background: #000; */
 }
-.V-Grid span:not([data-invalid=' ']):hover{
-    /* outline: white double 5px; */
-} 
-.V-Grid span.hover{
+.V-Grid div:first-child {
+    /* padding-bottom: 0; */
+}
+
+/* WORD */
+/* WORD */
+/* WORD */
+.V-Grid span:first-child {
+    background: steelblue;
+}
+.V-Grid span:hover {
+    outline: green double 5px;
+}
+.V-Grid span.hoverByJs {
     color: springgreen;
     background: dimgrey;
     outline: double;
 }
-.V-Grid{
-    overflow:hidden;
-    /* padding: 1px; */
+.V-Grid span:not([data-invalid=' ']):hover {
+    /* outline: white double 5px; */
 }
-.V-Grid >div{
-    display: flex;
-    flex-wrap: wrap;
-    /* padding: 25px 0; */
-}
-.V-Grid div:first-child{
-    /* padding-top: 0; */
-}
-.V-Grid >i{
-    display: block;
-    height: var(--SIZE_H);
-}
-div.bg1{
-    background: salmon;
-}
-div.bg2{
-    background: slategray;
-}
-
 body {
     margin: 0;
 }
 #root {
     -webkit-font-smoothing: antialiased;
-    display: flex;
     height: 100vh;
+    display: grid;
+    grid-template-rows: max-content;
+    grid-template-columns: 100px auto;
+    background: steelblue;
 }
 
+.control {
+    grid-row-start: 1;
+    grid-column-start: 1;
+    grid-row-end: 3;
+    grid-column-end: 2;
+}
+
+.reader {
+    grid-row-start: 1;
+    grid-column-start: 2;
+    grid-row-end: 2;
+    grid-column-end: 3;
+}
+
+.autoScrolling {
+    grid-row-start: 2;
+    grid-column-start: 2;
+    grid-row-end: 3;
+    grid-column-end: 3;
+}
+
+[tabindex]:focus-visible {
+    outline: none;
+}
 .control {
     display: flex;
     flex-direction: column;
@@ -59,6 +85,7 @@ body {
 .reader {
     display: flex;
     flex-grow: 1;
+    height: var(--readerHight);
     background: steelblue;
     color: aliceblue;
     font-size: 25px;
@@ -124,10 +151,12 @@ body {
 }
 
 /* magic invalid*/
-span.speaking,
-[data-invalid='：']:has(+ :not([data-invalid='“'])) {
+span.speaking {
     background: #7171e2;
 }
+/* [data-invalid='：']:has(+ :not([data-invalid='“'])) {
+    background: #7171e2;
+} */
 span.isTarget {
     background: red;
     filter: hue-rotate(90deg);
@@ -137,9 +166,9 @@ span.isTarget {
 :not(.isTarget) + .isTarget {
     border-left: 3px solid;
 }
-.isTarget:has(+ :not(.isTarget)) {
+/* .isTarget:has(+ :not(.isTarget)) {
     border-right: 3px solid;
-}
+} */
 span[data-invalid='“'] {
     display: inline-flex;
     justify-content: end;

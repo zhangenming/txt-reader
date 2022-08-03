@@ -46,23 +46,17 @@ export default function Control({
     const ctrX = useStatePaire(0)
 
     return (
-        <div
-            {...{
-                className: 'control',
-                tabIndex: 1,
-                // 两种方式空格连续按着时 原生不卡 自己实现卡
-            }}
-        >
+        <>
+            <div>
+                <div>scrollTop:</div>
+                <span>{scrollTop}</span>
+            </div>
             <button onClick={() => (querySelector('.reader').scrollTop -= 1)}>
                 up
             </button>
             <button onClick={() => (querySelector('.reader').scrollTop += 1)}>
                 down
             </button>
-            {/* <div>
-                <div>scrollTop:</div>
-                <span>{scrollTop}</span>
-            </div> */}
             <div>
                 <div>Line:</div>
                 <span>
@@ -197,7 +191,7 @@ export default function Control({
                     )
                 })}
             </div>
-        </div>
+        </>
     )
 }
 

@@ -2,6 +2,7 @@ const autoScrollSpeed = 1
 import {
     createElement,
     RefObject,
+    useCallback,
     useEffect,
     useLayoutEffect,
     useMemo,
@@ -45,7 +46,7 @@ export function useSizeCount() {
     function getter() {
         const min = 0
         const width = innerWidth - 100 - min - 17 /*滚轴宽度*/ - 20
-        const height = innerHeight - 30 - min
+        const height = innerHeight - 10 - min
         const widthCount = floor(width / SIZE_W)
         const heightCount = floor(height / SIZE_W)
 
@@ -115,20 +116,30 @@ export function useTXT(widthCount: number) {
         )
     }
     function getAOT() {
-        if (hasFeature('aot')) {
+        if (!hasFeature('aot')) {
             console.time('AOT done')
             requestIdleCallback(doWork)
         }
         return []
 
         function doWork(deadline: IdleDeadline) {
-            const { BLOCK_STR_JIT: JIT, BLOCK_ELE_AOT: AOT } = config // 这时候AOT拿到的是return []的[]
+            const {
+                BLOCK_STR_JIT: JIT,
+                BLOCK_ELE_AOT: AOT,
+                block2Line,
+            } = config // 这时候AOT拿到的是return []的[]
             while (deadline.timeRemaining()) {
                 if (AOT.length === JIT.length) {
                     console.timeEnd('AOT done')
                     return
                 }
-                AOT.push(geneBlock(JIT[AOT.length], AOT.length))
+                AOT.push(
+                    geneBlock(
+                        JIT[AOT.length],
+                        AOT.length,
+                        block2Line(AOT.length)
+                    )
+                )
             }
             requestIdleCallback(doWork)
         }
@@ -145,18 +156,23 @@ export function useScroll(
     const stopScroll = useStatePaire(false)
     const overscan = useStatePaire(_overscan)
     const [updata, setUpdata] = useState(0)
-    const { LINE, line2Block, BLOCK_STR_JIT } = config
 
     const [scrollTop, SET_scrollTop] = useStateWithLS('scrollTop')
     const currentLine = floor(scrollTop / SIZE_H)
-    const lineL = Math.max(0, currentLine - overscan.get.top)
-    const lineR = Math.min(
-        LINE.length - 1,
-        currentLine + overscan.get.bot + heightCount
-    )
-    const blockL = line2Block[lineL]
-    const blockR = line2Block[lineR] + 1
+    const [blockL, blockR] = useMemo(
+        function computed() {
+            config.currentLine = currentLine
+            const { LINE, line2Block } = config
 
+            const lineL = Math.max(0, currentLine - overscan.get.top)
+            const lineR = Math.min(
+                LINE.length - 1,
+                currentLine + overscan.get.bot + heightCount
+            )
+            return [line2Block[lineL], line2Block[lineR] + 1]
+        },
+        [currentLine]
+    )
     useEffect(() => {
         if (querySelector('.reader')) {
             querySelector('.reader').scrollTop = scrollTop //触发 onScrollHandle

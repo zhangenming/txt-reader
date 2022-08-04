@@ -22,8 +22,8 @@ import { chunkString, floor, i2rc, querySelector } from './utils'
 import { geneBlock } from './V-Grid'
 // console.log('HOOK')
 
-import _txt from '../txt/mc'
-const txt = hasFeature('test') ? (await import('../txt/test')).default : _txt
+import txt from '../txt/h'
+// const txt = hasFeature('test') ? (await import('../txt/test')).default : _txt
 config.txt = txt
 
 type react_SET<T = any> = React.Dispatch<React.SetStateAction<T>>

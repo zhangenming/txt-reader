@@ -13,10 +13,12 @@ export default defineConfig({
         hmr: false,
     },
 
-    build: {
-        sourcemap: true,
-        target: 'esnext',
-    },
+    // build: {
+    //     // base: '/txt-reader/dist/',
+    //     sourcemap: true,
+    //     target: 'esnext',
+    // },
 
     // base: '/txt-reader/dist/',
+    base: './',
 })

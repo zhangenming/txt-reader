@@ -22,7 +22,7 @@ import { chunkString, floor, i2rc, querySelector } from './utils'
 import { geneBlock } from './V-Grid'
 // console.log('HOOK')
 
-import txt from '../txt/h'
+import txt from '../txt/txt'
 // const txt = hasFeature('test') ? (await import('../txt/test')).default : _txt
 config.txt = txt
 

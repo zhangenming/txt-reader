@@ -11,7 +11,6 @@ export const config: {
     LINE: string[] // line string
     line2Block: [number, number, number][]
     block2Line: (block: number) => number
-    currentLine: number
 } = {}.ll as any
 
 const getAllWordPositionCache: { [key: string]: number[] } = {}

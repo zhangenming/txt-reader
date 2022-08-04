@@ -20,7 +20,7 @@ import { chunkString, floor, i2rc, querySelector } from './utils'
 import { geneBlock } from './V-Grid'
 // console.log('HOOK')
 
-import txt from '../txt/test'
+import txt from '../txt/mc'
 // const txt = hasFeature('test') ? (await import('../txt/test')).default : _txt
 ;(function init() {
     config.txt = txt
@@ -161,6 +161,8 @@ export function useTXT(widthCount: number) {
     }
 }
 
+function computed2() {}
+
 export function useScroll(
     _overscan: {
         top: number
@@ -176,15 +178,17 @@ export function useScroll(
     const currentLine = floor(scrollTop / SIZE_H)
     const [blockL, blockR] = useMemo(
         function computed() {
-            config.currentLine = currentLine
-            const { LINE, line2Block } = config
+            const { line2Block, LINE } = config
 
-            const lineL = Math.max(0, currentLine - overscan.get.top)
-            const lineR = Math.min(
-                LINE.length - 1,
-                currentLine + overscan.get.bot + heightCount
-            )
-            return [line2Block[lineL][0], line2Block[lineR][0] + 1]
+            return [
+                Math.max(0, line2Block[currentLine][0] - overscan.get.top),
+
+                line2Block[
+                    Math.min(LINE.length - 1, currentLine + heightCount)
+                ][0] +
+                    overscan.get.bot +
+                    1,
+            ]
         },
         [currentLine]
     )

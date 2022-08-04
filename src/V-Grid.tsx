@@ -22,7 +22,7 @@ export default function VGrid({
     return (
         <>
             <div className='V-Grid'>
-                <div
+                <nav
                     role='占位符'
                     style={{
                         height: block2Line(blockL) * SIZE_H,

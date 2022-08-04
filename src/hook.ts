@@ -17,7 +17,7 @@ import {
     useStatePaire,
     useStateWithLS,
 } from './hookUtils'
-import { config, getAllWordPosition, getBlocks, hasFeature } from './utils'
+import { config, getAllWordPosition, hasFeature } from './utils'
 import { chunkString, floor, i2rc, querySelector } from './utils'
 import { geneBlock } from './V-Grid'
 // console.log('HOOK')
@@ -25,6 +25,43 @@ import { geneBlock } from './V-Grid'
 import txt from '../txt/mc'
 // const txt = hasFeature('test') ? (await import('../txt/test')).default : _txt
 config.txt = txt
+config.BLOCK_STR_JIT = txt
+    //去掉多余空行, 注意有两种空格
+    .replaceAll(/[　\n ]+/g, '\n')
+    // .replaceAll(/\n　　/g, '\n')
+    // // 段落
+    .replaceAll(/\n/g, '\n\n')
+    // 句号
+    // .replaceAll(/(?<!“[^“”]*?)(。|？|！)/g, '$1\n\n')
+    // // 下引号
+    // .replaceAll(/(。|？|！)”/g, '$1”\n\n')
+    // // 逗号
+    // .replaceAll(/(?<!“[^“”]*?)，/g, '，\n')
+    .split('\n')
+    // .ll.filter(e => e !== '')
+    .map(block => '  ' + block)
+
+config.BLOCK_ELE_AOT = (function getAOT() {
+    if (!hasFeature('aot')) {
+        console.time('AOT done')
+        requestIdleCallback(doWork)
+    }
+    return []
+
+    function doWork(deadline: IdleDeadline) {
+        const { BLOCK_STR_JIT: JIT, BLOCK_ELE_AOT: AOT, block2Line } = config // 这时候AOT拿到的是return []的[]
+        while (deadline.timeRemaining()) {
+            if (AOT.length === JIT.length) {
+                console.timeEnd('AOT done')
+                return
+            }
+            AOT.push(
+                geneBlock(JIT[AOT.length], AOT.length, block2Line(AOT.length))
+            )
+        }
+        requestIdleCallback(doWork)
+    }
+})()
 
 type react_SET<T = any> = React.Dispatch<React.SetStateAction<T>>
 
@@ -57,8 +94,6 @@ export function useSizeCount() {
 export function useTXT(widthCount: number) {
     // useEffect deps也能达到缓存减少rerender目的? 和useMemo什么区别?
     useMemo(() => {
-        config.BLOCK_STR_JIT = getBlocks(txt)
-        config.BLOCK_ELE_AOT = getAOT()
         config.LINE = getLines()
         config.line2Block = (() => {
             let block = -1
@@ -115,37 +150,10 @@ export function useTXT(widthCount: number) {
             // [])
         )
     }
-    function getAOT() {
-        if (!hasFeature('aot')) {
-            console.time('AOT done')
-            requestIdleCallback(doWork)
-        }
-        return []
-
-        function doWork(deadline: IdleDeadline) {
-            const {
-                BLOCK_STR_JIT: JIT,
-                BLOCK_ELE_AOT: AOT,
-                block2Line,
-            } = config // 这时候AOT拿到的是return []的[]
-            while (deadline.timeRemaining()) {
-                if (AOT.length === JIT.length) {
-                    console.timeEnd('AOT done')
-                    return
-                }
-                AOT.push(
-                    geneBlock(
-                        JIT[AOT.length],
-                        AOT.length,
-                        block2Line(AOT.length)
-                    )
-                )
-            }
-            requestIdleCallback(doWork)
-        }
-    }
 }
-
+function useMemo2(fn: any, deps: any[]) {
+    return fn()
+}
 export function useScroll(
     _overscan: {
         top: number

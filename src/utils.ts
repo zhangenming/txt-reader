@@ -174,18 +174,22 @@ ${getCss2()}
 `
 
     function getCss1() {
-        const type = isOneScreen
-            ? `\
+        const type =
+            isOneScreen || justOne
+                ? `\
 background: linear-gradient(#000,#000);
   background-size: 100% ${justOne ? 2 : 4}px;
   background-repeat: no-repeat;
   background-position: 0px 50%;`
-            : `cursor: var(--clickType);${isPined ? 'background:deeppink' : ''}`
+                : `cursor: var(--clickType);${
+                      isPined ? 'background:sandybrown' : ''
+                  }`
 
         const style = `
 {
   color: ${color};
   content: '${word}';
+  font-weight: 900;
   ${type}
 }`
 
@@ -213,50 +217,13 @@ background: linear-gradient(#000,#000);
             idxOf: string,
             offset: number
         ) {
-            const arr = config.BLOCK_STR_JIT
-            const BlockIdx = arr[findIdx](e => e.includes(word))
+            const arr = config.BLOCK_STR_JIT as any
+            const BlockIdx = arr[findIdx]((e: string) => e.includes(word))
             const ItemIdx =
-                arr[find](e => e.includes(word))![idxOf](word) + 1 + offset
+                arr[find]((e: string) => e.includes(word))![idxOf](word) +
+                1 +
+                offset
             return `.V-Grid div[data-block="${BlockIdx}"] span:nth-child(${ItemIdx})`
-        }
-    }
-
-    function getCss2s() {
-        if (justOne) return '/* 只有一个没必要显示 */'
-
-        const allWordPosition = getAllWordPosition(word)
-
-        const [first, ...firstNext] = allWordPosition.slice(0, wordLen)
-        const lastPriv = allWordPosition.slice(allWordPosition.length - wordLen)
-        const last = lastPriv.pop()!
-
-        return [
-            {
-                selector: [first],
-                style: `2px 0 0 2px`,
-            },
-            { selector: firstNext, style: `2px 0 0 0` },
-            {
-                selector: lastPriv,
-                style: `0 0 2px 0`,
-            },
-            {
-                selector: [last],
-                style: `0 2px 2px 0`,
-            },
-        ]
-            .map(setCss)
-            .join('\n')
-
-        function setCss({
-            selector,
-            style,
-        }: {
-            selector: number[]
-            style: string
-        }) {
-            const x = selector.map(e => `[data-i='${e}']`)
-            return `span:is(${x}) { border:dotted;border-width:${style}; }`
         }
     }
 
@@ -459,22 +426,4 @@ export const getFeature = (f: string) =>
 export function getWord(ele: Element) {
     const content = getComputedStyle(ele).content // js <-> css
     return content === 'normal' ? undefined : content.slice(1, -1)
-}
-export function getBlocks(txt: string) {
-    return (
-        txt //去掉多余空行, 注意有两种空格
-            .replaceAll(/[　\n ]+/g, '\n')
-            // .replaceAll(/\n　　/g, '\n')
-            // // 段落
-            .replaceAll(/\n/g, '\n\n')
-            // 句号
-            // .replaceAll(/(?<!“[^“”]*?)(。|？|！)/g, '$1\n\n')
-            // // 下引号
-            // .replaceAll(/(。|？|！)”/g, '$1”\n\n')
-            // // 逗号
-            // .replaceAll(/(?<!“[^“”]*?)，/g, '，\n')
-            .split('\n')
-            // .ll.filter(e => e !== '')
-            .map(block => '  ' + block)
-    )
 }

@@ -35,12 +35,9 @@ export default function Control({
     selectArr: item[]
     deleteHandle(key: string): void
     changeHandle(item: item): void
-    TXT: string
     widthCount: number
     heightCount: number
     currentLine: number
-    onKeyUp: (e: React.KeyboardEvent<Element>) => void
-    onKeyDown: (e: React.KeyboardEvent<Element>) => void
 }) {
     // console.log('render Control')
     const ctrX = useStatePaire(0)
@@ -153,7 +150,7 @@ export default function Control({
             <div>
                 {selectArr.map(item => {
                     const { key, count, isOneScreen } = item
-                    // if (count === 1 || isOneScreen) return
+                    if (count === 1 || isOneScreen) return
                     return (
                         <div
                             className='selectItem'
@@ -167,16 +164,20 @@ export default function Control({
                                 className='key'
                                 children={key}
                                 onClick={() => {
+                                    changeHandle({
+                                        ...item,
+                                        isPined: true,
+                                    })
                                     scrollToNext(currentLine + 2, key)
                                 }}
                                 title={key}
                             />
                             <span
-                                className='count'
+                                className={item.isPined ? 'isPined' : ''}
                                 children={count}
                                 onClick={() => {
                                     // react 会不会每个span都新建了一个函数事件
-                                    if (getHoldingKey().Backspace) {
+                                    if (getHoldingKey().ll.Backspace) {
                                         return deleteHandle(item.key)
                                     }
                                     changeHandle({

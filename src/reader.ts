@@ -8,6 +8,7 @@ export function scrollToNext(clickLine: number, word: string) {
         const allLine = config.LINE
         const { Control, Alt } = getHoldingKey()
 
+        // todo click的时候判断holding -> hold直接执行 略过click
         if (Control && Alt) {
             // 第一个
             return getFirst()

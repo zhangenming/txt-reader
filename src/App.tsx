@@ -98,42 +98,30 @@ const APP = () => {
             console.log('\n')
         })
 
-    const PROPS = {
-        control: {
-            blockL,
-            selectArr,
-            deleteHandle,
-            changeHandle,
-            widthCount,
-            heightCount,
-            currentLine,
-            tabIndex: 1,
-            onKeyDown,
-            onKeyUp,
-            setUpdata,
-            overscan,
-            feature,
-            setFeature,
-            RENDER,
-            scrollTop,
-            stopControl,
-            SET_stopControl,
-            stopScroll,
-            pined,
-        },
-        VG: {
-            blockL,
-            blockR,
-            widthCount,
-            heightCount,
-            feature,
-            RENDER,
-            onScrollHandle,
-            // 不用添加进依赖 isAotOver变化不需要主动触发VG变化, 这种需求vue怎么处理?
-        },
-    }
-
-    const ctr = <Control {...PROPS.control} />
+    const ctr = (
+        <Control
+            {...{
+                currentLine,
+                tabIndex: 1,
+                onKeyDown,
+                onKeyUp,
+                setUpdata,
+                overscan,
+                feature,
+                setFeature,
+                RENDER,
+                scrollTop,
+                stopControl,
+                SET_stopControl,
+                stopScroll,
+                pined,
+                selectArr,
+                blockL,
+                widthCount,
+                heightCount,
+            }}
+        />
+    )
     const staleCtr = useMemo(() => ctr, [stopControl])
     const control = stopControl ? staleCtr : ctr
 
@@ -184,9 +172,20 @@ const APP = () => {
 
                 {useMemo(
                     () => (
-                        <VG {...PROPS.VG} />
+                        <VG
+                            {...{
+                                blockL,
+                                blockR,
+                                widthCount,
+                                heightCount,
+                                feature,
+                                RENDER,
+                                onScrollHandle,
+                                // 不用添加进依赖 isAotOver变化不需要主动触发VG变化, 这种需求vue怎么处理?
+                            }}
+                        />
                     ),
-                    [blockL, blockR]
+                    [blockL, blockR, widthCount, heightCount]
                 )}
 
                 {/* <div
@@ -214,7 +213,7 @@ const APP = () => {
                     }
                 </style>
 
-                {useMemo(() => {
+                {(() => {
                     const styles = {
                         '--clickType': clickType,
                         '--SIZE_H': SIZE_H + 'px',
@@ -232,7 +231,7 @@ const APP = () => {
                         <style slot='--变量'>{`:root {${vals}}`}</style>,
                         document.head
                     )
-                }, [])}
+                })()}
 
                 {useMemo(() => {
                     return createPortal(
@@ -317,17 +316,17 @@ const APP = () => {
         //         deleteHandle(select)
         //     }, 5000)
         // }
-        // if (count.length === 1) {
-        //     setTimeout(() => {
-        //         deleteHandle(select)
-        //     }, 1000)
-        // }
+        if (count.length === 1) {
+            setTimeout(() => {
+                deleteHandle(select)
+            }, 1000)
+        }
 
         SETWRAP_selectArr([
             ...selectArr,
             {
                 key: select,
-                color: 'black',
+                color: 'mediumblue',
                 i: Date.now(),
                 count: count.length,
                 isPined: false,

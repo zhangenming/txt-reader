@@ -72,13 +72,7 @@ function geneItem(word: string) {
 
         itemMap[word] = [
             <span className={word} children={word} />,
-            <span
-                className={word}
-                children={word}
-                style={{
-                    background: 'teal',
-                }}
-            />,
+            <span className={word + ' speaking'} children={word} />,
         ]
     }
 

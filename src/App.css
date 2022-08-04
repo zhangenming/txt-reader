@@ -31,7 +31,7 @@
 .V-Grid span:hover {
     outline: green double 5px;
 }
-.V-Grid span.hoverByJs {
+.V-Grid span.hoverByJs.hoverByJs.hoverByJs {
     color: springgreen;
     background: dimgrey;
     outline: double;
@@ -46,7 +46,7 @@ body {
     -webkit-font-smoothing: antialiased;
     height: 100vh;
     display: grid;
-    grid-template-rows: max-content;
+    /* grid-template-rows: max-content; */
     grid-template-columns: 100px auto;
     background: steelblue;
 }
@@ -150,10 +150,6 @@ body {
     /* transition: color 0.1s, background-color 0.1s; */
 }
 
-/* magic invalid*/
-span.speaking {
-    background: #7171e2;
-}
 /* [data-invalid='：']:has(+ :not([data-invalid='“'])) {
     background: #7171e2;
 } */
@@ -190,12 +186,20 @@ span[data-invalid='”'] {
     overflow: hidden;
 }
 .selectItem span {
-    min-width: 10px;
+    min-width: 30px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
     flex-shrink: 0;
+    text-align: right;
 }
 .selectItem span.key {
     flex-shrink: 1;
+}
+
+.isPined {
+    background: sandybrown;
+}
+.speaking {
+    background: teal;
 }

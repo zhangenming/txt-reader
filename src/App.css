@@ -93,7 +93,8 @@ body {
     /* todo */
     overflow: hidden;
     flex-shrink: 0;
-    justify-content: center;
+    /* justify-content: center; */
+    /* 此情况下子元素直接用margin: 0 auto更好, 在缩小时会居左, 而justify-content扔会居中 */
     overflow-y: scroll;
     transition: height 0.4s;
 }
@@ -127,6 +128,9 @@ body {
 .V-Grid {
     background: cornflowerblue;
     width: var(--VG_width);
+    min-width: var(--VG_width);
+    max-width: var(--VG_width);
+    margin: 0 auto;
     height: var(--VG_height);
     transition: width 1s;
     line-height: var(--SIZE_H);

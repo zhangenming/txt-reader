@@ -7,7 +7,6 @@ import {
     useMemo,
 } from 'react'
 import { config, querySelector } from './utils'
-config.ll
 // console.log('hookUtils TS')
 
 export function useHover() {
@@ -29,20 +28,24 @@ export function useHover() {
     return [ref, value] as const
 }
 
+// 存
 window.onbeforeunload = () => {
-    Object.entries(refWLS).forEach(([key, val]) => {
+    Object.entries(refSWLS).forEach(([key, { state, fn }]) => {
         if (key.includes('globalWords')) {
-            localStorage.setItem(key, JSON.stringify(Array.from(val)))
+            localStorage.setItem(key, JSON.stringify(Array.from(state)))
         } else if (key.includes('selectArr')) {
-            localStorage.setItem(key, JSON.stringify(val) || '[]')
+            localStorage.setItem(key, JSON.stringify(state) || '[]')
+        } else if (key.includes('currentBlock')) {
+            localStorage.setItem(key, fn?.())
         } else {
-            localStorage.setItem(key, val)
+            localStorage.setItem(key, state)
         }
     })
 }
 
-const refWLS: any = {}
-export function useStateWithLS<T>(key: string) {
+const refSWLS: { [key: string]: { fn: Function | undefined; state: any } } = {}
+// 取
+export function useStateWithLS<T>(key: string, fn?: Function) {
     const flag = `${key} - ${config.txt.length}`
 
     const [state, SET_state] = useState<T>(() => {
@@ -56,7 +59,10 @@ export function useStateWithLS<T>(key: string) {
         return rs
     })
 
-    refWLS[flag] = state
+    refSWLS[flag] = {
+        state,
+        fn,
+    } // 注册onbeforeunload
 
     return [state, SET_state] as const
 }
@@ -108,4 +114,8 @@ export function useKeyHold() {
             useKeyHoldRef[e.key] = false
         }
     }, [])
+}
+
+export function useMemo2(fn: any, deps: any[]) {
+    return fn()
 }

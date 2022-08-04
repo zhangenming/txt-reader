@@ -1,9 +1,9 @@
+const showInfo = false
 const _overscan = {
     top: 0,
     bot: 0,
 }
 const RENDER = { app: 0, reader: 0, VG: 0 }
-;(window as any).RENDER = RENDER
 // console.log('APP TSX')
 
 import type { item } from './comp/control'
@@ -19,7 +19,14 @@ import {
     querySelectorAll,
 } from './utils'
 import { Effect } from './comp/comp'
-import { useKey, useKeyScroll, useScroll, useSizeCount, useTXT } from './hook'
+import {
+    restoreCurrentWord,
+    useKey,
+    useKeyScroll,
+    useScroll,
+    useSizeCount,
+    useTXT,
+} from './hook'
 import Control from './comp/control'
 import VG from './V-Grid'
 
@@ -35,7 +42,6 @@ export const featureFlag = { line: false }
 const APP = () => {
     const [globalWords, SET_globalWords] = useStateWithLS('_globalWords')
 
-    const showInfo = false
     if (showInfo) {
         console.log('\n')
         console.log('\n')
@@ -45,8 +51,10 @@ const APP = () => {
     // runWithTime(() => {}, 1)
     RENDER.app++
 
-    const [widthCount, heightCount] = useSizeCount()
+    const [widthCount, heightCount] = useSizeCount() // 二级rerender first
+
     useTXT(widthCount)
+
     const [
         scrollTop,
         currentLine,
@@ -57,6 +65,8 @@ const APP = () => {
         overscan,
         setUpdata,
     ] = useScroll(_overscan, heightCount)
+
+    restoreCurrentWord(currentLine, [widthCount]) // 二级rerender second
 
     const [refVG, hoverRef] = useKeyScroll()
 

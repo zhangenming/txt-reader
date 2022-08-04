@@ -9,11 +9,10 @@ export const config: {
     BLOCK_STR_JIT: string[] // block string
     BLOCK_ELE_AOT: JSX.Element[] // block element
     LINE: string[] // line string
-    line2Block: number[]
+    line2Block: [number, number, number][]
     block2Line: (block: number) => number
     currentLine: number
-} = {} as any
-console.log(config)
+} = {}.ll as any
 
 const getAllWordPositionCache: { [key: string]: number[] } = {}
 export function getAllWordPosition(word: string) {

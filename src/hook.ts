@@ -1,8 +1,6 @@
 const autoScrollSpeed = 1
 import {
     createElement,
-    RefObject,
-    useCallback,
     useEffect,
     useLayoutEffect,
     useMemo,
@@ -22,44 +20,51 @@ import { chunkString, floor, i2rc, querySelector } from './utils'
 import { geneBlock } from './V-Grid'
 // console.log('HOOK')
 
-import txt from '../txt/mc'
+import txt from '../txt/test'
 // const txt = hasFeature('test') ? (await import('../txt/test')).default : _txt
-config.txt = txt
-config.BLOCK_STR_JIT = txt
-    //去掉多余空行, 注意有两种空格
-    .replaceAll(/[　\n ]+/g, '\n')
-    // .replaceAll(/\n　　/g, '\n')
-    // // 段落
-    .replaceAll(/\n/g, '\n\n')
-    // 句号
-    // .replaceAll(/(?<!“[^“”]*?)(。|？|！)/g, '$1\n\n')
-    // // 下引号
-    // .replaceAll(/(。|？|！)”/g, '$1”\n\n')
-    // // 逗号
-    // .replaceAll(/(?<!“[^“”]*?)，/g, '，\n')
-    .split('\n')
-    // .ll.filter(e => e !== '')
-    .map(block => '  ' + block)
+;(function init() {
+    config.txt = txt
+    config.BLOCK_STR_JIT = txt
+        //去掉多余空行, 注意有两种空格
+        .replaceAll(/[　\n ]+/g, '\n')
+        // .replaceAll(/\n　　/g, '\n')
+        // // 段落
+        .replaceAll(/\n/g, '\n\n')
+        // 句号
+        // .replaceAll(/(?<!“[^“”]*?)(。|？|！)/g, '$1\n\n')
+        // // 下引号
+        // .replaceAll(/(。|？|！)”/g, '$1”\n\n')
+        // // 逗号
+        // .replaceAll(/(?<!“[^“”]*?)，/g, '，\n')
+        .split('\n')
+        // .ll.filter(e => e !== '')
+        .map(block => '  ' + block)
 
-config.BLOCK_ELE_AOT = (function getAOT() {
+    config.BLOCK_ELE_AOT = []
     if (!hasFeature('aot')) {
         console.time('AOT done')
         requestIdleCallback(doWork)
-    }
-    return []
-
-    function doWork(deadline: IdleDeadline) {
-        const { BLOCK_STR_JIT: JIT, BLOCK_ELE_AOT: AOT, block2Line } = config // 这时候AOT拿到的是return []的[]
-        while (deadline.timeRemaining()) {
-            if (AOT.length === JIT.length) {
-                console.timeEnd('AOT done')
-                return
+        function doWork(deadline: IdleDeadline) {
+            const {
+                BLOCK_STR_JIT: JIT,
+                BLOCK_ELE_AOT: AOT,
+                block2Line,
+            } = config // 这时候AOT拿到的是return []的[]
+            while (deadline.timeRemaining()) {
+                if (AOT.length === JIT.length) {
+                    console.timeEnd('AOT done')
+                    return
+                }
+                AOT.push(
+                    geneBlock(
+                        JIT[AOT.length],
+                        AOT.length,
+                        block2Line(AOT.length)
+                    )
+                )
             }
-            AOT.push(
-                geneBlock(JIT[AOT.length], AOT.length, block2Line(AOT.length))
-            )
+            requestIdleCallback(doWork)
         }
-        requestIdleCallback(doWork)
     }
 })()
 
@@ -72,9 +77,7 @@ export function useSizeCount() {
         let timer: number
         window.onresize = () => {
             clearTimeout(timer)
-            timer = setTimeout(function () {
-                SET_state(getter)
-            }, 200)
+            timer = setTimeout(() => SET_state(getter), 1000) // 二级rerender
         }
     }, [])
 
@@ -95,17 +98,23 @@ export function useTXT(widthCount: number) {
     // useEffect deps也能达到缓存减少rerender目的? 和useMemo什么区别?
     useMemo(() => {
         config.LINE = getLines()
+
         config.line2Block = (() => {
             let block = -1
+            let lineOfBlock = 1
             return config.LINE.map(line => {
                 if (line.startsWith(' ')) {
                     block++
+                    lineOfBlock = 1
+                } else {
+                    lineOfBlock++
                 }
-                return block
+                return [block, lineOfBlock, (lineOfBlock - 1) * widthCount + 1]
             })
         })()
+
         config.block2Line = block =>
-            config.line2Block.findIndex(e => e === block)
+            config.line2Block.findIndex(e => e[0] === block)
     }, [widthCount])
 
     function getLines() {
@@ -151,9 +160,7 @@ export function useTXT(widthCount: number) {
         )
     }
 }
-function useMemo2(fn: any, deps: any[]) {
-    return fn()
-}
+
 export function useScroll(
     _overscan: {
         top: number
@@ -165,7 +172,7 @@ export function useScroll(
     const overscan = useStatePaire(_overscan)
     const [updata, setUpdata] = useState(0)
 
-    const [scrollTop, SET_scrollTop] = useStateWithLS('scrollTop')
+    const [scrollTop, SET_scrollTop] = useStateWithLS<number>('scrollTop')
     const currentLine = floor(scrollTop / SIZE_H)
     const [blockL, blockR] = useMemo(
         function computed() {
@@ -177,15 +184,10 @@ export function useScroll(
                 LINE.length - 1,
                 currentLine + overscan.get.bot + heightCount
             )
-            return [line2Block[lineL], line2Block[lineR] + 1]
+            return [line2Block[lineL][0], line2Block[lineR][0] + 1]
         },
         [currentLine]
     )
-    useEffect(() => {
-        if (querySelector('.reader')) {
-            querySelector('.reader').scrollTop = scrollTop //触发 onScrollHandle
-        }
-    }, [])
 
     return [
         scrollTop,
@@ -371,4 +373,16 @@ export function useMouseHover(L: number, R: number) {
                 e.style['-webkit-text-stroke-width'] = color
             })
     }
+}
+
+export function restoreCurrentWord(currentLine: number, deps: any[]) {
+    const [currentBlock] = useStateWithLS<number>(
+        'currentBlock',
+        () => config.line2Block[currentLine][0]
+    )
+    useEffect(() => {
+        // 赋值触发onscroll event
+        querySelector('.reader').scrollTop =
+            config.block2Line(currentBlock) * SIZE_H
+    }, deps)
 }

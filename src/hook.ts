@@ -20,8 +20,8 @@ import { chunkString, floor, i2rc, querySelector } from './utils'
 import { geneBlock } from './V-Grid'
 // console.log('HOOK')
 
-import txt from '../txt/mc'
-// const txt = hasFeature('test') ? (await import('../txt/test')).default : _txt
+import _txt from '../txt/mc'
+const txt = hasFeature('test') ? (await import('../txt/test')).default : _txt
 ;(function init() {
     config.txt = txt
     config.BLOCK_STR_JIT = txt
@@ -163,6 +163,7 @@ export function useTXT(widthCount: number) {
 
 function computed2() {}
 
+let clear2: number
 export function useScroll(
     _overscan: {
         top: number
@@ -211,14 +212,16 @@ export function useScroll(
         const scrollTopNow = (e.target as HTMLElement).scrollTop
         if (scrollTopNow === scrollTop) return
 
-        SET_scrollTop(scrollTopNow)
+        clearTimeout(clear2)
+        clear2 = setTimeout(() => {
+            SET_scrollTop(scrollTopNow)
+        }) // todo clear
     }
 }
 
 let clear: number
 export function useKey(
     OVERSCAN_bottom: number,
-    DIFF: number,
     lineSize: number,
     currentLine: number,
     heightLineCount: number
@@ -254,12 +257,11 @@ export function useKey(
         }
         if (e.code === 'Space') {
             setTimeout(() => {
-                const x = (OVERSCAN_bottom + DIFF) * lineSize
+                const x = OVERSCAN_bottom * lineSize
                 const xx = `:nth-child(${x}) ~ :not([data-invalid=" "])` // magic
                 const target = Number(querySelector(xx).dataset.i)
                 const rc = i2rc(target, lineSize).r
-                const rs =
-                    DIFF + rc - currentLine - heightLineCount - OVERSCAN_bottom
+                const rs = rc - currentLine - heightLineCount - OVERSCAN_bottom
 
                 const dom = querySelector('.reader-helper').style
                 dom.top = rs * SIZE_H + 'px'

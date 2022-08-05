@@ -86,7 +86,7 @@ body {
     display: flex;
     flex-grow: 1;
     height: var(--readerHight);
-    background: steelblue;
+    /* background: steelblue; */
     color: aliceblue;
     font-size: 25px;
     font-family: fangsong;

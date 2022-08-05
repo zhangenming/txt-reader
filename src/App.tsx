@@ -7,7 +7,7 @@ const RENDER = { app: 0, reader: 0, VG: 0 }
 // console.log('APP TSX')
 
 import type { item } from './comp/control'
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import {
     config,
@@ -72,7 +72,6 @@ const APP = () => {
 
     const [onKeyDown, onKeyUp, clickType] = useKey(
         overscan.get.bot,
-        DIFF,
         widthCount,
         currentLine,
         heightCount
@@ -181,21 +180,19 @@ const APP = () => {
             >
                 {/* <div className='reader-helper' /> */}
 
-                {useMemo(
-                    () => (
-                        <VG
-                            {...{
-                                blockL,
-                                blockR,
-                                widthCount,
-                                heightCount,
-                                feature,
-                                RENDER,
-                                onScrollHandle,
-                                // 不用添加进依赖 isAotOver变化不需要主动触发VG变化, 这种需求vue怎么处理?
-                            }}
-                        />
-                    ),
+                {useCallback<any>(
+                    <VG
+                        {...{
+                            blockL,
+                            blockR,
+                            widthCount,
+                            heightCount,
+                            feature,
+                            RENDER,
+                            onScrollHandle,
+                            // 不用添加进依赖 isAotOver变化不需要主动触发VG变化, 这种需求vue怎么处理?
+                        }}
+                    />,
                     [blockL, blockR, widthCount, heightCount]
                 )}
 

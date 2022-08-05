@@ -3,9 +3,13 @@ https://jscolor.com/
 长按长高亮/双击
 滚动结束 自动本文对齐
 适配英文数字字符
+动画滚动
 
-css spk
-size 30*25
+
+done
+页面调整时 以文本位置定位
+
+
 
 :hover [这] {
     background: #000 !important;

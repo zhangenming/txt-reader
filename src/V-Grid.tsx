@@ -17,7 +17,7 @@ export default function VGrid({
     //     console.log('effect VG')
     // })
 
-    const { JIT: JIT, AOT: AOT, block2Line } = config
+    const { BLOCK, BLOCK_AOT, block2Line } = config
 
     return (
         <>
@@ -32,44 +32,51 @@ export default function VGrid({
                 {/* // 滚动全屏 domdiff 删除key直接更新属性 比删除dom新建dom好 */}
                 {/* 滑动的时候卡 能不能滑动的时候暂时只新建dom  删除dom稍后操作 */}
 
-                {AOT.length === JIT.length
-                    ? AOT.slice(blockL, blockR)
-                    : JIT.slice(blockL, blockR).map((block, i) =>
+                {/* // todo remove just temp value JIT */}
+                {/* todo  首屏直出(缓存到LS) 躲避txt过大等待加载 */}
+                {hasFeature('aot')
+                    ? BLOCK_AOT.slice(blockL, blockR)
+                    : BLOCK.slice(blockL, blockR).map((block, i) =>
                           geneBlock(block, blockL + i, block2Line[blockL + i])
                       )}
-                {/* // todo remove just temp value JIT */}
             </div>
         </>
     )
 }
 
-let isSpeaking = 0
-const itemMap: any = {}
-export function geneBlock(line: string, blockIdx: number, lineIdx?: number) {
-    return line === '  ' ? (
-        <div key={blockIdx} data-line={lineIdx} />
-    ) : (
-        // ''
-        // doing fail
-        <div
-            key={blockIdx}
-            data-line={lineIdx}
-            data-block={blockIdx}
-            data-str={
-                line.length < 20
-                    ? line
-                    : line.slice(0, 10) + '...' + line.slice(-10)
-            }
-        >
-            {[...line].map(geneItem)}
-        </div>
-    )
+const blockCache: any = {}
+const xxx = new Set().ll
+export function geneBlock(block: string, blockIdx: number, lineIdx?: number) {
+    if (!blockCache[blockIdx]) {
+        xxx.add(blockIdx)
+        blockCache[blockIdx] =
+            block === '  ' ? (
+                <div key={blockIdx} data-line={lineIdx} />
+            ) : (
+                // ''
+                // doing fail
+                <div
+                    key={blockIdx}
+                    data-line={lineIdx}
+                    data-block={blockIdx}
+                    data-str={
+                        block.length < 20
+                            ? block
+                            : block.slice(0, 10) + '...' + block.slice(-10)
+                    }
+                >
+                    {[...block].map(geneItem)}
+                </div>
+            )
+    }
+
+    return blockCache[blockIdx]
 }
 
+let isSpeaking = 0
+const itemMap: any = {}
 function geneItem(word: string) {
     if (!itemMap[word]) {
-        // console.log(1)
-
         itemMap[word] = [
             <span className={word} children={word} />,
             <span className={word + ' speaking'} children={word} />,
@@ -87,6 +94,13 @@ function geneItem(word: string) {
     }
 
     return itemMap[word][spk]
+
+    return (
+        <span
+            className={word + isSpeaking ? '  speaking' : ''}
+            children={word}
+        />
+    )
 }
 
 function geneChild2(words: string[], idx: number, key: number) {

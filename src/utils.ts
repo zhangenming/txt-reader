@@ -6,8 +6,8 @@ export const floor = Math.floor
 
 export const config: {
     txt: string
-    JIT: string[] // block string
-    AOT: JSX.Element[] // block element
+    BLOCK_AOT: JSX.Element[] // block element
+    BLOCK: string[] // block string
     LINE: string[] // line string
     line2Block: [number, number, number][]
     block2Line: number[]
@@ -215,7 +215,7 @@ background: linear-gradient(#000,#000);
             idxOf: string,
             offset: number
         ) {
-            const arr = config.JIT as any
+            const arr = config.BLOCK as any
             const BlockIdx = arr[findIdx]((e: string) => e.includes(word))
             const ItemIdx =
                 arr[find]((e: string) => e.includes(word))![idxOf](word) +
@@ -419,7 +419,7 @@ export function chunkString(line: string, len: number) {
 const features = [...new URLSearchParams(location.search).keys()]
 
 export const hasFeature = (
-    f: string,
+    f: string = 'x',
     l: Function = () => true,
     r: Function = () => false
 ) => (features.includes(f) ? l() : r())

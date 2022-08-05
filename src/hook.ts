@@ -20,10 +20,27 @@ import { chunkString, floor, i2rc, querySelector } from './utils'
 import { geneBlock } from './V-Grid'
 // console.log('HOOK')
 
-import _txt from '../txt/mc'
-const txt = hasFeature('test') ? (await import('../txt/test')).default : _txt
+// import _1629 from '../txt/1629'
+// import 诡秘之主 from '../txt/诡秘之主'
 
-type react_SET<T = any> = React.Dispatch<React.SetStateAction<T>>
+// const txt = hasFeature('test')
+//     ? (await import('../txt/test')).default
+//     : 'loading'
+
+export function useLoad() {
+    const [state, SET_state] = useState('loading')
+    const [load, SET_load] = useState('test')
+    useEffect(() => {
+        fetch(`../txt/${load}.txt`)
+            .then(r => r.text())
+            .then(text => {
+                setTimeout(() => {
+                    SET_state(text)
+                }, 1111)
+            })
+    }, [load])
+    return [state, SET_load] as const
+}
 
 export function useSizeCount() {
     const [state, SET_state] = useState(getter)
@@ -49,30 +66,70 @@ export function useSizeCount() {
     }
 }
 
-export function useTXT(widthCount: number) {
+export function useTXT(widthCount: number, txt) {
     // useEffect deps也能达到缓存减少rerender目的? 和useMemo什么区别?  useMemo是同步的
 
-    useMemo(function JIT() {
-        config.txt = txt
-        config.JIT = txt
-            //去掉多余空行, 注意有两种空格
-            .replaceAll(/[　\n ]+/g, '\n')
-            // .replaceAll(/\n　　/g, '\n')
-            // // 段落
-            .replaceAll(/\n/g, '\n\n')
-            // 句号
-            // .replaceAll(/(?<!“[^“”]*?)(。|？|！)/g, '$1\n\n')
-            // // 下引号
-            // .replaceAll(/(。|？|！)”/g, '$1”\n\n')
-            // // 逗号
-            // .replaceAll(/(?<!“[^“”]*?)，/g, '，\n')
-            .split('\n')
-            // .ll.filter(e => e !== '')
-            .map(block => '  ' + block)
-    }, [])
+    useMemo(
+        function init() {
+            config.txt = txt
+            config.BLOCK = txt
+                //去掉多余空行, 注意有两种空格
+                .replaceAll(/[　\n ]+/g, '\n')
+                // .replaceAll(/\n　　/g, '\n')
+                // // 段落
+                .replaceAll(/\n/g, '\n\n')
+                // 句号
+                // .replaceAll(/(?<!“[^“”]*?)(。|？|！)/g, '$1\n\n')
+                // // 下引号
+                // .replaceAll(/(。|？|！)”/g, '$1”\n\n')
+                // // 逗号
+                // .replaceAll(/(?<!“[^“”]*?)，/g, '，\n')
+                .split('\n')
+                // .ll.filter(e => e !== '')
+                .map(block => '  ' + block)
+        },
+        [txt]
+    )
 
     useMemo(() => {
-        config.LINE = getLines()
+        config.LINE = config.BLOCK
+            // split and join
+            .flatMap(function lineMaybeSplit(block) {
+                return chunkString(block, widthCount)
+            })
+        // .reduce(function lineMaybeJoin(
+        //     accLine: string[],
+        //     nowLine,
+        //     idx,
+        //     arr
+        // ) {
+        //     if (hasFeature('x')) {
+        //         if (nowLine.includes('种种种种')) {
+        //             // debugger
+        //         }
+        //         const preLine = accLine.at(-1)
+        //         const nextLine = arr[idx + 1]
+        //         if (
+        //             preLine?.includes('，') &&
+        //             preLine?.startsWith('  ') &&
+        //             preLine?.length + nowLine.length < widthCount / 2 &&
+        //             preLine?.length + nowLine.length >
+        //                 nowLine.length + nextLine.length &&
+        //             nowLine !== '  '
+        //         ) {
+        //             // nowLine.ll
+        //             accLine[accLine.length - 1] += nowLine.slice(2)
+        //         } else {
+        //             accLine.push(nowLine)
+        //         }
+        //     } else {
+        //         accLine.push(nowLine)
+        //     }
+        //     return accLine
+        //     // return [...accLine, nowLine]
+        //     // return accLine.concat(nowLine)
+        // },
+        // [])
 
         config.line2Block = (() => {
             let block = -1
@@ -89,81 +146,40 @@ export function useTXT(widthCount: number) {
         })()
 
         let _line = 0
-        config.block2Line = config.JIT.map((_, i, arr) => {
+        config.block2Line = config.BLOCK.map((_, i, arr) => {
             if (i === 0) return 0
             return (_line += Math.ceil(arr[i - 1].length / widthCount))
         })
         // config.block2Line = block =>
         //     config.line2Block.findIndex(e => e[0] === block) //性能太差
-    }, [widthCount])
+    }, [txt, widthCount])
 
-    useMemo(function AOT() {
-        config.AOT = []
-        if (!hasFeature('aot')) {
-            console.time('AOT done')
-            const { JIT, AOT, block2Line } = config // 此时只有txt,JIT是完毕的, []是引用, 异步补全
-            const over = JIT.length
+    if (hasFeature('aot')) {
+        useMemo(
+            function AOT() {
+                console.time('AOT done')
+                config.BLOCK_AOT = []
+                const { BLOCK, BLOCK_AOT, block2Line } = config // 此时只有txt,JIT是完毕的, []是引用, 异步补全
+                const over = BLOCK.length
 
-            requestIdleCallback(doWork) //async
-            function doWork(deadline: IdleDeadline) {
-                while (deadline.timeRemaining()) {
-                    const block = AOT.length
-                    if (block === over) {
-                        console.timeEnd('AOT done')
-                        return
+                requestIdleCallback(doWork) //async
+                function doWork(deadline: IdleDeadline) {
+                    while (deadline.timeRemaining()) {
+                        const block = BLOCK_AOT.length
+                        if (block === over) {
+                            return console.timeEnd('AOT done')
+                        }
+                        BLOCK_AOT.push(
+                            geneBlock(BLOCK[block], block, block2Line[block])
+                        ) //error
                     }
-                    AOT.push(geneBlock(JIT[block], block, block2Line[block]))
+                    requestIdleCallback(doWork)
                 }
-                requestIdleCallback(doWork)
-            }
-        }
-    }, [])
-
-    function getLines() {
-        return (
-            config.JIT
-                // split and join
-                .flatMap(function lineMaybeSplit(block) {
-                    return chunkString(block, widthCount)
-                })
-            // .reduce(function lineMaybeJoin(
-            //     accLine: string[],
-            //     nowLine,
-            //     idx,
-            //     arr
-            // ) {
-            //     if (hasFeature('x')) {
-            //         if (nowLine.includes('种种种种')) {
-            //             // debugger
-            //         }
-            //         const preLine = accLine.at(-1)
-            //         const nextLine = arr[idx + 1]
-            //         if (
-            //             preLine?.includes('，') &&
-            //             preLine?.startsWith('  ') &&
-            //             preLine?.length + nowLine.length < widthCount / 2 &&
-            //             preLine?.length + nowLine.length >
-            //                 nowLine.length + nextLine.length &&
-            //             nowLine !== '  '
-            //         ) {
-            //             // nowLine.ll
-            //             accLine[accLine.length - 1] += nowLine.slice(2)
-            //         } else {
-            //             accLine.push(nowLine)
-            //         }
-            //     } else {
-            //         accLine.push(nowLine)
-            //     }
-            //     return accLine
-            //     // return [...accLine, nowLine]
-            //     // return accLine.concat(nowLine)
-            // },
-            // [])
+            },
+            [txt]
         )
     }
 }
-
-function computed2() {}
 
 let clear2: number
 export function useScroll(
@@ -171,7 +187,8 @@ export function useScroll(
         top: number
         bot: number
     },
-    heightCount: number
+    heightCount: number,
+    txt = config.txt
 ) {
     const stopScroll = useStatePaire(false)
     const overscan = useStatePaire(_overscan)
@@ -193,7 +210,7 @@ export function useScroll(
                     1,
             ]
         },
-        [currentLine]
+        [currentLine, txt]
     )
 
     return [

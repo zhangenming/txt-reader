@@ -23,6 +23,7 @@ import {
     restoreCurrentWord,
     useKey,
     useKeyScroll,
+    useLoad,
     useScroll,
     useSizeCount,
     useTXT,
@@ -39,6 +40,8 @@ const DIFF = 3
 
 export const featureFlag = { line: false }
 
+import mc from '../txt/mc'
+
 const APP = () => {
     if (showInfo) {
         console.log('\n')
@@ -51,7 +54,8 @@ const APP = () => {
 
     const [widthCount, heightCount] = useSizeCount() // 二级rerender first
 
-    useTXT(widthCount)
+    // const [txt, SET_load] = useLoad()
+    useTXT(widthCount, mc)
 
     const [globalWords, SET_globalWords] = useStateWithLS('_globalWords')
 

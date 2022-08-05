@@ -6,11 +6,11 @@ export const floor = Math.floor
 
 export const config: {
     txt: string
-    BLOCK_STR_JIT: string[] // block string
-    BLOCK_ELE_AOT: JSX.Element[] // block element
+    JIT: string[] // block string
+    AOT: JSX.Element[] // block element
     LINE: string[] // line string
     line2Block: [number, number, number][]
-    block2Line: (block: number) => number
+    block2Line: number[]
 } = {}.ll as any
 
 const getAllWordPositionCache: { [key: string]: number[] } = {}
@@ -215,7 +215,7 @@ background: linear-gradient(#000,#000);
             idxOf: string,
             offset: number
         ) {
-            const arr = config.BLOCK_STR_JIT as any
+            const arr = config.JIT as any
             const BlockIdx = arr[findIdx]((e: string) => e.includes(word))
             const ItemIdx =
                 arr[find]((e: string) => e.includes(word))![idxOf](word) +
@@ -417,7 +417,13 @@ export function chunkString(line: string, len: number) {
 }
 
 const features = [...new URLSearchParams(location.search).keys()]
-export const hasFeature = (f: string) => features.includes(f)
+
+export const hasFeature = (
+    f: string,
+    l: Function = () => true,
+    r: Function = () => false
+) => (features.includes(f) ? l() : r())
+
 export const getFeature = (f: string) =>
     new URLSearchParams(location.search).get(f)
 

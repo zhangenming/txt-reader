@@ -14,11 +14,9 @@ export default defineConfig({
     },
 
     build: {
-        // base: '/txt-reader/dist/',
         // sourcemap: true,
         target: 'chrome103',
     },
 
-    // base: '/txt-reader/dist/',
     base: './',
 })

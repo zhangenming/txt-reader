@@ -22,51 +22,6 @@ import { geneBlock } from './V-Grid'
 
 import _txt from '../txt/mc'
 const txt = hasFeature('test') ? (await import('../txt/test')).default : _txt
-;(function init() {
-    config.txt = txt
-    config.BLOCK_STR_JIT = txt
-        //去掉多余空行, 注意有两种空格
-        .replaceAll(/[　\n ]+/g, '\n')
-        // .replaceAll(/\n　　/g, '\n')
-        // // 段落
-        .replaceAll(/\n/g, '\n\n')
-        // 句号
-        // .replaceAll(/(?<!“[^“”]*?)(。|？|！)/g, '$1\n\n')
-        // // 下引号
-        // .replaceAll(/(。|？|！)”/g, '$1”\n\n')
-        // // 逗号
-        // .replaceAll(/(?<!“[^“”]*?)，/g, '，\n')
-        .split('\n')
-        // .ll.filter(e => e !== '')
-        .map(block => '  ' + block)
-
-    config.BLOCK_ELE_AOT = []
-    if (!hasFeature('aot')) {
-        console.time('AOT done')
-        requestIdleCallback(doWork)
-        function doWork(deadline: IdleDeadline) {
-            const {
-                BLOCK_STR_JIT: JIT,
-                BLOCK_ELE_AOT: AOT,
-                block2Line,
-            } = config // 这时候AOT拿到的是return []的[]
-            while (deadline.timeRemaining()) {
-                if (AOT.length === JIT.length) {
-                    console.timeEnd('AOT done')
-                    return
-                }
-                AOT.push(
-                    geneBlock(
-                        JIT[AOT.length],
-                        AOT.length,
-                        block2Line(AOT.length)
-                    )
-                )
-            }
-            requestIdleCallback(doWork)
-        }
-    }
-})()
 
 type react_SET<T = any> = React.Dispatch<React.SetStateAction<T>>
 
@@ -95,7 +50,27 @@ export function useSizeCount() {
 }
 
 export function useTXT(widthCount: number) {
-    // useEffect deps也能达到缓存减少rerender目的? 和useMemo什么区别?
+    // useEffect deps也能达到缓存减少rerender目的? 和useMemo什么区别?  useMemo是同步的
+
+    useMemo(function JIT() {
+        config.txt = txt
+        config.JIT = txt
+            //去掉多余空行, 注意有两种空格
+            .replaceAll(/[　\n ]+/g, '\n')
+            // .replaceAll(/\n　　/g, '\n')
+            // // 段落
+            .replaceAll(/\n/g, '\n\n')
+            // 句号
+            // .replaceAll(/(?<!“[^“”]*?)(。|？|！)/g, '$1\n\n')
+            // // 下引号
+            // .replaceAll(/(。|？|！)”/g, '$1”\n\n')
+            // // 逗号
+            // .replaceAll(/(?<!“[^“”]*?)，/g, '，\n')
+            .split('\n')
+            // .ll.filter(e => e !== '')
+            .map(block => '  ' + block)
+    }, [])
+
     useMemo(() => {
         config.LINE = getLines()
 
@@ -113,13 +88,40 @@ export function useTXT(widthCount: number) {
             })
         })()
 
-        config.block2Line = block =>
-            config.line2Block.findIndex(e => e[0] === block)
+        let _line = 0
+        config.block2Line = config.JIT.map((_, i, arr) => {
+            if (i === 0) return 0
+            return (_line += Math.ceil(arr[i - 1].length / widthCount))
+        })
+        // config.block2Line = block =>
+        //     config.line2Block.findIndex(e => e[0] === block) //性能太差
     }, [widthCount])
+
+    useMemo(function AOT() {
+        config.AOT = []
+        if (!hasFeature('aot')) {
+            console.time('AOT done')
+            const { JIT, AOT, block2Line } = config // 此时只有txt,JIT是完毕的, []是引用, 异步补全
+            const over = JIT.length
+
+            requestIdleCallback(doWork) //async
+            function doWork(deadline: IdleDeadline) {
+                while (deadline.timeRemaining()) {
+                    const block = AOT.length
+                    if (block === over) {
+                        console.timeEnd('AOT done')
+                        return
+                    }
+                    AOT.push(geneBlock(JIT[block], block, block2Line[block]))
+                }
+                requestIdleCallback(doWork)
+            }
+        }
+    }, [])
 
     function getLines() {
         return (
-            config.BLOCK_STR_JIT
+            config.JIT
                 // split and join
                 .flatMap(function lineMaybeSplit(block) {
                     return chunkString(block, widthCount)
@@ -389,6 +391,6 @@ export function restoreCurrentWord(currentLine: number, deps: any[]) {
     useEffect(() => {
         // 赋值触发onscroll event
         querySelector('.reader').scrollTop =
-            config.block2Line(currentBlock) * SIZE_H
+            config.block2Line[currentBlock] * SIZE_H
     }, deps)
 }

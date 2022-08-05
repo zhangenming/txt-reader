@@ -5,15 +5,30 @@ Object.defineProperties(Object.prototype, {
             return this
         },
     },
-    lls: {
+    llt: {
         get() {
             console.time()
             return this
         },
     },
-    lle: {
+    lltt: {
         get() {
             console.timeEnd()
+            return this
+        },
+    },
+    llc: {
+        get() {
+            window.cc = 0
+            setTimeout(() => {
+                console.log(window.cc)
+            })
+            return this
+        },
+    },
+    llcc: {
+        get() {
+            window.cc++
             return this
         },
     },

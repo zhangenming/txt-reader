@@ -40,8 +40,6 @@ const DIFF = 3
 export const featureFlag = { line: false }
 
 const APP = () => {
-    const [globalWords, SET_globalWords] = useStateWithLS('_globalWords')
-
     if (showInfo) {
         console.log('\n')
         console.log('\n')
@@ -54,6 +52,8 @@ const APP = () => {
     const [widthCount, heightCount] = useSizeCount() // 二级rerender first
 
     useTXT(widthCount)
+
+    const [globalWords, SET_globalWords] = useStateWithLS('_globalWords')
 
     const [
         scrollTop,
@@ -292,7 +292,7 @@ const APP = () => {
             const clickBlock = Number(
                 querySelector('.V-Grid div:hover').dataset.block // js <-> html
             )
-            const clickLineBase = config.block2Line(clickBlock)
+            const clickLineBase = config.block2Line[clickBlock]
             const clickLineoffset = Math.floor(
                 [...target.parentNode!.childNodes.values()].indexOf(target) /
                     widthCount

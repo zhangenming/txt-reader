@@ -17,7 +17,7 @@ export default function VGrid({
     //     console.log('effect VG')
     // })
 
-    const { BLOCK_STR_JIT: JIT, BLOCK_ELE_AOT: AOT, block2Line } = config
+    const { JIT: JIT, AOT: AOT, block2Line } = config
 
     return (
         <>
@@ -25,7 +25,7 @@ export default function VGrid({
                 <nav
                     role='占位符'
                     style={{
-                        height: block2Line(blockL) * SIZE_H,
+                        height: block2Line[blockL] * SIZE_H,
                     }}
                 />
                 {/* // 滚动一行 domdiff 部分更新比全量更新好(key->domdiff) */}
@@ -35,7 +35,7 @@ export default function VGrid({
                 {AOT.length === JIT.length
                     ? AOT.slice(blockL, blockR)
                     : JIT.slice(blockL, blockR).map((block, i) =>
-                          geneBlock(block, blockL + i, block2Line(blockL + i))
+                          geneBlock(block, blockL + i, block2Line[blockL + i])
                       )}
                 {/* // todo remove just temp value JIT */}
             </div>
@@ -45,7 +45,7 @@ export default function VGrid({
 
 let isSpeaking = 0
 const itemMap: any = {}
-export function geneBlock(line: string, blockIdx: number, lineIdx: number) {
+export function geneBlock(line: string, blockIdx: number, lineIdx?: number) {
     return line === '  ' ? (
         <div key={blockIdx} data-line={lineIdx} />
     ) : (

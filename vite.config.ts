@@ -13,11 +13,11 @@ export default defineConfig({
         hmr: false,
     },
 
-    // build: {
-    //     // base: '/txt-reader/dist/',
-    //     sourcemap: true,
-    //     target: 'esnext',
-    // },
+    build: {
+        // base: '/txt-reader/dist/',
+        // sourcemap: true,
+        target: 'chrome 104',
+    },
 
     // base: '/txt-reader/dist/',
     base: './',

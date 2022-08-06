@@ -1,6 +1,8 @@
+import React from 'react'
+import { useMemo, useState } from 'react'
 import { SIZE_H } from './App'
 import { config } from './hook'
-import { getHoldingKey } from './hookUtils'
+import { getHoldingKey, useStatePaire } from './hookUtils'
 import { querySelector, querySelectorAll } from './utils'
 // console.log('reader TS')
 export function scrollToNext(clickLine: number, word: string) {
@@ -54,8 +56,8 @@ export function scrollToNext(clickLine: number, word: string) {
     querySelector('.reader').scrollTop += (nextLine - clickLine) * SIZE_H
 }
 
-export function hoverWords(word: string) {
-    querySelector(`[title=${word}]`)?.classList.toggle('hoverByJs')
+export function hoverWords(word: string | undefined) {
+    querySelector(`[title="${word}"]`)?.classList.toggle('hoverByJs')
     querySelectorAll('.hoverByJs').forEach(node =>
         node.classList.toggle('hoverByJs')
     )
@@ -74,19 +76,10 @@ export function hoverWords(word: string) {
     //     }
     // })
 
-    querySelectorAll(geneSelector(word)).forEach(node =>
+    querySelectorAll(geneSelector(word!)).forEach(node =>
         node.classList.toggle('hoverByJs')
     )
-    querySelector(`[title=${word}]`).classList.toggle('hoverByJs')
-
-    // const len = config.LINE.length
-    // SET_searchItemsPos(
-    //     config.LINE.flatMap((line, idx) =>
-    //         line.includes(word)
-    //             ? ((idx / len) * 100).toFixed(3) + '%'
-    //             : []
-    //     ).ll
-    // )
+    querySelector(`[title=${word}]`)?.classList.toggle('hoverByJs')
 
     function geneSelector(word: string) {
         if (word.length === 1) {
@@ -109,6 +102,31 @@ export function hoverWords(word: string) {
             return `.${word}`
         }
     }
+}
+
+const useHoverWordsCache: any = {} // if (hoverWord === '') return []
+export function useHoverWords() {
+    const [hoverWord, SET_hoverWord] = useState<string>()
+
+    const searchItemsDoms = useMemo(() => {
+        hoverWords(hoverWord)
+        if (hoverWord === undefined) return
+
+        if (!useHoverWordsCache[hoverWord]) {
+            useHoverWordsCache[hoverWord] = config.LINE.flatMap((line, idx) =>
+                line.includes(hoverWord)
+                    ? (idx / config.LINE.length) * 100 + 1 /*滚轴自身*/ + '%'
+                    : []
+            ).map(top =>
+                React.createElement('i', {
+                    style: { top },
+                })
+            )
+        }
+        return useHoverWordsCache[hoverWord]
+    }, [hoverWord])
+
+    return [hoverWord, SET_hoverWord, searchItemsDoms] as const
 }
 
 export function doHas(wordLen: number, base: string) {

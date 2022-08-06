@@ -37,7 +37,8 @@
     left: -20px; */
 }
 .V-Grid span:hover {
-    /* outline: green double 5px; */
+    isolation: isolate;
+    outline: white double 5px;
     box-shadow: inset 0px 0px 0px 2px red;
 }
 .hoverByJs.hoverByJs.hoverByJs.hoverByJs {

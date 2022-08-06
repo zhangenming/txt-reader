@@ -30,8 +30,13 @@ import {
 import Control from './comp/control'
 import VG from './V-Grid'
 
-import { getHoldingKey, useStatePaire, useStateWithLS } from './hookUtils'
-import { hoverWords, scrollToNext } from './reader'
+import {
+    getHoldingKey,
+    usePrevious,
+    useStatePaire,
+    useStateWithLS,
+} from './hookUtils'
+import { hoverWords, scrollToNext, useHoverWords } from './reader'
 
 export const SIZE_W = 25
 export const SIZE_H = 25
@@ -86,14 +91,7 @@ const APP = () => {
             console.log('\n')
         })
 
-    const [hoverWord, SET_hoverWord] = useState('')
-    const [searchItemsPos, SET_searchItemsPos] = useState<JSX.Element[]>(() =>
-        config.LINE.flatMap((line, idx) =>
-            line.includes('朱元璋')
-                ? (idx / config.LINE.length) * 100 + 1 /*滚轴自身*/ + '%'
-                : []
-        ).map(top => <i style={{ top }} />)
-    )
+    const [hoverWord, SET_hoverWord, searchItems] = useHoverWords()
 
     return (
         <>
@@ -117,6 +115,8 @@ const APP = () => {
                         widthCount,
                         heightCount,
                         changeHandle,
+                        hoverWord,
+                        SET_hoverWord,
                     }}
                 />
             </div>
@@ -126,7 +126,14 @@ const APP = () => {
                 {...{
                     onScroll: onScrollHandle,
                     onClick: GoToNextItemHandle,
-                    onMouseOver: e => hoverWords(getWord(e.target as Element)!),
+                    onMouseOver: e =>
+                        SET_hoverWord(getWord(e.target as Element)!),
+                    // onMouseOver: e => {
+                    //     const word = getWord(e.target as Element)
+                    //     if (word === hoverWord) return // usefull for react
+                    //     SET_hoverWord(word)
+                    // },
+
                     onKeyDown,
                     onKeyUp,
                 }}
@@ -150,7 +157,7 @@ const APP = () => {
             {/* {useAutoScroll('.autoScrolling')} */}
             <UseMouseScroll />
 
-            <div className='search'>{searchItemsPos}</div>
+            <div className='search'>{searchItems}</div>
 
             <>
                 {/* <style>

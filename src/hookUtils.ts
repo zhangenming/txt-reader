@@ -73,7 +73,7 @@ export type paire<S> = {
     get: S
     set: Dispatch<SetStateAction<S>>
 }
-export function useStatePaire<S>(initialState: S | (() => S)): paire<S> {
+export function useStatePaire<S>(initialState?: any) {
     const [state, SET_state] = useState(initialState)
     return useMemo(
         () => ({
@@ -82,6 +82,17 @@ export function useStatePaire<S>(initialState: S | (() => S)): paire<S> {
         }),
         [state]
     )
+}
+
+export function useStateCompare(initialState?: any) {
+    const [state, SET_state] = useState(initialState)
+    return [
+        state,
+        e => {
+            if (e === state) return
+            SET_state(e)
+        },
+    ]
 }
 
 export function usePrevious<T>(value: T): T | undefined {

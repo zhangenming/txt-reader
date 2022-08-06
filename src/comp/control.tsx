@@ -29,6 +29,8 @@ export default function Control({
     pined,
     blockL,
     deleteHandle,
+    hoverWord,
+    SET_hoverWord,
 }: {
     selectArr: item[]
     deleteHandle(key: string): void
@@ -54,7 +56,7 @@ export default function Control({
                             style={{
                                 background: pined.get === key ? 'deeppink' : '',
                             }}
-                            onMouseOver={() => hoverWords(key)}
+                            onMouseEnter={() => SET_hoverWord(key)}
                         >
                             <span
                                 className='key'

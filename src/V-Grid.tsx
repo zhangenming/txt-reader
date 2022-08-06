@@ -45,7 +45,7 @@ export default function VGrid({
 }
 
 const blockCache: any = {}
-const xxx = new Set().ll
+const xxx = new Set()
 export function geneBlock(block: string, blockIdx: number, lineIdx?: number) {
     if (!blockCache[blockIdx]) {
         xxx.add(blockIdx)

@@ -1,5 +1,5 @@
 import { useEffect } from 'react'
-import { doHas } from './App'
+import { doHas } from './reader'
 import { config } from './hook'
 
 export const floor = Math.floor

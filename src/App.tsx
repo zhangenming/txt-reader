@@ -31,7 +31,7 @@ import Control from './comp/control'
 import VG from './V-Grid'
 
 import { getHoldingKey, useStatePaire, useStateWithLS } from './hookUtils'
-import { scrollToNext } from './reader'
+import { hoverWords, scrollToNext } from './reader'
 
 export const SIZE_W = 25
 export const SIZE_H = 25
@@ -72,8 +72,6 @@ const APP = () => {
 
     const [globalWords, SET_globalWords] = useStateWithLS('_globalWords')
     const [selectArr, SET_selectArr] = useStateWithLS<item[]>('selectArr')
-    const [feature, setFeature] = useState(true)
-    const [stopControl, SET_stopControl] = useState(false)
     const pined = useStatePaire('')
 
     showInfo &&
@@ -88,6 +86,15 @@ const APP = () => {
             console.log('\n')
         })
 
+    const [hoverWord, SET_hoverWord] = useState('')
+    const [searchItemsPos, SET_searchItemsPos] = useState<JSX.Element[]>(() =>
+        config.LINE.flatMap((line, idx) =>
+            line.includes('朱元璋')
+                ? (idx / config.LINE.length) * 100 + 1 /*滚轴自身*/ + '%'
+                : []
+        ).map(top => <i style={{ top }} />)
+    )
+
     return (
         <>
             <Effect
@@ -99,23 +106,17 @@ const APP = () => {
                 <Control
                     {...{
                         currentLine,
-                        tabIndex: 1,
-                        onKeyDown,
-                        onKeyUp,
                         setUpdata,
                         overscan,
-                        feature,
-                        setFeature,
                         RENDER,
                         scrollTop,
-                        stopControl,
-                        SET_stopControl,
                         stopScroll,
                         pined,
                         selectArr,
                         blockL,
                         widthCount,
                         heightCount,
+                        changeHandle,
                     }}
                 />
             </div>
@@ -123,35 +124,11 @@ const APP = () => {
             <div
                 className='reader'
                 {...{
-                    tabIndex: 1,
                     onScroll: onScrollHandle,
                     onClick: GoToNextItemHandle,
+                    onMouseOver: e => hoverWords(getWord(e.target as Element)!),
                     onKeyDown,
                     onKeyUp,
-                    onMouseOver: e => {
-                        querySelectorAll('.hoverByJs').forEach(node =>
-                            node.classList.toggle('hoverByJs')
-                        )
-
-                        const word = getWord(e.target as Element)!
-                        // ||
-                        // (e.target as Element).className
-
-                        if ([' ', ',', '。', undefined].includes(word)) return
-
-                        // 局部匹配
-                        // selectArr.map(e => {
-                        //     if (e.key.includes(word) || word.includes(e.key)) {
-                        //         document
-                        //             .querySelectorAll(geneSelector(e.key))
-                        //             .forEach(e => e.classList.add('hoverByJs'))
-                        //     }
-                        // })
-
-                        querySelectorAll(geneSelector(word)).forEach(node =>
-                            node.classList.toggle('hoverByJs')
-                        )
-                    },
                 }}
             >
                 {useCallback<any>(
@@ -161,7 +138,6 @@ const APP = () => {
                             blockR,
                             widthCount,
                             heightCount,
-                            feature,
                             RENDER,
                             onScrollHandle,
                             // 不用添加进依赖 isAotOver变化不需要主动触发VG变化, 这种需求vue怎么处理?
@@ -174,16 +150,18 @@ const APP = () => {
             {/* {useAutoScroll('.autoScrolling')} */}
             <UseMouseScroll />
 
+            <div className='search'>{searchItemsPos}</div>
+
             <>
-                <style>
+                {/* <style>
                     {
-                        // Array(6)
-                        //     .fill(null)
-                        //     .map((_, i) => `span:hover ${'+span '.repeat(i)}`)
-                        //     .join(',\n') + '{background:yellowgreen}'
+                        Array(6)
+                            .fill(null)
+                            .map((_, i) => `span:hover ${'+span '.repeat(i)}`)
+                            .join(',\n') + '{background:yellowgreen}'
                         // aot 卡, 使用jit
                     }
-                </style>
+                </style> */}
 
                 {(() => {
                     const styles = {
@@ -342,33 +320,3 @@ function APPwrap() {
 }
 
 export default APP
-
-function geneSelector(word: string) {
-    if (word.length === 1) {
-        return '.V-Grid ' + getCls(word)
-    }
-    const base = word
-        .split('')
-        .reduce((all, now) => all + getCls(now) + '+', '')
-        .slice(0, -1) //去掉末尾' +'
-
-    const _HAS = doHas(word.length, base).join(',\n').replaceAll(':has()', '')
-    const HAS = `:is(${_HAS})`
-
-    return '.V-Grid ' + HAS
-
-    function getCls(word: string) {
-        if ('- 0123456789'.includes(word)) return `[class="${word}"]`
-        return `.${word}`
-    }
-}
-export function doHas(wordLen: number, base: string) {
-    const t = base.split('+')
-    return Array(wordLen)
-        .fill(0)
-        .map((_, idx) => {
-            const l = t.slice(0, idx + 1).join('+')
-            const r = t.slice(idx + 1).join('+')
-            return idx === wordLen - 1 ? l : `${l}:has(+${r})`
-        })
-}

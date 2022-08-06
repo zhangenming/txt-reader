@@ -109,10 +109,10 @@ export function getHoldingKey(key?: string) {
 }
 export function useKeyHold() {
     useEffect(() => {
-        querySelector('#root').onkeydown = e => {
+        document.body.onkeydown = e => {
             useKeyHoldRef[e.key] = true
         }
-        querySelector('#root').onkeyup = e => {
+        document.body.onkeyup = e => {
             useKeyHoldRef[e.key] = false
         }
     }, [])

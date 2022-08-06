@@ -25,13 +25,22 @@
 /* WORD */
 /* WORD */
 /* WORD */
-.V-Grid span:first-child {
+.V-Grid span:is(:nth-child(1), :nth-child(2)) {
     background: steelblue;
+    height: 5px;
+    vertical-align: baseline;
+}
+.V-Grid span:nth-child(3) {
+    /* font-size: 2em;
+    position: relative;
+    top: -10px;
+    left: -20px; */
 }
 .V-Grid span:hover {
-    outline: green double 5px;
+    /* outline: green double 5px; */
+    box-shadow: inset 0px 0px 0px 2px red;
 }
-.V-Grid span.hoverByJs.hoverByJs.hoverByJs {
+.hoverByJs.hoverByJs.hoverByJs.hoverByJs {
     color: springgreen;
     background: dimgrey;
     outline: double;
@@ -41,6 +50,23 @@
 }
 body {
     margin: 0;
+}
+.search {
+    width: 14px;
+    position: absolute;
+    right: 0;
+    top: 20px;
+    bottom: 70px;
+    pointer-events: none;
+    box-sizing: border-box;
+    /* background: chocolate; */
+    opacity: 0.5;
+}
+.search i {
+    width: 14px;
+    height: 1px;
+    background: red;
+    position: absolute;
 }
 #root {
     -webkit-font-smoothing: antialiased;

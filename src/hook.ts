@@ -79,27 +79,24 @@ export function useLoad() {
 export function useTXT(widthCount: number, txt: string) {
     // useEffect deps也能达到缓存减少rerender目的? 和useMemo什么区别?  useMemo是同步的
 
-    useMemo(
-        function init() {
-            config.txt = txt
-            config.BLOCK = txt
-                //去掉多余空行, 注意有两种空格
-                .replaceAll(/[　\n ]+/g, '\n')
-                // .replaceAll(/\n　　/g, '\n')
-                // // 段落
-                .replaceAll(/\n/g, '\n\n')
-                // 句号
-                // .replaceAll(/(?<!“[^“”]*?)(。|？|！)/g, '$1\n\n')
-                // // 下引号
-                // .replaceAll(/(。|？|！)”/g, '$1”\n\n')
-                // // 逗号
-                // .replaceAll(/(?<!“[^“”]*?)，/g, '，\n')
-                .split('\n')
-                // .ll.filter(e => e !== '')
-                .map(block => '  ' + block)
-        },
-        [txt]
-    )
+    useMemo(() => {
+        config.txt = txt
+        config.BLOCK = txt
+            //去掉多余空行, 注意有两种空格
+            .replaceAll(/[　\n ]+/g, '\n')
+            // .replaceAll(/\n　　/g, '\n')
+            // // 段落
+            .replaceAll(/\n/g, '\n\n')
+            // 句号
+            // .replaceAll(/(?<!“[^“”]*?)(。|？|！)/g, '$1\n\n')
+            // // 下引号
+            // .replaceAll(/(。|？|！)”/g, '$1”\n\n')
+            // // 逗号
+            // .replaceAll(/(?<!“[^“”]*?)，/g, '，\n')
+            .split('\n')
+            // .ll.filter(e => e !== '')
+            .map(block => '  ' + block)
+    }, [txt])
 
     useMemo(() => {
         config.LINE = config.BLOCK
@@ -165,31 +162,27 @@ export function useTXT(widthCount: number, txt: string) {
         //     config.line2Block.findIndex(e => e[0] === block) //性能太差
     }, [txt, widthCount])
 
-    if (hasFeature('aot')) {
-        useMemo(
-            function AOT() {
-                console.time('AOT done')
-                config.BLOCK_AOT = []
-                const { BLOCK, BLOCK_AOT, block2Line } = config // 此时只有txt,JIT是完毕的, []是引用, 异步补全
-                const over = BLOCK.length
+    useMemo(() => {
+        if (!hasFeature('aot')) return
+        console.time('AOT done')
+        config.BLOCK_AOT = []
+        const { BLOCK, BLOCK_AOT, block2Line } = config // 此时只有txt,JIT是完毕的, []是引用, 异步补全
+        const over = BLOCK.length
 
-                requestIdleCallback(doWork) //async
-                function doWork(deadline: IdleDeadline) {
-                    while (deadline.timeRemaining()) {
-                        const block = BLOCK_AOT.length
-                        if (block === over) {
-                            return console.timeEnd('AOT done')
-                        }
-                        BLOCK_AOT.push(
-                            geneBlock(BLOCK[block], block, block2Line[block])
-                        ) //error
-                    }
-                    requestIdleCallback(doWork)
+        requestIdleCallback(doWork) //async
+        function doWork(deadline: IdleDeadline) {
+            while (deadline.timeRemaining()) {
+                const block = BLOCK_AOT.length
+                if (block === over) {
+                    return console.timeEnd('AOT done')
                 }
-            },
-            [txt]
-        )
-    }
+                BLOCK_AOT.push(
+                    geneBlock(BLOCK[block], block, block2Line[block])
+                ) //error
+            }
+            requestIdleCallback(doWork)
+        }
+    }, [txt])
 }
 
 let clear2: number
@@ -248,7 +241,7 @@ export function useScroll(
         clearTimeout(clear2)
         clear2 = setTimeout(() => {
             SET_scrollTop(scrollTopNow)
-        }) // todo clear
+        }, 15) // todo clear
     }
 }
 export function restoreCurrentWord(currentLine: number, deps: any[]) {

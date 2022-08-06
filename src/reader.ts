@@ -1,8 +1,8 @@
 import { SIZE_H } from './App'
+import { config } from './hook'
 import { getHoldingKey } from './hookUtils'
-import { config, querySelector } from './utils'
+import { querySelector } from './utils'
 // console.log('reader TS')
-
 export function scrollToNext(clickLine: number, word: string) {
     const nextLine = (() => {
         const allLine = config.LINE

@@ -10,7 +10,6 @@ import type { item } from './comp/control'
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import {
-    config,
     getSelectionString,
     getStyle,
     getWord,
@@ -27,6 +26,7 @@ import {
     useScroll,
     useSizeCount,
     useTXT,
+    config,
 } from './hook'
 import Control from './comp/control'
 import VG from './V-Grid'
@@ -36,9 +36,6 @@ import { scrollToNext } from './reader'
 
 export const SIZE_W = 25
 export const SIZE_H = 25
-const DIFF = 3
-
-export const featureFlag = { line: false }
 
 import mc from '../txt/mc'
 
@@ -53,11 +50,8 @@ const APP = () => {
     RENDER.app++
 
     const [widthCount, heightCount] = useSizeCount() // 二级rerender first
-
     // const [txt, SET_load] = useLoad()
     useTXT(widthCount, mc)
-
-    const [globalWords, SET_globalWords] = useStateWithLS('_globalWords')
 
     const [
         scrollTop,
@@ -68,9 +62,7 @@ const APP = () => {
         stopScroll,
         overscan,
         setUpdata,
-    ] = useScroll(_overscan, heightCount)
-
-    restoreCurrentWord(currentLine, [widthCount]) // 二级rerender second
+    ] = useScroll(_overscan, widthCount, heightCount)
 
     const [refVG, hoverRef] = useKeyScroll()
 
@@ -81,23 +73,11 @@ const APP = () => {
         heightCount
     )
 
+    const [globalWords, SET_globalWords] = useStateWithLS('_globalWords')
     const [selectArr, SET_selectArr] = useStateWithLS<item[]>('selectArr')
     const [feature, setFeature] = useState(true)
     const [stopControl, SET_stopControl] = useState(false)
     const pined = useStatePaire('')
-
-    // 列表逻辑
-    useEffect(() => {
-        document.onselectionchange = function () {
-            return
-            // 需要通过全局函数拿值 而不是e
-            const selection = getSelectionString()
-            // 随便点击也会触发这个事件 值是空 覆盖到期望值
-            if (selection) {
-                SET_select(selection)
-            }
-        }
-    }, [])
 
     showInfo &&
         useEffect(() => {
@@ -111,44 +91,41 @@ const APP = () => {
             console.log('\n')
         })
 
-    const ctr = (
-        <Control
-            {...{
-                currentLine,
-                tabIndex: 1,
-                onKeyDown,
-                onKeyUp,
-                setUpdata,
-                overscan,
-                feature,
-                setFeature,
-                RENDER,
-                scrollTop,
-                stopControl,
-                SET_stopControl,
-                stopScroll,
-                pined,
-                selectArr,
-                blockL,
-                widthCount,
-                heightCount,
-            }}
-        />
-    )
-    const staleCtr = useMemo(() => ctr, [stopControl])
-    const control = stopControl ? staleCtr : ctr
-
     return (
         <>
             <Effect
                 showInfo={showInfo}
                 msg='------------------ effect begin ------------------'
             />
-            <div className='control'>{control}</div>
+
+            <div className='control'>
+                <Control
+                    {...{
+                        currentLine,
+                        tabIndex: 1,
+                        onKeyDown,
+                        onKeyUp,
+                        setUpdata,
+                        overscan,
+                        feature,
+                        setFeature,
+                        RENDER,
+                        scrollTop,
+                        stopControl,
+                        SET_stopControl,
+                        stopScroll,
+                        pined,
+                        selectArr,
+                        blockL,
+                        widthCount,
+                        heightCount,
+                    }}
+                />
+            </div>
 
             <div
-                aaaaaa={'aaaaaa'}
                 className='reader'
+                aaaaaa={'aaaaaa'}
                 ref={refVG}
                 {...{
                     tabIndex: 1,
@@ -312,6 +289,9 @@ const APP = () => {
 
         SET_globalWords(e => new Set([...e, select]))
         pined.set(select)
+        setTimeout(() => {
+            pined.set('')
+        }, 1000)
 
         const count = getWordPosition(select)
         const isOneScreen = (() => {

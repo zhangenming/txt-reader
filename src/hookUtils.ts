@@ -6,9 +6,9 @@ import {
     SetStateAction,
     useMemo,
 } from 'react'
-import { config, querySelector } from './utils'
+import { config } from './hook'
+import { querySelector } from './utils'
 // console.log('hookUtils TS')
-
 export function useHover() {
     const [value, setValue] = useState(false)
     const ref = useRef(null)

@@ -1,7 +1,9 @@
 import './App.css'
-import './debug.js'
+import { runWithTime } from './debug'
 
 import React, { memo, useEffect, useMemo, useRef, useState } from 'react'
+import ReactDOM from 'react-dom/client'
+import { render } from 'react-dom'
 
 // import whyDidYouRender from '@welldone-software/why-did-you-render'
 // const { default: whyDidYouRender } = await import(
@@ -14,19 +16,15 @@ import React, { memo, useEffect, useMemo, useRef, useState } from 'react'
 //     // trackHooks: true,
 // })
 
-import ReactDOM from 'react-dom/client'
-import { render } from 'react-dom'
 import APP from './App'
 import { callWithTime, callWithTime2, useEffectWrap } from './utils'
-import { runWithTime } from './debug'
-//todo 更新方式 打印动画更新
 setTimeout(() => {
     const dom = !0 ? (
         <>
             <APP />
         </>
     ) : (
-        <App2 />
+        <App5 />
     )
 
     if (!0) {
@@ -35,6 +33,62 @@ setTimeout(() => {
         render(dom, document.getElementById('root')!)
     }
 })
+function App5() {
+    return (
+        <>
+            2222
+            <C />
+        </>
+    )
+    function C() {
+        console.log(111)
+        useMemo(() => {
+            // debugger
+            console.log(222)
+            aaaa // 故意写错一个不存在的变量
+            console.log(333)
+        }, [])
+        console.log(444)
+        return 'c'
+    }
+}
+function App52() {
+    return (
+        <>
+            2222
+            <C />
+        </>
+    )
+    function C() {
+        console.log(111)
+        useEffect(() => {
+            console.log(222)
+            aaaa // 故意写错一个不存在的变量
+            console.log(333)
+        }, []) //useEffect报错 也没用DOM输出
+        console.log(444)
+        return 'c'
+    }
+}
+function App51() {
+    let x
+    try {
+        x = <C /> //这里只是语法糖 并没有执行
+    } catch {}
+
+    return <>222{x}</> // 这里才相当于C()!!!!!!!!!!!
+    function C() {
+        console.log(111)
+        useMemo(() => {
+            // debugger
+            console.log(222)
+            aaaa // 故意写错一个不存在的变量
+            console.log(333)
+        }, [])
+        console.log(444)
+        return 'c'
+    }
+}
 const useUpdate = (fn, dep) => {
     const [count, setCount] = useState(0)
 

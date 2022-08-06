@@ -1,8 +1,7 @@
-import { forwardRef } from 'react'
-import { featureFlag } from '../App'
+import { config } from '../hook'
 import { getHoldingKey, useStatePaire } from '../hookUtils'
 import { scrollToNext } from '../reader'
-import { config, querySelector } from '../utils'
+import { querySelector } from '../utils'
 export type item = {
     key: string
     color: string
@@ -85,15 +84,6 @@ export default function Control({
             </button>
             {/*  */}
             <br />
-            实验切换{!feature + ''}
-            <button
-                onClick={() => {
-                    featureFlag.line = !featureFlag.line
-                    setFeature((f: boolean) => !f)
-                }}
-            >
-                实验 toggle
-            </button>
             <div>{(config.txt.length / 10000).toFixed(2)}万</div>
             <br />
             {/*  */}

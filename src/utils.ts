@@ -1,17 +1,9 @@
 import { useEffect } from 'react'
 import { doHas } from './App'
+import { config } from './hook'
 
 export const floor = Math.floor
 // console.log('utils TS')
-
-export const config: {
-    txt: string
-    BLOCK_AOT: JSX.Element[] // block element
-    BLOCK: string[] // block string
-    LINE: string[] // line string
-    line2Block: [number, number, number][]
-    block2Line: number[]
-} = {}.ll as any
 
 const getAllWordPositionCache: { [key: string]: number[] } = {}
 export function getAllWordPosition(word: string) {

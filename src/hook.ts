@@ -15,32 +15,10 @@ import {
     useStatePaire,
     useStateWithLS,
 } from './hookUtils'
-import { config, getAllWordPosition, hasFeature } from './utils'
+import { getAllWordPosition, hasFeature } from './utils'
 import { chunkString, floor, i2rc, querySelector } from './utils'
 import { geneBlock } from './V-Grid'
 // console.log('HOOK')
-
-// import _1629 from '../txt/1629'
-// import 诡秘之主 from '../txt/诡秘之主'
-
-// const txt = hasFeature('test')
-//     ? (await import('../txt/test')).default
-//     : 'loading'
-
-export function useLoad() {
-    const [state, SET_state] = useState('loading')
-    const [load, SET_load] = useState('test')
-    useEffect(() => {
-        fetch(`../txt/${load}.txt`)
-            .then(r => r.text())
-            .then(text => {
-                setTimeout(() => {
-                    SET_state(text)
-                }, 1111)
-            })
-    }, [load])
-    return [state, SET_load] as const
-}
 
 export function useSizeCount() {
     const [state, SET_state] = useState(getter)
@@ -66,7 +44,38 @@ export function useSizeCount() {
     }
 }
 
-export function useTXT(widthCount: number, txt) {
+// import _1629 from '../txt/1629'
+// import 诡秘之主 from '../txt/诡秘之主'
+
+// const txt = hasFeature('test')
+//     ? (await import('../txt/test')).default
+//     : 'loading'
+
+export const config: {
+    txt: string
+    BLOCK_AOT: JSX.Element[] // block element
+    BLOCK: string[] // block string
+    LINE: string[] // line string
+    line2Block: [number, number, number][]
+    block2Line: number[]
+} = {}.ll as any
+
+export function useLoad() {
+    const [state, SET_state] = useState('loading')
+    const [load, SET_load] = useState('test')
+    useEffect(() => {
+        setTimeout(() => {
+            fetch(`../txt/${load}.txt`)
+                .then(r => r.text())
+                .then(text => {
+                    SET_state(text)
+                })
+        }, 1000)
+    }, [load])
+    return [state, SET_load] as const
+}
+
+export function useTXT(widthCount: number, txt: string) {
     // useEffect deps也能达到缓存减少rerender目的? 和useMemo什么区别?  useMemo是同步的
 
     useMemo(
@@ -94,10 +103,11 @@ export function useTXT(widthCount: number, txt) {
     useMemo(() => {
         config.LINE = config.BLOCK
             // split and join
-            .flatMap(function lineMaybeSplit(block) {
+            .flatMap(function blockMaybeSplit(block) {
+                // block or line?
                 return chunkString(block, widthCount)
             })
-        // .reduce(function lineMaybeJoin(
+        // .reduce(function blockMaybeJoin(
         //     accLine: string[],
         //     nowLine,
         //     idx,
@@ -187,6 +197,7 @@ export function useScroll(
         top: number
         bot: number
     },
+    widthCount: number,
     heightCount: number,
     txt = config.txt
 ) {
@@ -213,6 +224,8 @@ export function useScroll(
         [currentLine, txt]
     )
 
+    restoreCurrentWord(currentLine, [widthCount]) // 二级rerender second
+
     return [
         scrollTop,
         currentLine,
@@ -236,6 +249,17 @@ export function useScroll(
             SET_scrollTop(scrollTopNow)
         }) // todo clear
     }
+}
+export function restoreCurrentWord(currentLine: number, deps: any[]) {
+    const [currentBlock] = useStateWithLS<number>(
+        'currentBlock',
+        () => config.line2Block[currentLine][0]
+    )
+    useEffect(() => {
+        // 赋值触发onscroll event
+        querySelector('.reader').scrollTop =
+            config.block2Line[currentBlock] * SIZE_H
+    }, deps)
 }
 
 let clear: number
@@ -398,16 +422,4 @@ export function useMouseHover(L: number, R: number) {
                 e.style['-webkit-text-stroke-width'] = color
             })
     }
-}
-
-export function restoreCurrentWord(currentLine: number, deps: any[]) {
-    const [currentBlock] = useStateWithLS<number>(
-        'currentBlock',
-        () => config.line2Block[currentLine][0]
-    )
-    useEffect(() => {
-        // 赋值触发onscroll event
-        querySelector('.reader').scrollTop =
-            config.block2Line[currentBlock] * SIZE_H
-    }, deps)
 }

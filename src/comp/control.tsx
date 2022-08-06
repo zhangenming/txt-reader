@@ -145,7 +145,7 @@ export default function Control({
                         <div
                             className='selectItem'
                             key={key}
-                            slot={key}
+                            title={key}
                             style={{
                                 background: pined.get === key ? 'deeppink' : '',
                             }}
@@ -160,7 +160,6 @@ export default function Control({
                                     })
                                     scrollToNext(currentLine + 2, key)
                                 }}
-                                title={key}
                             />
                             <span
                                 className={item.isPined ? 'isPined' : ''}

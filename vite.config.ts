@@ -14,8 +14,8 @@ export default defineConfig({
     },
 
     build: {
-        // sourcemap: true,
-        target: 'chrome103',
+        sourcemap: true,
+        target: 'chrome104',
     },
 
     base: './',

@@ -383,12 +383,6 @@ export function callWithTime2(name: string, func: any) {
     }
 }
 
-const selection = document.getSelection()!
-export function getSelectionString() {
-    //todo with hook effect
-    return selection.toString().replaceAll(/\n/g, '')
-}
-
 export function chunk(arr: any[], chunkSize: number) {
     if (chunkSize == 0) return
 

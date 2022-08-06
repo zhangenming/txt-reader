@@ -10,7 +10,6 @@ import type { item } from './comp/control'
 import { useState, useEffect, useMemo, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import {
-    getSelectionString,
     getStyle,
     getWord,
     getWordPosition,
@@ -21,7 +20,7 @@ import { Effect } from './comp/comp'
 import {
     restoreCurrentWord,
     useKey,
-    useKeyScroll,
+    useMouseScroll as UseMouseScroll,
     useLoad,
     useScroll,
     useSizeCount,
@@ -63,8 +62,6 @@ const APP = () => {
         overscan,
         setUpdata,
     ] = useScroll(_overscan, widthCount, heightCount)
-
-    const [refVG, hoverRef] = useKeyScroll()
 
     const [onKeyDown, onKeyUp, clickType] = useKey(
         overscan.get.bot,
@@ -125,8 +122,6 @@ const APP = () => {
 
             <div
                 className='reader'
-                aaaaaa={'aaaaaa'}
-                ref={refVG}
                 {...{
                     tabIndex: 1,
                     onScroll: onScrollHandle,
@@ -159,8 +154,6 @@ const APP = () => {
                     },
                 }}
             >
-                {/* <div className='reader-helper' /> */}
-
                 {useCallback<any>(
                     <VG
                         {...{
@@ -176,20 +169,10 @@ const APP = () => {
                     />,
                     [blockL, blockR, widthCount, heightCount]
                 )}
-
-                {/* <div
-                    ref={hoverRef}
-                    className='next'
-                    onMouseOver={() => console.log}
-                >
-                    NEXT
-                </div> */}
             </div>
 
-            <div
-                className='autoScrolling'
-                onMouseOver={() => console.log}
-            ></div>
+            {/* {useAutoScroll('.autoScrolling')} */}
+            <UseMouseScroll />
 
             <>
                 <style>
@@ -248,15 +231,19 @@ const APP = () => {
             />
         </>
     )
+
     function GoToNextItemHandle({ target }: React.MouseEvent) {
         // 拉选selection状态
         if (target instanceof HTMLDivElement) {
-            const selection = getSelectionString()
+            const select = getSelection()!
+            const selection = select.toString().replaceAll(/\n/g, '')
+
             if (selectArr.find(e => e.key === selection)) {
                 deleteHandle(selection)
             } else {
                 addHandle(selection)
             }
+            select.removeAllRanges()
         }
 
         // 点击click状态
@@ -326,8 +313,6 @@ const APP = () => {
                 // isOneScreenWill
             },
         ])
-
-        getSelection()!.removeAllRanges()
     }
     function deleteHandle(key: string) {
         SETWRAP_selectArr(selectArr.filter(e => e.key !== key))

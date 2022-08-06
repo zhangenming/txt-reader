@@ -1,4 +1,5 @@
 const autoScrollSpeed = 1
+import React from 'react'
 import {
     createElement,
     useEffect,
@@ -347,34 +348,30 @@ export function useCounter(ref = useRef()) {
     return ref
 }
 
-export function useKeyScroll() {
-    const refVG = useRef<HTMLElement>(null)
-    const [hoverRef, isHovered] = useHover()
-
-    type refCur = { cur: number }
-
-    useEffect(() => {
+type refCur = { cur: number }
+export function useMouseScroll() {
+    useEffect(function useMouseScroll() {
         let rAF: refCur = { cur: 0 }
-        if (isHovered) {
-            runRAF(rAF, autoScrollSpeed)
+        const node = querySelector('.scrolling')
+        node.onmouseover = () => runRAF(rAF, autoScrollSpeed)
+        node.onmouseout = () => clearRaf(rAF)
+    }, [])
+
+    useEffect(function useKeyScroll() {
+        let rAF: refCur = { cur: 0 }
+        const map: any = {
+            w: -30,
+            s: 30,
+            x: 0.1,
+            z: SIZE_H / 5,
+            q: -1,
+            a: 1,
         }
-        return () => clearRaf(rAF)
-    }, [isHovered])
-
-    useEffect(() => {
-        let rAF: refCur = { cur: 0 }
 
         document.onkeydown = e => {
             // keydown浏览器原生 触发频率是 32ms
             // 但现在由requestAnimationFrame触发onScrollHandle的频率是 16ms
-            const val = {
-                w: -30,
-                s: 30,
-                x: 0.1,
-                z: SIZE_H / 5,
-                q: -1,
-                a: 1,
-            }[e.key]
+            const val = map[e.key]
             if (val) {
                 e.preventDefault()
                 runRAF(rAF, val)
@@ -385,15 +382,15 @@ export function useKeyScroll() {
         }
     }, [])
 
-    return [refVG, hoverRef]
+    return React.createElement('div', {
+        className: 'scrolling',
+    })
 
     function runRAF(rAF: refCur, val: number) {
         if (rAF.cur) return
         ;(function run() {
             rAF.cur = requestAnimationFrame(() => {
-                // todo 和useScroll2交互
-                // console.log('rAF scrollTop', scrollTop)
-                refVG.current!.scrollTop += val //触发 onScrollHandle
+                querySelector('.reader').scrollTop += val //触发 onScrollHandle
                 run()
             })
         })()
@@ -403,7 +400,6 @@ export function useKeyScroll() {
         rAF.cur = 0
     }
 }
-
 export function useMouseHover(L: number, R: number) {
     const [mouseHover, SET_mouseHover] = useState('')
     const pre = usePrevious(mouseHover)

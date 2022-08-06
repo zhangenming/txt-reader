@@ -5,27 +5,29 @@ import {
     Dispatch,
     SetStateAction,
     useMemo,
+    MutableRefObject,
+    RefObject,
 } from 'react'
 import { config } from './hook'
 import { querySelector } from './utils'
 // console.log('hookUtils TS')
-export function useHover() {
-    const [value, setValue] = useState(false)
-    const ref = useRef(null)
-    const handleMouseOver = () => setValue(true)
-    const handleMouseOut = () => setValue(false)
+export function useHover(
+    ref: React.MutableRefObject<HTMLDivElement | undefined>
+) {
+    const [isHover, SET_isHover] = useState(false)
+    const handleMouseOver = () => SET_isHover(true)
+    const handleMouseOut = () => SET_isHover(false)
+
     useEffect(() => {
-        const node = ref.current
-        if (node) {
-            node.addEventListener('mouseover', handleMouseOver)
-            node.addEventListener('mouseout', handleMouseOut)
-            return () => {
-                node.removeEventListener('mouseover', handleMouseOver)
-                node.removeEventListener('mouseout', handleMouseOut)
-            }
-        }
-    }, [ref.current])
-    return [ref, value] as const
+        const node = ref.current!
+        node.addEventListener('mouseover', handleMouseOver)
+        node.addEventListener('mouseout', handleMouseOut)
+        // return () => {
+        //     node.removeEventListener('mouseover', handleMouseOver)
+        //     node.removeEventListener('mouseout', handleMouseOut)
+        // }
+    }, [])
+    return isHover
 }
 
 // 存

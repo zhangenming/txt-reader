@@ -1,9 +1,16 @@
 .V-Grid {
+    background: cornflowerblue;
+    width: var(--VG_width);
+    min-width: var(--VG_width);
+    max-width: var(--VG_width);
+    margin: 0 auto;
+    height: var(--VG_height);
+    transition: width 1s;
+    line-height: var(--SIZE_H);
+    box-sizing: border-box;
+    will-change: scroll-position;
+    content-visibility: auto;
     overflow: hidden;
-    /* display: flex;
-    flex-direction: column;
-    gap: 25px; */
-    /* padding: 1px; */
 }
 
 /* BLOCK */
@@ -41,133 +48,9 @@
     outline: white double 5px;
     box-shadow: inset 0px 0px 0px 2px red;
 }
-.hoverByJs.hoverByJs.hoverByJs.hoverByJs {
-    color: springgreen;
-    background: dimgrey;
-    outline: double;
-}
 .V-Grid span:not([data-invalid=' ']):hover {
     /* outline: white double 5px; */
 }
-body {
-    margin: 0;
-}
-.search {
-    width: 14px;
-    position: absolute;
-    right: 0;
-    top: 20px;
-    bottom: 70px;
-    pointer-events: none;
-    box-sizing: border-box;
-    /* background: chocolate; */
-    opacity: 0.5;
-}
-.search i {
-    width: 14px;
-    height: 1px;
-    background: red;
-    position: absolute;
-}
-#root {
-    -webkit-font-smoothing: antialiased;
-    height: 100vh;
-    display: grid;
-    grid-template-rows: var(--readerHight) auto;
-    grid-template-columns: 100px auto;
-    background: steelblue;
-}
-
-.control {
-    grid-row-start: 1;
-    grid-column-start: 1;
-    grid-row-end: 3;
-    grid-column-end: 2;
-}
-
-.reader {
-    grid-row-start: 1;
-    grid-column-start: 2;
-    grid-row-end: 2;
-    grid-column-end: 3;
-}
-
-.autoScrolling {
-    grid-row-start: 2;
-    grid-column-start: 2;
-    grid-row-end: 3;
-    grid-column-end: 3;
-}
-
-[tabindex]:focus-visible {
-    outline: none;
-}
-.control {
-    display: flex;
-    flex-direction: column;
-    width: 100px;
-    height: inherit;
-    background: yellowgreen;
-    overflow: hidden;
-}
-.reader {
-    display: flex;
-    flex-grow: 1;
-    height: var(--readerHight);
-    /* background: steelblue; */
-    color: aliceblue;
-    font-size: 25px;
-    font-family: fangsong;
-    /* todo */
-    overflow: hidden;
-    flex-shrink: 0;
-    /* justify-content: center; */
-    /* 此情况下子元素直接用margin: 0 auto更好, 在缩小时会居左, 而justify-content扔会居中 */
-    overflow-y: scroll;
-    transition: height 0.4s;
-}
-.reader .reader-helper {
-    position: absolute;
-    z-index: 1;
-    transition-property: top, background-color, height, opacity;
-    transition-duration: 0.3s;
-
-    width: 100%;
-    /* 需要设置0 才能响应transition */
-    height: 0;
-    opacity: 0;
-}
-.reader .next {
-    display: flex;
-    flex-grow: 1;
-    justify-content: center;
-    align-items: center;
-    height: var(--SIZE_H);
-    background: yellowgreen;
-}
-.reader .next:hover {
-    background: steelblue;
-}
-.container {
-}
-.container:focus-visible {
-    outline: none;
-}
-.V-Grid {
-    background: cornflowerblue;
-    width: var(--VG_width);
-    min-width: var(--VG_width);
-    max-width: var(--VG_width);
-    margin: 0 auto;
-    height: var(--VG_height);
-    transition: width 1s;
-    line-height: var(--SIZE_H);
-    box-sizing: border-box;
-    will-change: scroll-position;
-    content-visibility: auto;
-}
-
-/* ITEM class begin begin begin begin begin begin begin begin begin begin begin begin*/
 .V-Grid span {
     display: inline-block;
     text-align: center;
@@ -205,10 +88,105 @@ span[data-invalid='”'] {
     display: inline-flex;
     justify-content: start;
 }
+
+body {
+    margin: 0;
+}
+#root {
+    -webkit-font-smoothing: antialiased;
+    height: 100vh;
+    display: grid;
+    grid-template-rows: var(--readerHight) auto;
+    grid-template-columns: 100px auto;
+    background: steelblue;
+}
+.search {
+    width: 14px;
+    position: absolute;
+    right: 0;
+    top: 20px;
+    bottom: 70px;
+    pointer-events: none;
+    box-sizing: border-box;
+    /* background: chocolate; */
+    opacity: 0.5;
+}
+.search i {
+    width: 14px;
+    height: 1px;
+    background: red;
+    position: absolute;
+}
+
+.control {
+    grid-row-start: 1;
+    grid-column-start: 1;
+    grid-row-end: 3;
+    grid-column-end: 2;
+}
+
+.reader {
+    grid-row-start: 1;
+    grid-column-start: 2;
+    grid-row-end: 2;
+    grid-column-end: 3;
+}
+
+.autoScrolling {
+    grid-row-start: 2;
+    grid-column-start: 2;
+    grid-row-end: 3;
+    grid-column-end: 3;
+}
+
+.control {
+    display: flex;
+    flex-direction: column;
+    width: 100px;
+    height: inherit;
+    background: yellowgreen;
+    overflow: hidden;
+}
+.reader {
+    display: flex;
+    flex-grow: 1;
+    height: var(--readerHight);
+    /* background: steelblue; */
+    color: aliceblue;
+    font-size: 25px;
+    font-family: fangsong;
+    /* todo */
+    overflow: hidden;
+    flex-shrink: 0;
+    /* justify-content: center; */
+    /* 此情况下子元素直接用margin: 0 auto更好, 在缩小时会居左, 而justify-content扔会居中 */
+    overflow-y: scroll;
+    transition: height 0.4s;
+}
+.reader .reader-helper {
+    position: absolute;
+    z-index: 1;
+    transition-property: top, background-color, height, opacity;
+    transition-duration: 0.3s;
+    width: 100%;
+    /* 需要设置0 才能响应transition */
+    height: 0;
+    opacity: 0;
+}
+.reader .next {
+    display: flex;
+    flex-grow: 1;
+    justify-content: center;
+    align-items: center;
+    height: var(--SIZE_H);
+    background: yellowgreen;
+}
+.reader .next:hover {
+    background: steelblue;
+}
 [class*='select'] {
     background-color: var(--var-color);
 }
-/* ITEM class end end end end end end end end end end end end end end end end end end*/
 
 .selectItem {
     display: flex;
@@ -232,4 +210,10 @@ span[data-invalid='”'] {
 }
 .speaking {
     background: teal;
+}
+
+.hoverByJs.hoverByJs.hoverByJs.hoverByJs {
+    color: springgreen;
+    background: dimgrey;
+    outline: double;
 }

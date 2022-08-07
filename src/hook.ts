@@ -233,6 +233,24 @@ export function useScroll(
     // useCallback/useEffect[]存在 就需注意 值过期问题
 
     function onScrollHandle(e: React.UIEvent<HTMLDivElement, UIEvent>) {
+        // if (!window.xxx) {
+        //     window.xxx = []
+        //     setTimeout(() => {
+        //         var all = xxx[xxx.length - 1] - xxx[0]
+        //         var t = xxx.map((e, i, a) => a[i + 1] - e).slice(1, -1)
+        //         console.log(
+        //             t,
+        //             ...[
+        //                 all,
+        //                 all / xxx.length,
+        //                 Math.max(...t),
+        //                 Math.min(...t),
+        //             ].map(e => e.toFixed(1))
+        //         )
+        //         window.xxx = 0
+        //     }, 1000)
+        // }
+        // xxx.push(performance.now())
         if (stopScroll.get) return
 
         const scrollTopNow = (e.target as HTMLElement).scrollTop
@@ -241,7 +259,7 @@ export function useScroll(
         clearTimeout(clear2)
         clear2 = setTimeout(() => {
             SET_scrollTop(scrollTopNow)
-        }, 15) // todo clear
+        }, 1) // todo clear
     }
 }
 export function restoreCurrentWord(currentLine: number, deps: any[]) {
@@ -342,12 +360,18 @@ export function useCounter(ref = useRef()) {
 }
 
 type refCur = { cur: number }
-export function useMouseScroll() {
+export function useMouseScroll({ children, speed: s }: any) {
+    const [speed, SET_speed] = useState(s)
+    const speedRef = useRef(speed)
+    speedRef.current = speed
+
+    const ref = useRef<HTMLDivElement>()
     useEffect(function useMouseScroll() {
         let rAF: refCur = { cur: 0 }
-        const node = querySelector('.scrolling')
-        node.onmouseover = () => runRAF(rAF, autoScrollSpeed)
+        const node = ref.current!
+        node.onmouseover = () => runRAF(rAF)
         node.onmouseout = () => clearRaf(rAF)
+        return () => clearRaf(rAF)
     }, [])
 
     useEffect(function useKeyScroll() {
@@ -375,15 +399,13 @@ export function useMouseScroll() {
         }
     }, [])
 
-    return React.createElement('div', {
-        className: 'scrolling',
-    })
+    return children(ref, speed, SET_speed)
 
-    function runRAF(rAF: refCur, val: number) {
+    function runRAF(rAF: refCur) {
         if (rAF.cur) return
         ;(function run() {
             rAF.cur = requestAnimationFrame(() => {
-                querySelector('.reader').scrollTop += val //触发 onScrollHandle
+                querySelector('.reader').scrollTop += speedRef.current //触发 onScrollHandle
                 run()
             })
         })()

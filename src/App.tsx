@@ -155,7 +155,19 @@ const APP = () => {
             </div>
 
             {/* {useAutoScroll('.autoScrolling')} */}
-            <UseMouseScroll />
+            <UseMouseScroll speed={0.1}>
+                {(ref: any, speed: any, SET_speed: any) => (
+                    <div
+                        ref={ref}
+                        style={{ 'font-size': 13 }}
+                        onWheel={({ deltaY }) => {
+                            SET_speed((speed *= deltaY < 0 ? 1.2 : 0.8))
+                        }}
+                    >
+                        {speed}
+                    </div>
+                )}
+            </UseMouseScroll>
 
             <div className='search'>{searchItems}</div>
 

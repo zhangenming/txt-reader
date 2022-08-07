@@ -359,62 +359,6 @@ export function useCounter(ref = useRef()) {
     return ref
 }
 
-type refCur = { cur: number }
-export function useMouseScroll({ children, speed: s }: any) {
-    const [speed, SET_speed] = useState(s)
-    const speedRef = useRef(speed)
-    speedRef.current = speed
-
-    const ref = useRef<HTMLDivElement>()
-    useEffect(function useMouseScroll() {
-        let rAF: refCur = { cur: 0 }
-        const node = ref.current!
-        node.onmouseover = () => runRAF(rAF)
-        node.onmouseout = () => clearRaf(rAF)
-        return () => clearRaf(rAF)
-    }, [])
-
-    useEffect(function useKeyScroll() {
-        let rAF: refCur = { cur: 0 }
-        const map: any = {
-            w: -30,
-            s: 30,
-            x: 0.1,
-            z: SIZE_H / 5,
-            q: -1,
-            a: 1,
-        }
-
-        document.onkeydown = e => {
-            // keydown浏览器原生 触发频率是 32ms
-            // 但现在由requestAnimationFrame触发onScrollHandle的频率是 16ms
-            const val = map[e.key]
-            if (val) {
-                e.preventDefault()
-                runRAF(rAF, val)
-            }
-        }
-        document.onkeyup = () => {
-            clearRaf(rAF)
-        }
-    }, [])
-
-    return children(ref, speed, SET_speed)
-
-    function runRAF(rAF: refCur) {
-        if (rAF.cur) return
-        ;(function run() {
-            rAF.cur = requestAnimationFrame(() => {
-                querySelector('.reader').scrollTop += speedRef.current //触发 onScrollHandle
-                run()
-            })
-        })()
-    }
-    function clearRaf(rAF: refCur) {
-        cancelAnimationFrame(rAF.cur)
-        rAF.cur = 0
-    }
-}
 export function useMouseHover(L: number, R: number) {
     const [mouseHover, SET_mouseHover] = useState('')
     const pre = usePrevious(mouseHover)

@@ -16,11 +16,10 @@ import {
     querySelector,
     querySelectorAll,
 } from './utils'
-import { Effect } from './comp/comp'
+import { Effect, UseMouseScroll } from './comp/comp'
 import {
     restoreCurrentWord,
     useKey,
-    useMouseScroll as UseMouseScroll,
     useLoad,
     useScroll,
     useSizeCount,
@@ -155,19 +154,10 @@ const APP = () => {
             </div>
 
             {/* {useAutoScroll('.autoScrolling')} */}
-            <UseMouseScroll speed={0.1}>
-                {(ref: any, speed: any, SET_speed: any) => (
-                    <div
-                        ref={ref}
-                        style={{ 'font-size': 13 }}
-                        onWheel={({ deltaY }) => {
-                            SET_speed((speed *= deltaY < 0 ? 1.2 : 0.8))
-                        }}
-                    >
-                        {speed}
-                    </div>
-                )}
-            </UseMouseScroll>
+            {useCallback(
+                (<UseMouseScroll speed={0.1}></UseMouseScroll>) as any,
+                []
+            )}
 
             <div className='search'>{searchItems}</div>
 

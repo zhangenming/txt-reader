@@ -1,4 +1,7 @@
-import { lazy, memo, Suspense, useEffect, useState } from 'react'
+import { lazy, memo, Suspense, useEffect, useRef, useState } from 'react'
+import { SIZE_H } from '../App'
+import { runWithTime } from '../debug'
+import { querySelector } from '../utils'
 // console.log('COMP....')
 
 export default function Comp({ RENDER }: any) {
@@ -49,239 +52,69 @@ export function Effect({ showInfo, msg }: any) {
     // return msg
 }
 
-const APP = () => {
-    return
-    const callback = useCallback(
-        (() => {
-            const rt = /* @__PURE__ */ _jsxDEV(
-                VGrid,
-                {
-                    ...props_VG,
-                },
-                void 0,
-                false,
-                {
-                    fileName: _jsxFileName,
-                    lineNumber: 181,
-                    columnNumber: 24,
-                },
-                this
-            )
-            return rt
-        })(),
-        deps_VG
+type refCur = { cur: number }
+export function UseMouseScroll({ speed: s }: any) {
+    const [speed, SET_speed] = useState(s)
+    const speedRef = useRef(speed)
+    speedRef.current = speed
+
+    const ref = useRef<HTMLDivElement>(null)
+    useEffect(function useMouseScroll() {
+        let rAF: refCur = { cur: 0 }
+        const node = ref.current!
+        node.onmouseover = () => runRAF(rAF)
+        node.onmouseout = () => clearRaf(rAF)
+        return () => clearRaf(rAF)
+    }, [])
+
+    useEffect(function useKeyScroll() {
+        let rAF: refCur = { cur: 0 }
+        const map: any = {
+            w: -30,
+            s: 30,
+            x: 0.1,
+            z: SIZE_H / 5,
+            q: -1,
+            a: 1,
+        }
+
+        document.onkeydown = e => {
+            // keydown浏览器原生 触发频率是 32ms
+            // 但现在由requestAnimationFrame触发onScrollHandle的频率是 16ms
+            const val = map[e.key]
+            if (val) {
+                e.preventDefault()
+                runRAF(rAF, val)
+            }
+        }
+        document.onkeyup = () => {
+            clearRaf(rAF)
+        }
+    }, [])
+
+    return (
+        <div
+            ref={ref}
+            style={{ 'font-size': 13 }}
+            onWheel={({ deltaY }) => {
+                SET_speed(speedRef.current * (deltaY < 0 ? 6 / 5 : 5 / 6))
+            }}
+        >
+            {speed}
+        </div>
     )
-    return /* @__PURE__ */ _jsxDEV(
-        _Fragment,
-        {
-            children: [
-                /* @__PURE__ */ _jsxDEV(
-                    Effect,
-                    {
-                        msg: '------------------ effect begin ------------------',
-                    },
-                    void 0,
-                    false,
-                    {
-                        fileName: _jsxFileName,
-                        lineNumber: 198,
-                        columnNumber: 13,
-                    },
-                    this
-                ),
-                /* @__PURE__ */ _jsxDEV(
-                    Control,
-                    {
-                        select,
-                        SET_select,
-                        selectArr,
-                        deleteHandle,
-                        changeHandle,
-                        TXT,
-                        TXTLen,
-                        txtLen,
-                        widthCount,
-                        heightCount,
-                        currentLine,
-                        jumpLine,
-                        tabIndex: 1,
-                        onKeyDown,
-                        onKeyUp,
-                        domC,
-                        updata,
-                        setUpdata,
-                        OVERSCAN_change,
-                        SET_OVERSCAN_change,
-                        OVERSCAN_bottom,
-                        SET_OVERSCAN_bottom,
-                        feature,
-                        setFeature,
-                        RENDER,
-                        scrollTop,
-                    },
-                    void 0,
-                    false,
-                    {
-                        fileName: _jsxFileName,
-                        lineNumber: 199,
-                        columnNumber: 13,
-                    },
-                    this
-                ),
-                /* @__PURE__ */ _jsxDEV(
-                    'div',
-                    {
-                        className: 'reader',
-                        style: {
-                            '--clickType': clickType,
-                            '--SIZE_H': SIZE_H + 'px',
-                            '--SIZE_W': SIZE_W + 'px',
-                        },
-                        onClick: GoToNextItemHandle,
-                        children: [
-                            /* @__PURE__ */ _jsxDEV(
-                                'div',
-                                {
-                                    className: 'reader-helper',
-                                },
-                                void 0,
-                                false,
-                                {
-                                    fileName: _jsxFileName,
-                                    lineNumber: 241,
-                                    columnNumber: 17,
-                                },
-                                this
-                            ),
-                            1
-                                ? useMemo(
-                                      () =>
-                                          /* @__PURE__ */ _jsxDEV(
-                                              VGM,
-                                              {
-                                                  ...props_VG,
-                                              },
-                                              void 0,
-                                              false,
-                                              {
-                                                  fileName: _jsxFileName,
-                                                  lineNumber: 243,
-                                                  columnNumber: 35,
-                                              },
-                                              this
-                                          ),
-                                      deps_VG
-                                  )
-                                : /* @__PURE__ */ _jsxDEV(
-                                      VGrid,
-                                      {
-                                          ...props_VG,
-                                      },
-                                      void 0,
-                                      false,
-                                      {
-                                          fileName: _jsxFileName,
-                                          lineNumber: 245,
-                                          columnNumber: 21,
-                                      },
-                                      this
-                                  ),
-                            /* @__PURE__ */ _jsxDEV(
-                                'div',
-                                {
-                                    className: 'next',
-                                    onMouseOver: () => console.log,
-                                    children: [
-                                        (OVERSCAN_top +
-                                            OVERSCAN_bottom +
-                                            heightCount) *
-                                            widthCount,
-                                        'NEXT',
-                                    ],
-                                },
-                                void 0,
-                                true,
-                                {
-                                    fileName: _jsxFileName,
-                                    lineNumber: 248,
-                                    columnNumber: 17,
-                                },
-                                this
-                            ),
-                        ],
-                    },
-                    void 0,
-                    true,
-                    {
-                        fileName: _jsxFileName,
-                        lineNumber: 230,
-                        columnNumber: 13,
-                    },
-                    this
-                ),
-                /* @__PURE__ */ _jsxDEV(
-                    'div',
-                    {
-                        className: 'styles',
-                        children: [
-                            {
-                                key: select,
-                                color: 'black',
-                                i: Date.now(),
-                                count: getWordCount(select, TXT),
-                                isPined: false,
-                            },
-                            ...selectArr,
-                        ].map(({ key, color, isPined }, idx) =>
-                            /* @__PURE__ */ _jsxDEV(
-                                'style',
-                                {
-                                    slot: key,
-                                    children: getStyle(
-                                        TXT,
-                                        key,
-                                        color,
-                                        isPined || key === select,
-                                        idx === 0
-                                    ),
-                                },
-                                key + idx,
-                                false,
-                                {
-                                    fileName: _jsxFileName,
-                                    lineNumber: 293,
-                                    columnNumber: 21,
-                                },
-                                this
-                            )
-                        ),
-                    },
-                    void 0,
-                    false,
-                    {
-                        fileName: _jsxFileName,
-                        lineNumber: 256,
-                        columnNumber: 13,
-                    },
-                    this
-                ),
-                /* @__PURE__ */ _jsxDEV(
-                    Effect,
-                    {
-                        msg: '------- render OVER -------------------',
-                    },
-                    void 0,
-                    false,
-                    {
-                        fileName: _jsxFileName,
-                        lineNumber: 304,
-                        columnNumber: 13,
-                    },
-                    this
-                ),
-            ],
-        },
-        void 0,
-        true
-    )
+
+    function runRAF(rAF: refCur) {
+        if (rAF.cur) return
+        ;(function run() {
+            rAF.cur = requestAnimationFrame(() => {
+                querySelector('.reader').scrollTop += speedRef.current //触发 onScrollHandle
+                run()
+            })
+        })()
+    }
+    function clearRaf(rAF: refCur) {
+        cancelAnimationFrame(rAF.cur)
+        rAF.cur = 0
+    }
 }

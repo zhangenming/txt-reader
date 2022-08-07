@@ -148,6 +148,7 @@ body {
     overflow: hidden;
 }
 .reader {
+    /* scroll-behavior: smooth; */
     display: flex;
     flex-grow: 1;
     height: var(--readerHight);

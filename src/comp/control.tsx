@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { config } from '../hook'
 import { getHoldingKey, useStatePaire } from '../hookUtils'
 import { hoverWords, scrollToNext } from '../reader'
@@ -45,60 +45,51 @@ export default function Control({
     return (
         <>
             <div>
-                {selectArr.map(item => {
-                    const { key, count, isOneScreen } = item
-                    if (count === 1 || isOneScreen) return
-                    return (
-                        <div
-                            className='selectItem'
-                            key={key}
-                            title={key}
-                            style={{
-                                background: pined.get === key ? 'deeppink' : '',
-                            }}
-                            onMouseEnter={() => SET_hoverWord(key)}
-                        >
-                            <span
-                                className='key'
-                                children={key}
-                                onClick={() => {
-                                    changeHandle({
-                                        ...item,
-                                        isPined: true,
-                                    })
-                                    scrollToNext(currentLine + 2, key)
-                                }}
-                            />
-                            <span
-                                className={item.isPined ? 'isPined' : ''}
-                                children={count}
-                                onClick={() => {
-                                    // react 会不会每个span都新建了一个函数事件
-                                    if (getHoldingKey().ll.Backspace) {
-                                        return deleteHandle(item.key)
-                                    }
-                                    changeHandle({
-                                        ...item,
-                                        isPined: !item.isPined,
-                                    })
-
-                                    // deleteHandle(item.key)
-                                }}
-                            />
-                        </div>
-                    )
-                })}
-            </div>
-            <div>
                 <div>scrollTop:</div>
                 <span>{scrollTop}</span>
             </div>
-            <button onClick={() => (querySelector('.reader').scrollTop -= 1)}>
-                up
-            </button>
-            <button onClick={() => (querySelector('.reader').scrollTop += 1)}>
-                down
-            </button>
+            {(() => {
+                const [state, SET_state] = useState(111111)
+                return (
+                    <>
+                        <input
+                            value={state}
+                            onChange={e => SET_state(Number(e.target.value))}
+                        />
+                        <button
+                            onClick={() =>
+                                (querySelector('.reader').scrollTop -=
+                                    Number(state))
+                            }
+                        >
+                            up
+                        </button>
+                        <button
+                            onClick={() =>
+                                (querySelector('.reader').scrollTop +=
+                                    Number(state))
+                            }
+                        >
+                            down
+                        </button>
+                        <button
+                            onClick={() =>
+                                (querySelector('.reader').scrollTop = 0)
+                            }
+                        >
+                            0
+                        </button>
+                        <button
+                            onClick={() =>
+                                (querySelector('.reader').scrollTop +=
+                                    config.LINE.length * 25)
+                            }
+                        >
+                            99
+                        </button>
+                    </>
+                )
+            })()}
             <div>
                 <div>Line:</div>
                 <span>
@@ -161,28 +152,51 @@ export default function Control({
             <div>
                 宽: {widthCount}- 高:{heightCount}
             </div>
-            {/*
-            
-            
-            
-            */}
-            <br />
-            <br />
-            {/* <div className='count'>
-                <span
-                    className='item'
-                    children={getWordCount(select, TXT)}
-                    onClick={() => {
-                        jumpLine(i2rc(TXT.indexOf(select), widthCount).r)
-                    }}
-                />
+            <div>
+                {selectArr.map(item => {
+                    const { key, count, isOneScreen } = item
+                    if (count === 1 || isOneScreen) return
+                    return (
+                        <div
+                            className='selectItem'
+                            key={key}
+                            title={key}
+                            style={{
+                                background: pined.get === key ? 'deeppink' : '',
+                            }}
+                            onMouseEnter={() => SET_hoverWord(key)}
+                        >
+                            <span
+                                className='key'
+                                children={key}
+                                onClick={() => {
+                                    changeHandle({
+                                        ...item,
+                                        isPined: true,
+                                    })
+                                    scrollToNext(currentLine + 2, key)
+                                }}
+                            />
+                            <span
+                                className={item.isPined ? 'isPined' : ''}
+                                children={count}
+                                onClick={() => {
+                                    // react 会不会每个span都新建了一个函数事件
+                                    if (getHoldingKey().Backspace) {
+                                        return deleteHandle(item.key)
+                                    }
+                                    changeHandle({
+                                        ...item,
+                                        isPined: !item.isPined,
+                                    })
+
+                                    // deleteHandle(item.key)
+                                }}
+                            />
+                        </div>
+                    )
+                })}
             </div>
-            <input
-                type='text'
-                value={select}
-                onChange={e => SET_select(e.target.value)}
-                onKeyDown={e => e.stopPropagation()}
-            /> */}
         </>
     )
 }

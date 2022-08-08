@@ -17,14 +17,14 @@ import { render } from 'react-dom'
 // })
 
 import APP from './App'
-import { callWithTime, callWithTime2, useEffectWrap } from './utils'
+import { callWithTime, callWithTime2, hasFeature, useEffectWrap } from './utils'
 setTimeout(() => {
-    const dom = !0 ? (
+    const dom = hasFeature() ? (
         <>
             <APP />
         </>
     ) : (
-        <App5 />
+        <App6 />
     )
 
     if (!0) {
@@ -33,6 +33,19 @@ setTimeout(() => {
         render(dom, document.getElementById('root')!)
     }
 })
+function App6() {
+    const [x, setX] = useState(0)
+    return (
+        <>
+            <button onClick={() => setX(x + 1)}>add x</button>
+            {Array(1e3 + x)
+                .fill(1)
+                .map((e, i) => (
+                    <span>{i}</span>
+                ))}
+        </>
+    )
+}
 function App5() {
     return (
         <>

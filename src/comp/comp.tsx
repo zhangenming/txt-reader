@@ -95,7 +95,7 @@ export function UseMouseScroll({ speed: s }: any) {
     return (
         <div
             ref={ref}
-            style={{ 'font-size': 13 }}
+            style={{ 'font-size': 13, overflow: 'hidden' }}
             onWheel={({ deltaY }) => {
                 SET_speed(speedRef.current * (deltaY < 0 ? 6 / 5 : 5 / 6))
             }}

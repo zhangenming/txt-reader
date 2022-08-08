@@ -215,7 +215,7 @@ export function useScroll(
                     1,
             ]
         },
-        [currentLine, txt]
+        [currentLine, txt, overscan.get, heightCount]
     )
 
     restoreCurrentWord(currentLine, [widthCount]) // 二级rerender second
@@ -253,13 +253,13 @@ export function useScroll(
         // xxx.push(performance.now())
         if (stopScroll.get) return
 
-        const scrollTopNow = (e.target as HTMLElement).scrollTop
-        if (scrollTopNow === scrollTop) return
+        // const scrollTopNow = (e.target as HTMLElement).scrollTop
+        // if (scrollTopNow === scrollTop) return
 
         clearTimeout(clear2)
         clear2 = setTimeout(() => {
-            SET_scrollTop(scrollTopNow)
-        }, 1) // todo clear
+            // SET_scrollTop((e.target as HTMLElement).scrollTop)
+        }) // todo clear
     }
 }
 export function restoreCurrentWord(currentLine: number, deps: any[]) {

@@ -51,7 +51,7 @@ export function geneBlock(block: string, blockIdx: number, lineIdx?: number) {
         xxx.add(blockIdx)
         blockCache[blockIdx] =
             block === '  ' ? (
-                <div key={blockIdx} data-line={lineIdx} />
+                <div key={blockIdx} />
             ) : (
                 // ''
                 // doing fail

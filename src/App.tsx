@@ -100,6 +100,23 @@ const APP = () => {
             />
 
             <div className='control'>
+                <div>
+                    {(() => {
+                        const [x, setX] = useState(0)
+                        return (
+                            <>
+                                <button onClick={() => setX(x + 1)}>
+                                    add x
+                                </button>
+                                {Array(1e3 + x)
+                                    .fill(1)
+                                    .map((e, i) => (
+                                        <span>{i}</span>
+                                    ))}
+                            </>
+                        )
+                    })()}
+                </div>
                 <Control
                     {...{
                         currentLine,
@@ -142,14 +159,10 @@ const APP = () => {
                         {...{
                             blockL,
                             blockR,
-                            widthCount,
-                            heightCount,
-                            RENDER,
-                            onScrollHandle,
                             // 不用添加进依赖 isAotOver变化不需要主动触发VG变化, 这种需求vue怎么处理?
                         }}
                     />,
-                    [blockL, blockR, widthCount, heightCount]
+                    [blockL, blockR]
                 )}
             </div>
 
@@ -159,6 +172,7 @@ const APP = () => {
                 []
             )}
 
+            {/* cache dom, use display */}
             <div className='search'>{searchItems}</div>
 
             <>

@@ -5,34 +5,34 @@ import { config } from './hook'
 import { getHoldingKey, useStatePaire } from './hookUtils'
 import { querySelector, querySelectorAll } from './utils'
 // console.log('reader TS')
-export function scrollToNext(clickLine: number, word: string) {
-    const nextLine = (() => {
-        const allLine = config.LINE
+export function scrollToNext(
+    clickLine: number,
+    word: string,
+    nextType = (() => {
         const { Control, Alt } = getHoldingKey()
+        if (Control && Alt) return 'first'
+        if (Control) return 'last'
+        if (Alt) return 'prev'
+        return 'next'
+    })()
+) {
+    const nextLine = (() => {
+        const Line = config.LINE
 
         // todo click的时候判断holding -> hold直接执行 略过click
-        if (Control && Alt) {
-            // 第一个
-            return getFirst()
-        }
-
-        if (Control) {
-            // 最后一个
-            return getLast()
-        }
-
-        if (Alt) {
-            // 上一个
-            const pre = (allLine.slice(0, clickLine) as any).findLastIndex(
+        if (nextType == 'first') return getFirst()
+        if (nextType == 'last') return getLast()
+        if (nextType == 'prev') {
+            const pre = (Line.slice(0, clickLine) as any).findLastIndex(
                 findNextWord
             )
             return pre === -1 ? getLast() : pre
         }
 
-        // 下一个
-        const next = allLine.slice(clickLine + 1).findIndex(findNextWord)
+        const next = Line.slice(clickLine + 1).findIndex(findNextWord)
         return next === -1 ? getFirst() : clickLine + 1 + next
 
+        // find with line -> find with block?
         function findNextWord(line1: string, idx: number, arr: string[]) {
             return line1.includes(word) || willFindWithDouble()
             function willFindWithDouble() {
@@ -45,10 +45,10 @@ export function scrollToNext(clickLine: number, word: string) {
             }
         }
         function getFirst() {
-            return allLine.findIndex(findNextWord)
+            return Line.findIndex(findNextWord)
         }
         function getLast() {
-            return (allLine as any).findLastIndex(findNextWord)
+            return (Line as any).findLastIndex(findNextWord)
         }
     })()
 

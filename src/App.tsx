@@ -142,11 +142,11 @@ const APP = () => {
                 )}
             </div>
 
-            {/* {useAutoScroll('.autoScrolling')} */}
-            {useCallback(
-                (<UseMouseScroll speed={0.1}></UseMouseScroll>) as any,
-                []
-            )}
+            {/* {
+                UseMouseScroll({ speed: 0.1 })
+                // memo后不能函数调用了
+            } */}
+            <UseMouseScroll speed={0.1} />
 
             {/* cache dom, use display */}
             <div className='search'>{searchItems}</div>

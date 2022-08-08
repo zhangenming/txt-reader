@@ -154,8 +154,9 @@ export default function Control({
             </div>
             <div>
                 {selectArr.map(item => {
-                    const { key, count, isOneScreen } = item
-                    if (count === 1 || isOneScreen) return
+                    const { key, count, isOneScreen, isPined } = item
+                    if (count === 1 || isOneScreen) return <></>
+
                     return (
                         <div
                             className='selectItem'
@@ -170,24 +171,29 @@ export default function Control({
                                 className='key'
                                 children={key}
                                 onClick={() => {
-                                    changeHandle({
-                                        ...item,
-                                        isPined: true,
-                                    })
-                                    scrollToNext(currentLine + 2, key)
+                                    if (key === pined.get) {
+                                        scrollToNext(currentLine + 2, key)
+                                    } else {
+                                        pined.set(key)
+                                        scrollToNext(
+                                            currentLine + 2,
+                                            key,
+                                            'first'
+                                        )
+                                    }
                                 }}
                             />
                             <span
-                                className={item.isPined ? 'isPined' : ''}
+                                className={isPined ? 'isPined' : ''}
                                 children={count}
                                 onClick={() => {
                                     // react 会不会每个span都新建了一个函数事件
                                     if (getHoldingKey().Backspace) {
-                                        return deleteHandle(item.key)
+                                        return deleteHandle(key)
                                     }
                                     changeHandle({
                                         ...item,
-                                        isPined: !item.isPined,
+                                        isPined: !isPined,
                                     })
 
                                     // deleteHandle(item.key)

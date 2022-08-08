@@ -53,8 +53,8 @@ export function Effect({ showInfo, msg }: any) {
 }
 
 type refCur = { cur: number }
-export function UseMouseScroll({ speed: s }: any) {
-    const [speed, SET_speed] = useState(s)
+export const UseMouseScroll = memo(function UseMouseScroll({ speed: s }: any) {
+    const [speed, SET_speed] = useState(s).ll
     const speedRef = useRef(speed)
     speedRef.current = speed
 
@@ -95,7 +95,7 @@ export function UseMouseScroll({ speed: s }: any) {
     return (
         <div
             ref={ref}
-            style={{ 'font-size': 13, overflow: 'hidden' }}
+            style={{ fontSize: 13, overflow: 'hidden' }}
             onWheel={({ deltaY }) => {
                 SET_speed(speedRef.current * (deltaY < 0 ? 6 / 5 : 5 / 6))
             }}
@@ -117,4 +117,4 @@ export function UseMouseScroll({ speed: s }: any) {
         cancelAnimationFrame(rAF.cur)
         rAF.cur = 0
     }
-}
+})

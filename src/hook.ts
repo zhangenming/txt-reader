@@ -258,7 +258,7 @@ export function useScroll(
 
         clearTimeout(clear2)
         clear2 = setTimeout(() => {
-            // SET_scrollTop((e.target as HTMLElement).scrollTop)
+            SET_scrollTop((e.target as HTMLElement).scrollTop)
         }) // todo clear
     }
 }

@@ -43,13 +43,6 @@ export const SIZE_H = 25
 import mc from '../txt/mc'
 
 const APP = () => {
-    if (showInfo) {
-        console.log('\n')
-        console.log('\n')
-        console.log('↓↓↓↓↓↓↓↓↓↓↓↓')
-        console.log('%c------- render begin -------------------', 'color: red;')
-    }
-    // runWithTime(() => {}, 1)
     RENDER.app++
 
     const [widthCount, heightCount] = useSizeCount() // 二级rerender first
@@ -78,27 +71,10 @@ const APP = () => {
     const [selectArr, SET_selectArr] = useStateWithLS<item[]>('selectArr')
     const pined = useStatePaire('')
 
-    showInfo &&
-        useEffect(() => {
-            console.log(
-                '%c------------------ effect OVER -------------------',
-                'color: red;'
-            )
-            // runWithTime(() => {}, 4)
-            console.log('↑↑↑↑↑↑↑↑↑↑↑↑')
-            console.log('\n')
-            console.log('\n')
-        })
-
     const [hoverWord, SET_hoverWord, searchItems] = useHoverWords()
 
     return (
         <>
-            <Effect
-                showInfo={showInfo}
-                msg='------------------ effect begin ------------------'
-            />
-
             <div className='control'>
                 <div>
                     {(() => {
@@ -225,11 +201,6 @@ const APP = () => {
                     )
                 }, [pined, selectArr])}
             </>
-
-            <Effect
-                showInfo={showInfo}
-                msg='------- render OVER -------------------'
-            />
         </>
     )
 

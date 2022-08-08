@@ -11,9 +11,7 @@ export function getAllWordPosition(word: string) {
     const t = Array(word.length).fill(0)
 
     if (!getAllWordPositionCache[key]) {
-        getAllWordPositionCache[key] = getWordPosition(word).flatMap(
-            (n: number) => t.map((_, i) => n + i)
-        )
+        getAllWordPositionCache[key] = getWordPosition(word).flatMap((n: number) => t.map((_, i) => n + i))
     }
     return getAllWordPositionCache[key]
 }
@@ -23,15 +21,13 @@ export function getAllWordPositionWithNode(word: string) {
     const key = word + config.line2Block.length
 
     if (!getAllWordPositionWithNodeCache[key]) {
-        getAllWordPositionWithNodeCache[key] = getAllWordPosition(word).map(
-            idx => querySelector(`[data-i="${idx}"]`)
-        )
+        getAllWordPositionWithNodeCache[key] = getAllWordPosition(word).map(idx => querySelector(`[data-i="${idx}"]`))
     }
     return getAllWordPositionWithNodeCache[key]
 }
 
 export function makeFuncCache(
-    func: (..._: any) => any
+    func: (..._: any) => any,
     // getKey = (x: any) => JSON.stringify(x)
 ) {
     const cache: any = {}
@@ -77,13 +73,7 @@ export function getClasses(classes: object) {
     return className && { className }
 }
 
-export function getStyle(
-    word: string,
-    color: string,
-    isPined: boolean,
-    count: number,
-    isOneScreen: boolean
-) {
+export function getStyle(word: string, color: string, isPined: boolean, count: number, isOneScreen: boolean) {
     if (count === 0 || word === '' || word === ' ') return
 
     const justOne = count === 1
@@ -171,9 +161,7 @@ background: linear-gradient(#000,#000);
   background-size: 100% ${justOne ? 2 : 4}px;
   background-repeat: no-repeat;
   background-position: 0px 50%;`
-                : `cursor: var(--clickType);${
-                      isPined ? 'background:sandybrown' : ''
-                  }`
+                : `cursor: var(--clickType);${isPined ? 'background:sandybrown' : ''}`
 
         const style = `
 {
@@ -189,30 +177,12 @@ background: linear-gradient(#000,#000);
         if (justOne) return '/* 只有一个没必要显示 */'
 
         const first = getSelector('findIndex', 'find', 'indexOf', 0)
-        const last = getSelector(
-            'findLastIndex',
-            'findLast',
-            'lastIndexOf',
-            word.length - 1
-        )
-        return (
-            first +
-            '{box-shadow: -3px -3px 0px 0px #973636, -3px 3px 0px 0px #973636;}\n' +
-            last +
-            '{box-shadow: 3px -3px 0px 0px #973636, 3px 3px 0px 0px #973636;}'
-        )
-        function getSelector(
-            findIdx: string,
-            find: string,
-            idxOf: string,
-            offset: number
-        ) {
+        const last = getSelector('findLastIndex', 'findLast', 'lastIndexOf', word.length - 1)
+        return first + '{box-shadow: -3px -3px 0px 0px #973636, -3px 3px 0px 0px #973636;}\n' + last + '{box-shadow: 3px -3px 0px 0px #973636, 3px 3px 0px 0px #973636;}'
+        function getSelector(findIdx: string, find: string, idxOf: string, offset: number) {
             const arr = config.BLOCK as any
             const BlockIdx = arr[findIdx]((e: string) => e.includes(word))
-            const ItemIdx =
-                arr[find]((e: string) => e.includes(word))![idxOf](word) +
-                1 +
-                offset
+            const ItemIdx = arr[find]((e: string) => e.includes(word))![idxOf](word) + 1 + offset
             return `.V-Grid div[data-block="${BlockIdx}"] span:nth-child(${ItemIdx})`
         }
     }
@@ -284,11 +254,7 @@ export function i2rc(i: number, lineSize: number = config.lineSize) {
 }
 
 export function getColor() {
-    const [l, g, b] = [
-        floor(Math.random() * 256),
-        floor(Math.random() * 256),
-        floor(Math.random() * 256),
-    ]
+    const [l, g, b] = [floor(Math.random() * 256), floor(Math.random() * 256), floor(Math.random() * 256)]
     return `rgb(${l},${g},${b})`
 }
 
@@ -301,10 +267,7 @@ export function querySelectorAll(selector: string) {
 
 export function useEffectWrap(func: any = () => {}, deps?: any) {
     if (!0) {
-        const name = new Error()
-            .stack!.split('\n')[3]
-            .split('(')[0]
-            .replaceAll('    at ', '')
+        const name = new Error().stack!.split('\n')[3].split('(')[0].replaceAll('    at ', '')
 
         const type = (() => {
             if (!deps) return 'every' // 没数组
@@ -404,14 +367,9 @@ export function chunkString(line: string, len: number) {
 
 const features = [...new URLSearchParams(location.search).keys()]
 
-export const hasFeature = (
-    f: string = 'x',
-    l: Function = () => true,
-    r: Function = () => false
-) => (features.includes(f) ? l() : r())
+export const hasFeature = (f: string = 'x', l: Function = () => true, r: Function = () => false) => (features.includes(f) ? l() : r())
 
-export const getFeature = (f: string) =>
-    new URLSearchParams(location.search).get(f)
+export const getFeature = (f: string) => new URLSearchParams(location.search).get(f)
 
 export function getWord(ele: Element) {
     const content = getComputedStyle(ele).content // js <-> css

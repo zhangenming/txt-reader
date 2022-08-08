@@ -14,7 +14,7 @@ export function scrollToNext(
         if (Control) return 'last'
         if (Alt) return 'prev'
         return 'next'
-    })()
+    })(),
 ) {
     const nextLine = (() => {
         const Line = config.LINE
@@ -23,9 +23,7 @@ export function scrollToNext(
         if (nextType == 'first') return getFirst()
         if (nextType == 'last') return getLast()
         if (nextType == 'prev') {
-            const pre = (Line.slice(0, clickLine) as any).findLastIndex(
-                findNextWord
-            )
+            const pre = (Line.slice(0, clickLine) as any).findLastIndex(findNextWord)
             return pre === -1 ? getLast() : pre
         }
 
@@ -58,9 +56,7 @@ export function scrollToNext(
 
 export function hoverWords(word: string | undefined) {
     querySelector(`[title="${word}"]`)?.classList.toggle('hoverByJs')
-    querySelectorAll('.hoverByJs').forEach(node =>
-        node.classList.toggle('hoverByJs')
-    )
+    querySelectorAll('.hoverByJs').forEach(node => node.classList.toggle('hoverByJs'))
 
     // ||
     // (e.target as Element).className
@@ -76,9 +72,7 @@ export function hoverWords(word: string | undefined) {
     //     }
     // })
 
-    querySelectorAll(geneSelector(word!)).forEach(node =>
-        node.classList.toggle('hoverByJs')
-    )
+    querySelectorAll(geneSelector(word!)).forEach(node => node.classList.toggle('hoverByJs'))
     querySelector(`[title=${word}]`)?.classList.toggle('hoverByJs')
 
     function geneSelector(word: string) {
@@ -90,9 +84,7 @@ export function hoverWords(word: string | undefined) {
             .reduce((all, now) => all + getCls(now) + '+', '')
             .slice(0, -1) //去掉末尾' +'
 
-        const _HAS = doHas(word.length, base)
-            .join(',\n')
-            .replaceAll(':has()', '')
+        const _HAS = doHas(word.length, base).join(',\n').replaceAll(':has()', '')
         const HAS = `:is(${_HAS})`
 
         return '.V-Grid ' + HAS
@@ -113,14 +105,10 @@ export function useHoverWords() {
         if (hoverWord === undefined) return
 
         if (!useHoverWordsCache[hoverWord]) {
-            useHoverWordsCache[hoverWord] = config.LINE.flatMap((line, idx) =>
-                line.includes(hoverWord)
-                    ? (idx / config.LINE.length) * 100 + 1 /*滚轴自身*/ + '%'
-                    : []
-            ).map(top =>
+            useHoverWordsCache[hoverWord] = config.LINE.flatMap((line, idx) => (line.includes(hoverWord) ? (idx / config.LINE.length) * 100 + 1 /*滚轴自身*/ + '%' : [])).map(top =>
                 React.createElement('i', {
                     style: { top },
-                })
+                }),
             )
         }
         return useHoverWordsCache[hoverWord]

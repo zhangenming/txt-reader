@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import { config } from '../hook'
 import { getHoldingKey, useStatePaire } from '../hookUtils'
-import { hoverWords, scrollToNext } from '../reader'
+import { scrollToNext } from '../reader'
 import { getWord, querySelector } from '../utils'
 export type item = {
     key: string
@@ -52,49 +52,18 @@ export default function Control({
                 const [state, SET_state] = useState(111111)
                 return (
                     <>
-                        <input
-                            value={state}
-                            onChange={e => SET_state(Number(e.target.value))}
-                        />
-                        <button
-                            onClick={() =>
-                                (querySelector('.reader').scrollTop -=
-                                    Number(state))
-                            }
-                        >
-                            up
-                        </button>
-                        <button
-                            onClick={() =>
-                                (querySelector('.reader').scrollTop +=
-                                    Number(state))
-                            }
-                        >
-                            down
-                        </button>
-                        <button
-                            onClick={() =>
-                                (querySelector('.reader').scrollTop = 0)
-                            }
-                        >
-                            0
-                        </button>
-                        <button
-                            onClick={() =>
-                                (querySelector('.reader').scrollTop +=
-                                    config.LINE.length * 25)
-                            }
-                        >
-                            99
-                        </button>
+                        <input value={state} onChange={e => SET_state(Number(e.target.value))} />
+                        <button onClick={() => (querySelector('.reader').scrollTop -= Number(state))}>up</button>
+                        <button onClick={() => (querySelector('.reader').scrollTop += Number(state))}>down</button>
+                        <button onClick={() => (querySelector('.reader').scrollTop = 0)}>0</button>
+                        <button onClick={() => (querySelector('.reader').scrollTop += config.LINE.length * 25)}>99</button>
                     </>
                 )
             })()}
             <div>
                 <div>Line:</div>
                 <span>
-                    {currentLine}(
-                    {((currentLine / config.LINE.length) * 100).toFixed(2)}
+                    {currentLine}({((currentLine / config.LINE.length) * 100).toFixed(2)}
                     %)
                 </span>
             </div>
@@ -104,12 +73,8 @@ export default function Control({
                 <span key={ctrX.get}> ctrX:{ctrX.get}</span>
             </span>
             {/* isAotOver:{String(config.AOT.length === config.JIT.length)} */}
-            <button onClick={() => SET_stopControl((v: any) => !v)}>
-                stopControl:{String(stopControl)}
-            </button>
-            <button onClick={() => stopScroll.set((v: any) => !v)}>
-                stopScroll:{String(stopScroll.get)}
-            </button>
+            <button onClick={() => SET_stopControl((v: any) => !v)}>stopControl:{String(stopControl)}</button>
+            <button onClick={() => stopScroll.set((v: any) => !v)}>stopScroll:{String(stopScroll.get)}</button>
             {/* <span>APP:{RENDER.app}</span>
             <span>VG: {RENDER.VG}</span> */}
             <button
@@ -175,11 +140,7 @@ export default function Control({
                                         scrollToNext(currentLine + 2, key)
                                     } else {
                                         pined.set(key)
-                                        scrollToNext(
-                                            currentLine + 2,
-                                            key,
-                                            'first'
-                                        )
+                                        scrollToNext(currentLine + 2, key, 'first')
                                     }
                                 }}
                             />

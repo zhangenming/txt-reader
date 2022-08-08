@@ -1,19 +1,8 @@
-import {
-    useState,
-    useRef,
-    useEffect,
-    Dispatch,
-    SetStateAction,
-    useMemo,
-    MutableRefObject,
-    RefObject,
-} from 'react'
+import { useState, useRef, useEffect, Dispatch, SetStateAction, useMemo, MutableRefObject, RefObject } from 'react'
 import { config } from './hook'
 import { querySelector } from './utils'
 // console.log('hookUtils TS')
-export function useHover(
-    ref: React.MutableRefObject<HTMLDivElement | undefined>
-) {
+export function useHover(ref: React.MutableRefObject<HTMLDivElement | undefined>) {
     const [isHover, SET_isHover] = useState(false)
     const handleMouseOver = () => SET_isHover(true)
     const handleMouseOut = () => SET_isHover(false)
@@ -80,7 +69,7 @@ export function useStatePaire<S>(initialState?: any) {
             get: state,
             set: SET_state,
         }),
-        [state]
+        [state],
     )
 }
 

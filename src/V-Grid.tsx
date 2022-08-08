@@ -5,13 +5,7 @@ import { hasFeature } from './utils'
 // console.log('VG TSX ')
 // Row是行， column是列
 // memo后不是函数形式的组件了
-export default function VGrid({
-    blockL,
-    blockR,
-}: {
-    blockL: number
-    blockR: number
-}) {
+export default function VGrid({ blockL, blockR }: { blockL: number; blockR: number }) {
     // console.log('render VG')
     // useEffect(() => {
     //     console.log('effect VG')
@@ -34,11 +28,7 @@ export default function VGrid({
 
                 {/* // todo remove just temp value JIT */}
                 {/* todo  首屏直出(缓存到LS) 躲避txt过大等待加载 */}
-                {hasFeature('aot')
-                    ? BLOCK_AOT.slice(blockL, blockR)
-                    : BLOCK.slice(blockL, blockR).map((block, i) =>
-                          geneBlock(block, blockL + i, block2Line[blockL + i])
-                      )}
+                {hasFeature('aot') ? BLOCK_AOT.slice(blockL, blockR) : BLOCK.slice(blockL, blockR).map((block, i) => geneBlock(block, blockL + i, block2Line[blockL + i]))}
             </div>
         </>
     )
@@ -55,16 +45,7 @@ export function geneBlock(block: string, blockIdx: number, lineIdx?: number) {
             ) : (
                 // ''
                 // doing fail
-                <div
-                    key={blockIdx}
-                    data-line={lineIdx}
-                    data-block={blockIdx}
-                    data-str={
-                        block.length < 20
-                            ? block
-                            : block.slice(0, 10) + '...' + block.slice(-10)
-                    }
-                >
+                <div key={blockIdx} data-line={lineIdx} data-block={blockIdx} data-str={block.length < 20 ? block : block.slice(0, 10) + '...' + block.slice(-10)}>
                     {[...block].map(geneItem)}
                 </div>
             )
@@ -77,10 +58,7 @@ let isSpeaking = 0
 const itemMap: any = {}
 function geneItem(word: string) {
     if (!itemMap[word]) {
-        itemMap[word] = [
-            <span className={word} children={word} />,
-            <span className={word + ' speaking'} children={word} />,
-        ]
+        itemMap[word] = [<span className={word} children={word} />, <span className={word + ' speaking'} children={word} />]
     }
 
     if (word === '”') {
@@ -95,12 +73,7 @@ function geneItem(word: string) {
 
     return itemMap[word][spk]
 
-    return (
-        <span
-            className={word + isSpeaking ? '  speaking' : ''}
-            children={word}
-        />
-    )
+    return <span className={word + isSpeaking ? '  speaking' : ''} children={word} />
 }
 
 function geneChild2(words: string[], idx: number, key: number) {

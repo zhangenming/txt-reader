@@ -171,9 +171,7 @@ background: linear-gradient(#000,#000);
   background-size: 100% ${justOne ? 2 : 4}px;
   background-repeat: no-repeat;
   background-position: 0px 50%;`
-                : `cursor: var(--clickType);${
-                      isPined ? 'background:sandybrown' : ''
-                  }`
+                : `cursor: var(--clickType);${isPined ? 'background:sandybrown' : ''}`
 
         const style = `
 {
@@ -299,7 +297,7 @@ export function querySelectorAll(selector: string) {
     return document.querySelectorAll<HTMLElement>(selector)!
 }
 
-export function useEffectWrap(func: any = () => {}, deps?: any) {
+export function useEffectWrap(func: any = () => { }, deps?: any) {
     if (!0) {
         const name = new Error()
             .stack!.split('\n')[3]

@@ -57,7 +57,7 @@
     vertical-align: bottom;
     height: var(--SIZE_H);
     width: var(--SIZE_W);
-    /* margin: 5px 0 5px 0; */
+    /* margin: 5px 0; */
 
     box-sizing: border-box; /*否则last会在speaking状态下失效*/
     /* for filter */
@@ -148,7 +148,7 @@ body {
     overflow: hidden;
 }
 .reader {
-    /* scroll-behavior: smooth; */
+    scroll-behavior: smooth;
     display: flex;
     flex-grow: 1;
     height: var(--readerHight);

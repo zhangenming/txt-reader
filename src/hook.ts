@@ -209,10 +209,10 @@ export function useScroll(
                 Math.max(0, line2Block[currentLine][0] - overscan.get.top),
 
                 line2Block[
-                    Math.min(LINE.length - 1, currentLine + heightCount)
+                Math.min(LINE.length - 1, currentLine + heightCount)
                 ][0] +
-                    overscan.get.bot +
-                    1,
+                overscan.get.bot +
+                1,
             ]
         },
         [currentLine, txt]

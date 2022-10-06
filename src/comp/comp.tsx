@@ -100,7 +100,7 @@ export const UseMouseScroll = memo(function UseMouseScroll({ speed: s }: any) {
                 SET_speed(speedRef.current * (deltaY < 0 ? 6 / 5 : 5 / 6))
             }}
         >
-            {speed}
+            {/* {speed} */}
         </div>
     )
 

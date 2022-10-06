@@ -1,8 +1,21 @@
 const autoScrollSpeed = 1
 import React from 'react'
-import { createElement, useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react'
+import {
+    createElement,
+    useEffect,
+    useLayoutEffect,
+    useMemo,
+    useRef,
+    useState,
+} from 'react'
 import { SIZE_H, SIZE_W } from './App'
-import { useHover, useKeyHold, usePrevious, useStatePaire, useStateWithLS } from './hookUtils'
+import {
+    useHover,
+    useKeyHold,
+    usePrevious,
+    useStatePaire,
+    useStateWithLS,
+} from './hookUtils'
 import { getAllWordPosition, hasFeature } from './utils'
 import { chunkString, floor, i2rc, querySelector } from './utils'
 import { geneBlock } from './V-Grid'
@@ -163,7 +176,9 @@ export function useTXT(widthCount: number, txt: string) {
                 if (block === over) {
                     return console.timeEnd('AOT done')
                 }
-                BLOCK_AOT.push(geneBlock(BLOCK[block], block, block2Line[block])) //error
+                BLOCK_AOT.push(
+                    geneBlock(BLOCK[block], block, block2Line[block])
+                ) //error
             }
             requestIdleCallback(doWork)
         }
@@ -178,7 +193,7 @@ export function useScroll(
     },
     widthCount: number,
     heightCount: number,
-    txt = config.txt,
+    txt = config.txt
 ) {
     const stopScroll = useStatePaire(false)
     const overscan = useStatePaire(_overscan)
@@ -190,14 +205,31 @@ export function useScroll(
         function computed() {
             const { line2Block, LINE } = config
 
-            return [Math.max(0, line2Block[currentLine][0] - overscan.get.top), line2Block[Math.min(LINE.length - 1, currentLine + heightCount)][0] + overscan.get.bot + 1]
+            return [
+                Math.max(0, line2Block[currentLine][0] - overscan.get.top),
+
+                line2Block[
+                Math.min(LINE.length - 1, currentLine + heightCount)
+                ][0] +
+                overscan.get.bot +
+                1,
+            ]
         },
-        [currentLine, txt, overscan.get, heightCount],
+        [currentLine, txt]
     )
 
     restoreCurrentWord(currentLine, [widthCount]) // 二级rerender second
 
-    return [scrollTop, currentLine, blockL, blockR, onScrollHandle, stopScroll, overscan, setUpdata] as const
+    return [
+        scrollTop,
+        currentLine,
+        blockL,
+        blockR,
+        onScrollHandle,
+        stopScroll,
+        overscan,
+        setUpdata,
+    ] as const
     // useCallback/useEffect[]存在 就需注意 值过期问题
 
     function onScrollHandle(e: React.UIEvent<HTMLDivElement, UIEvent>) {
@@ -221,30 +253,40 @@ export function useScroll(
         // xxx.push(performance.now())
         if (stopScroll.get) return
 
-        // const scrollTopNow = (e.target as HTMLElement).scrollTop
-        // if (scrollTopNow === scrollTop) return
+        const scrollTopNow = (e.target as HTMLElement).scrollTop
+        if (scrollTopNow === scrollTop) return
 
         clearTimeout(clear2)
         clear2 = setTimeout(() => {
-            SET_scrollTop((e.target as HTMLElement).scrollTop)
-        }) // todo clear
+            SET_scrollTop(scrollTopNow)
+        }, 1) // todo clear
     }
 }
 export function restoreCurrentWord(currentLine: number, deps: any[]) {
-    const [currentBlock] = useStateWithLS<number>('currentBlock', () => config.line2Block[currentLine][0])
+    const [currentBlock] = useStateWithLS<number>(
+        'currentBlock',
+        () => config.line2Block[currentLine][0]
+    )
     useEffect(() => {
         // 赋值触发onscroll event
-        querySelector('.reader').scrollTop = config.block2Line[currentBlock] * SIZE_H
+        querySelector('.reader').scrollTop =
+            config.block2Line[currentBlock] * SIZE_H
     }, deps)
 }
 
 let clear: number
-export function useKey(OVERSCAN_bottom: number, lineSize: number, currentLine: number, heightLineCount: number) {
+export function useKey(
+    OVERSCAN_bottom: number,
+    lineSize: number,
+    currentLine: number,
+    heightLineCount: number
+) {
     useKeyHold()
     const [isCtrlHold, SET_isCtrlHold] = useState(false)
     const [isShiftHold, SET_isShiftHold] = useState(false)
     const clickType = (() => {
-        if (isCtrlHold && isShiftHold) return 'url(/src/assert/last.svg) 15 15, pointer'
+        if (isCtrlHold && isShiftHold)
+            return 'url(/src/assert/last.svg) 15 15, pointer'
         if (isCtrlHold) return 'url(/src/assert/prev.svg) 15 15, pointer'
         if (isShiftHold) return 'url(/src/assert/first.svg) 15 15, pointer'
         return 'url(/src/assert/next.svg) 15 15, pointer'

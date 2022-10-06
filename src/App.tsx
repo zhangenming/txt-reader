@@ -21,7 +21,7 @@ import { scrollToNext, useHoverWords } from './reader'
 export const SIZE_W = 25
 export const SIZE_H = 25
 
-import mc from '../txt/mc'
+import mc from '../txt/x'
 
 const APP = () => {
     RENDER.app++
@@ -116,15 +116,38 @@ const APP = () => {
             <div className='search'>{searchItems}</div>
 
             <>
-                {/* <style>
+                <style>
                     {
-                        Array(6)
-                            .fill(null)
-                            .map((_, i) => `span:hover ${'+span '.repeat(i)}`)
-                            .join(',\n') + '{background:yellowgreen}'
+                        // Array(6)
+                        //     .fill(null)
+                        //     .map((_, i) => `span:hover ${'+span '.repeat(i)}`)
+                        //     .join(',\n') + '{background:yellowgreen}'
                         // aot 卡, 使用jit
+
+                        (() => {
+                            const l1 = `${widthCount * 4}n - ${widthCount * 2}`
+                            const l11 = `${widthCount * 4}n - ${
+                                widthCount * 2 - 1
+                            }`
+
+                            const l2 = `${widthCount * 4}n - ${widthCount * 4}`
+                            const l22 = `${widthCount * 4}n - ${
+                                widthCount * 4 - 1
+                            }`
+
+                            return `.V-Grid span:nth-last-child(n+${
+                                widthCount * 3
+                            }) ~ span:is(:nth-child(${l1}), :nth-child(${l11})) {
+                                background: #b464fd;
+                            }
+                            .V-Grid span:nth-last-child(n+${
+                                widthCount * 3
+                            }) ~ span:is(:nth-child(${l2}), :nth-child(${l22})) {
+                                background: #c9c961;
+                            }`
+                        })()
                     }
-                </style> */}
+                </style>
 
                 {(() => {
                     const styles = {

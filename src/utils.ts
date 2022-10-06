@@ -265,7 +265,7 @@ export function querySelectorAll(selector: string) {
     return document.querySelectorAll<HTMLElement>(selector)!
 }
 
-export function useEffectWrap(func: any = () => {}, deps?: any) {
+export function useEffectWrap(func: any = () => { }, deps?: any) {
     if (!0) {
         const name = new Error().stack!.split('\n')[3].split('(')[0].replaceAll('    at ', '')
 

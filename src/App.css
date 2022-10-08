@@ -9,8 +9,8 @@
     line-height: var(--SIZE_H);
     box-sizing: border-box;
     will-change: scroll-position;
-    content-visibility: auto;
-    overflow: hidden;
+    /* content-visibility: auto;
+    overflow: hidden; */
 }
 
 /* BLOCK */
@@ -36,12 +36,6 @@
     background: steelblue;
     height: 5px;
     vertical-align: baseline;
-}
-.V-Grid span:nth-child(3) {
-    /* font-size: 2em;
-    position: relative;
-    top: -10px;
-    left: -20px; */
 }
 .V-Grid span:hover {
     isolation: isolate;
@@ -74,7 +68,7 @@ span.isTarget {
     border-top: 3px solid;
     border-bottom: 3px solid;
 }
-:not(.isTarget) + .isTarget {
+:not(span.isTarget) + span.isTarget {
     border-left: 3px solid;
 }
 /* .isTarget:has(+ :not(.isTarget)) {

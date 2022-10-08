@@ -54,7 +54,7 @@ export function scrollToNext(
     querySelector('.reader').scrollTop += (nextLine - clickLine) * SIZE_H
 }
 
-export function hoverWords(word: string | undefined) {
+function hoverWords(word: string | undefined) {
     querySelector(`[title="${word}"]`)?.classList.toggle('hoverByJs')
     querySelectorAll('.hoverByJs').forEach(node => node.classList.toggle('hoverByJs'))
 
@@ -103,18 +103,23 @@ export function useHoverWords() {
     const searchItemsDoms = useMemo(() => {
         hoverWords(hoverWord)
         if (hoverWord === undefined) return
-
         if (!useHoverWordsCache[hoverWord]) {
-            useHoverWordsCache[hoverWord] = config.LINE.flatMap((line, idx) => (line.includes(hoverWord) ? (idx / config.LINE.length) * 100 + 1 /*滚轴自身*/ + '%' : [])).map(top =>
-                React.createElement('i', {
-                    style: { top },
-                }),
+            // line + arr[idx + 1] 处理情形: 一个词被两句话隔开
+            useHoverWordsCache[hoverWord] = config.LINE.flatMap((line, idx, arr) =>
+                (line + arr[idx + 1]).includes(hoverWord)
+                    ? React.createElement('i', {
+                          style: { top: (idx / config.LINE.length) * 100 + 1 /*滚轴自身*/ + '%' },
+                      })
+                    : [],
             )
         }
         return useHoverWordsCache[hoverWord]
     }, [hoverWord])
 
     return [hoverWord, SET_hoverWord, searchItemsDoms] as const
+}
+function withCache(fn: () => {}) {
+    const cache = {}
 }
 
 export function doHas(wordLen: number, base: string) {

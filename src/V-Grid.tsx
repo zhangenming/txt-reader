@@ -28,7 +28,9 @@ export default function VGrid({ blockL, blockR }: { blockL: number; blockR: numb
 
                 {/* // todo remove just temp value JIT */}
                 {/* todo  首屏直出(缓存到LS) 躲避txt过大等待加载 */}
-                {hasFeature('aot') ? BLOCK_AOT.slice(blockL, blockR) : BLOCK.slice(blockL, blockR).map((block, i) => geneBlock(block, blockL + i, block2Line[blockL + i]))}
+                {hasFeature('aot') //
+                    ? BLOCK_AOT.slice(blockL, blockR)
+                    : BLOCK.slice(blockL, blockR).map((block, i) => geneBlock(block, blockL + i, block2Line[blockL + i]))}
             </div>
         </>
     )

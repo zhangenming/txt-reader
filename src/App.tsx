@@ -11,7 +11,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { createPortal } from 'react-dom'
 import { getStyle, getWord, getWordPosition, querySelector, querySelectorAll } from './utils'
 import { Effect, UseMouseScroll } from './comp/comp'
-import { restoreCurrentWord, useKey, useLoad, useScroll, useSizeCount, useTXT, config } from './hook'
+import { restoreCurrentWord, useKey, useLoad, useScroll, useSizeCount, useTXT, config, useNext } from './hook'
 import Control from './comp/control'
 import VG from './V-Grid'
 
@@ -24,6 +24,7 @@ export const SIZE_H = 25
 import mc from '../txt/x'
 
 const APP = () => {
+    useNext()
     RENDER.app++
 
     const [widthCount, heightCount] = useSizeCount() // 二级rerender first
@@ -125,26 +126,25 @@ const APP = () => {
                         // aot 卡, 使用jit
 
                         (() => {
-                            const l1 = `${widthCount * 4}n - ${widthCount * 2}`
-                            const l11 = `${widthCount * 4}n - ${
-                                widthCount * 2 - 1
-                            }`
+                            const q = `${widthCount * 4}n - ${widthCount * 2}`
+                            const w = `${widthCount * 4}n - ${widthCount * 2 - 1}`
+                            const t = `${widthCount * 4}n - ${widthCount * 4}`
+                            const y = `${widthCount * 4}n - ${widthCount * 4 - 1}`
 
-                            const l2 = `${widthCount * 4}n - ${widthCount * 4}`
-                            const l22 = `${widthCount * 4}n - ${
-                                widthCount * 4 - 1
-                            }`
-
-                            return `.V-Grid span:nth-last-child(n+${
-                                widthCount * 3
-                            }) ~ span:is(:nth-child(${l1}), :nth-child(${l11})) {
-                                background: #b464fd;
-                            }
-                            .V-Grid span:nth-last-child(n+${
-                                widthCount * 3
-                            }) ~ span:is(:nth-child(${l2}), :nth-child(${l22})) {
-                                background: #c9c961;
-                            }`
+                            const s = (e: string) => `span:nth-last-child(n+${widthCount * 3}) ~ span:nth-child(${e})`
+                            return (
+                                `
+${s(q)} {box-shadow: 0.5em 0px 0px -0.1em #b464fd;}
+${s(w)} {box-shadow: -0.5em 0px 0px -0.1em #b464fd;}
+${s(t)} {box-shadow: 0.5em 0px 0px -0.1em #c9c961;}
+${s(y)} {box-shadow: -0.5em 0px 0px -0.1em #c9c961;}
+` +
+                                Array(widthCount)
+                                    .fill(null)
+                                    .map((_, i) => `span:hover ${'+span '.repeat(i)}`)
+                                    .join(',\n') +
+                                '{border-bottom: 5px solid yellowgreen}'
+                            )
                         })()
                     }
                 </style>
@@ -163,16 +163,16 @@ const APP = () => {
                     return createPortal(<style slot='--变量'>{`:root {${vals}}`}</style>, document.head)
                 })()}
 
-                {/* {useMemo(() => {
+                {useMemo(() => {
                     return createPortal(
                         selectArr.map(({ key, color, count, isOneScreen, isPined }) => (
                             <style key={key} slot={key}>
                                 {getStyle(key, color, isPined || pined.get === key, count, isOneScreen)}
                             </style>
                         )),
-                        document.head
+                        document.head,
                     )
-                }, [pined, selectArr])} */}
+                }, [pined, selectArr])}
             </>
         </>
     )
@@ -202,9 +202,7 @@ const APP = () => {
             }
 
             // 跳转
-            const clickBlock = Number(
-                querySelector('.V-Grid div:hover').dataset.block, // js <-> html
-            )
+            const clickBlock = Number(querySelector('.V-Grid div:hover').dataset.block) // js <-> html
             const clickLineBase = config.block2Line[clickBlock]
             const clickLineoffset = Math.floor([...target.parentNode!.childNodes.values()].indexOf(target) / widthCount)
             scrollToNext(clickLineBase + clickLineoffset, word)
@@ -247,7 +245,7 @@ const APP = () => {
             ...selectArr,
             {
                 key: select,
-                color: 'mediumblue',
+                color: '#241d5e',
                 i: Date.now(),
                 count: count.length,
                 isPined: false,

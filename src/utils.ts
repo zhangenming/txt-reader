@@ -178,7 +178,7 @@ background: linear-gradient(#000,#000);
 
         const first = getSelector('findIndex', 'find', 'indexOf', 0)
         const last = getSelector('findLastIndex', 'findLast', 'lastIndexOf', word.length - 1)
-        return first + '{box-shadow: -3px -3px 0px 0px #973636, -3px 3px 0px 0px #973636;}\n' + last + '{box-shadow: 3px -3px 0px 0px #973636, 3px 3px 0px 0px #973636;}'
+        return first + '{box-shadow: -3px -3px 0px 0px #973636, -3px 3px 0px 0px #973636;position:relative}\n' + last + '{box-shadow: 3px -3px 0px 0px #973636, 3px 3px 0px 0px #973636;position:relative}'
         function getSelector(findIdx: string, find: string, idxOf: string, offset: number) {
             const arr = config.BLOCK as any
             const BlockIdx = arr[findIdx]((e: string) => e.includes(word))

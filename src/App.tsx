@@ -21,7 +21,7 @@ import { scrollToNext, useHoverWords } from './reader'
 export const SIZE_W = 25
 export const SIZE_H = 25
 
-import mc from '../txt/x'
+import mc from '../txt/钱学森'
 
 const APP = () => {
     useNext()

@@ -8,8 +8,9 @@ import { querySelector, querySelectorAll } from './utils'
 export function scrollToNext(
     clickLine: number,
     word: string,
-    nextType = (() => {
+    nextType: 'first' | 'last' | 'prev' | 'next' = (() => {
         const { Control, Alt } = getHoldingKey()
+
         if (Control && Alt) return 'first'
         if (Control) return 'last'
         if (Alt) return 'prev'
@@ -17,19 +18,27 @@ export function scrollToNext(
     })(),
 ) {
     const nextLine = (() => {
-        const Line = config.LINE
-
+        const { LINE } = config
         // todo click的时候判断holding -> hold直接执行 略过click
         if (nextType == 'first') return getFirst()
-        if (nextType == 'last') return getLast()
-        if (nextType == 'prev') {
-            const pre = (Line.slice(0, clickLine) as any).findLastIndex(findNextWord)
+        if (nextType === 'last') return getLast()
+        if (nextType === 'prev') return getPrev()
+        if (nextType === 'next') return getNrev()
+
+        function getPrev() {
+            const pre = (LINE.slice(0, clickLine) as any).findLastIndex(findNextWord)
             return pre === -1 ? getLast() : pre
         }
-
-        const next = Line.slice(clickLine + 1).findIndex(findNextWord)
-        return next === -1 ? getFirst() : clickLine + 1 + next
-
+        function getNrev() {
+            const next = LINE.slice(clickLine + 1).findIndex(findNextWord)
+            return next === -1 ? getFirst() : clickLine + 1 + next
+        }
+        function getFirst() {
+            return LINE.findIndex(findNextWord)
+        }
+        function getLast() {
+            return (LINE as any).findLastIndex(findNextWord)
+        }
         // find with line -> find with block?
         function findNextWord(line1: string, idx: number, arr: string[]) {
             return line1.includes(word) || willFindWithDouble()
@@ -41,12 +50,6 @@ export function scrollToNext(
                 const line = line1.slice(-len) + line2.slice(0, len)
                 return line.includes(word)
             }
-        }
-        function getFirst() {
-            return Line.findIndex(findNextWord)
-        }
-        function getLast() {
-            return (Line as any).findLastIndex(findNextWord)
         }
     })()
 
@@ -103,6 +106,7 @@ export function useHoverWords() {
     const searchItemsDoms = useMemo(() => {
         hoverWords(hoverWord)
         if (hoverWord === undefined) return
+        if (window.isScrolling) return
         if (!useHoverWordsCache[hoverWord]) {
             // line + arr[idx + 1] 处理情形: 一个词被两句话隔开
             useHoverWordsCache[hoverWord] = config.LINE.flatMap((line, idx, arr) =>

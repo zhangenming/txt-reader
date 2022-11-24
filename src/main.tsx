@@ -254,9 +254,7 @@ function App() {
         const [count, setCount] = useState(0)
         return (
             <>
-                <button onClick={() => setCount(count + 1)}>
-                    increase{count}
-                </button>
+                <button onClick={() => setCount(count + 1)}>increase{count}</button>
 
                 <div style={{ display: 'none' }}>{result}</div>
             </>
@@ -278,9 +276,7 @@ const Parent = () => {
 
     const r = useRef()
     r.current = count
-    const dom = (
-        <Component onClick={() => console.log(`hi #${r.current}-${count}!`)} />
-    )
+    const dom = <Component onClick={() => console.log(`hi #${r.current}-${count}!`)} />
     let X
     X = dom
     X = React.useMemo(() => dom, [])
@@ -292,38 +288,29 @@ const Parent = () => {
     return (
         <>
             {xx}
-            <button onClick={() => setCount(count + 1)}>
-                increase counter{count}
-            </button>
+            <button onClick={() => setCount(count + 1)}>increase counter{count}</button>
         </>
     )
     return useMemo(
         () => (
             <>
                 {X}
-                <button onClick={() => setCount(count + 1)}>
-                    increase counter{count}
-                </button>
+                <button onClick={() => setCount(count + 1)}>increase counter{count}</button>
             </>
         ),
-        [count]
+        [count],
     )
 }
 const Parent2 = () => {
     const [count, setCount] = React.useState(0)
     const r = useRef()
     r.current = count
-    const handleClick = React.useCallback(
-        () => console.log(`hi #${r.current}!`),
-        []
-    )
+    const handleClick = React.useCallback(() => console.log(`hi #${r.current}!`), [])
 
     return (
         <>
             <PureComponent onClick={handleClick} />
-            <button onClick={() => setCount(count + 1)}>
-                increase counter{count}
-            </button>
+            <button onClick={() => setCount(count + 1)}>increase counter{count}</button>
         </>
     )
 }
@@ -349,8 +336,7 @@ function T83() {
     const X22 = () => <input type='text' readOnly value={3} />
     // const X222 = () => X22()
     const X3 = useMemo(() => <input type='text' readOnly value={3} />, [])
-    const X33 = () =>
-        useMemo(() => <input type='text' readOnly value={3} />, [])
+    const X33 = () => useMemo(() => <input type='text' readOnly value={3} />, [])
     const [count, setCount] = useState(0)
     return (
         <>
@@ -542,7 +528,7 @@ const App4 = () => {
         () => {
             console.log(X)
             localStorage.setItem('search', X)
-        }
+        },
     )
     return <button onClick={() => setX(X + 1)}>{X}</button>
 }
@@ -706,9 +692,7 @@ const CdTimerComp = () => {
     const NOW_IN_MS = new Date().getTime()
 
     const dateTimeAfterThreeDays = NOW_IN_MS + THREE_DAYS_IN_MS
-    const [targetDate, setTargetDate] = useState(
-        new Date(dateTimeAfterThreeDays)
-    )
+    const [targetDate, setTargetDate] = useState(new Date(dateTimeAfterThreeDays))
 
     const handleChange = event => {
         console.log(new Date(event.target.value))
@@ -729,27 +713,12 @@ const CdTimerComp = () => {
                 <div className='play-details-body'>
                     <div className='countdown-container'>
                         <form>
-                            <label htmlFor='countdown-date-time'>
-                                Select a Date and Time:
-                            </label>
-                            <input
-                                type='datetime-local'
-                                id='countdown-date-time'
-                                name='countdown-date-time'
-                                onChange={handleChange}
-                            />
+                            <label htmlFor='countdown-date-time'>Select a Date and Time:</label>
+                            <input type='datetime-local' id='countdown-date-time' name='countdown-date-time' onChange={handleChange} />
                         </form>
-                        <p>
-                            Select a date and time in the past, present, and
-                            future to see how the countdown timer will display.
-                        </p>
+                        <p>Select a date and time in the past, present, and future to see how the countdown timer will display.</p>
 
-                        <ShowCounter
-                            days={days}
-                            hours={hours}
-                            minutes={minutes}
-                            seconds={seconds}
-                        />
+                        <ShowCounter days={days} hours={hours} minutes={minutes} seconds={seconds} />
                     </div>
                 </div>
             </div>
@@ -768,9 +737,7 @@ const CdTimerComp = () => {
     function useCountDown(targetDate) {
         const countDownDate = new Date(targetDate).getTime()
 
-        const [countDown, setCountDown] = useState(
-            countDownDate - new Date().getTime()
-        )
+        const [countDown, setCountDown] = useState(countDownDate - new Date().getTime())
 
         useEffect(() => {
             const interval = setInterval(() => {
@@ -785,12 +752,8 @@ const CdTimerComp = () => {
         function getReturnValues(countDown) {
             // calculate time left
             const days = Math.floor(countDown / (1000 * 60 * 60 * 24))
-            const hours = Math.floor(
-                (countDown % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
-            )
-            const minutes = Math.floor(
-                (countDown % (1000 * 60 * 60)) / (1000 * 60)
-            )
+            const hours = Math.floor((countDown % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
+            const minutes = Math.floor((countDown % (1000 * 60 * 60)) / (1000 * 60))
             const seconds = Math.floor((countDown % (1000 * 60)) / 1000)
 
             return [days, hours, minutes, seconds]
@@ -800,35 +763,14 @@ const CdTimerComp = () => {
     function ShowCounter({ days, hours, minutes, seconds }) {
         return (
             <div className='show-counter'>
-                <a
-                    href='https://tapasadhikary.com'
-                    target='_blank'
-                    rel='noopener noreferrer'
-                    className='countdown-link'
-                >
-                    <DateTimeDisplay
-                        value={days}
-                        type={'Days'}
-                        isDanger={days <= 3}
-                    />
+                <a href='https://tapasadhikary.com' target='_blank' rel='noopener noreferrer' className='countdown-link'>
+                    <DateTimeDisplay value={days} type={'Days'} isDanger={days <= 3} />
                     <p>:</p>
-                    <DateTimeDisplay
-                        value={hours}
-                        type={'Hours'}
-                        isDanger={false}
-                    />
+                    <DateTimeDisplay value={hours} type={'Hours'} isDanger={false} />
                     <p>:</p>
-                    <DateTimeDisplay
-                        value={minutes}
-                        type={'Mins'}
-                        isDanger={false}
-                    />
+                    <DateTimeDisplay value={minutes} type={'Mins'} isDanger={false} />
                     <p>:</p>
-                    <DateTimeDisplay
-                        value={seconds}
-                        type={'Seconds'}
-                        isDanger={false}
-                    />
+                    <DateTimeDisplay value={seconds} type={'Seconds'} isDanger={false} />
                 </a>
             </div>
         )
@@ -865,14 +807,7 @@ const CdTimerComp2 = () => {
 }
 function CountDownTimer({ targetDate }) {
     const [days, hours, minutes, seconds] = useCountDown(targetDate)
-    return (
-        <ShowCounter
-            days={days}
-            hours={hours}
-            minutes={minutes}
-            seconds={seconds}
-        />
-    )
+    return <ShowCounter days={days} hours={hours} minutes={minutes} seconds={seconds} />
 }
 const CdTimerComp3 = () => {
     // The following code is to fetch the current play from the URL
@@ -891,12 +826,7 @@ const CdTimerComp3 = () => {
             <div className='play-details'>
                 <div className='play-details-body'>
                     <div className='countdown-container'>
-                        <ShowCounter
-                            days={days}
-                            hours={hours}
-                            minutes={minutes}
-                            seconds={seconds}
-                        />
+                        <ShowCounter days={days} hours={hours} minutes={minutes} seconds={seconds} />
                     </div>
                 </div>
             </div>
@@ -907,35 +837,14 @@ const CdTimerComp3 = () => {
 function ShowCounter({ days, hours, minutes, seconds }) {
     return (
         <div className='show-counter'>
-            <a
-                href='https://tapasadhikary.com'
-                target='_blank'
-                rel='noopener noreferrer'
-                className='countdown-link'
-            >
-                <DateTimeDisplay
-                    value={days}
-                    type={'Days'}
-                    isDanger={days <= 3}
-                />
+            <a href='https://tapasadhikary.com' target='_blank' rel='noopener noreferrer' className='countdown-link'>
+                <DateTimeDisplay value={days} type={'Days'} isDanger={days <= 3} />
                 <p>:</p>
-                <DateTimeDisplay
-                    value={hours}
-                    type={'Hours'}
-                    isDanger={false}
-                />
+                <DateTimeDisplay value={hours} type={'Hours'} isDanger={false} />
                 <p>:</p>
-                <DateTimeDisplay
-                    value={minutes}
-                    type={'Mins'}
-                    isDanger={false}
-                />
+                <DateTimeDisplay value={minutes} type={'Mins'} isDanger={false} />
                 <p>:</p>
-                <DateTimeDisplay
-                    value={seconds}
-                    type={'Seconds'}
-                    isDanger={false}
-                />
+                <DateTimeDisplay value={seconds} type={'Seconds'} isDanger={false} />
             </a>
         </div>
     )
@@ -952,9 +861,7 @@ function ShowCounter({ days, hours, minutes, seconds }) {
 function useCountDown(targetDate) {
     const countDownDate = new Date(targetDate).getTime()
 
-    const [countDown, setCountDown] = useState(
-        countDownDate - new Date().getTime()
-    )
+    const [countDown, setCountDown] = useState(countDownDate - new Date().getTime())
 
     useEffect(() => {
         const interval = setInterval(() => {
@@ -969,9 +876,7 @@ function useCountDown(targetDate) {
     function getReturnValues(countDown) {
         // calculate time left
         const days = Math.floor(countDown / (1000 * 60 * 60 * 24))
-        const hours = Math.floor(
-            (countDown % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60)
-        )
+        const hours = Math.floor((countDown % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60))
         const minutes = Math.floor((countDown % (1000 * 60 * 60)) / (1000 * 60))
         const seconds = Math.floor((countDown % (1000 * 60)) / 1000)
 

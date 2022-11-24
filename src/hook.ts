@@ -67,10 +67,23 @@ export function useTXT(widthCount: number, txt: string) {
     // useEffect deps也能达到缓存减少rerender目的? 和useMemo什么区别?  useMemo是同步的
 
     useMemo(() => {
+        const q = txt
+            .replaceAll(/[　\n ]+/g, '\n\n')
+            .split('\n')
+            .map(block => '  ' + block)
+        const w = txt
+            .replaceAll(/[　\n]+/g, '\n\n')
+            .replaceAll(/ {2,}/g, '\n\n')
+            .split('\n')
+            .map(block => '  ' + block)
+
+        console.log(q, w, q + '' === w + '', config)
+
         config.txt = txt
         config.BLOCK = txt
             //去掉多余空行, 注意有两种空格
-            .replaceAll(/[　\n ]+/g, '\n')
+            .replaceAll(/[　\n]+/g, '\n')
+            .replaceAll(/ {2,}/g, '\n')
             // .replaceAll(/\n　　/g, '\n')
             // // 段落
             .replaceAll(/\n/g, '\n\n')
@@ -83,6 +96,8 @@ export function useTXT(widthCount: number, txt: string) {
             .split('\n')
             // .ll.filter(e => e !== '')
             .map(block => '  ' + block)
+
+        config.BLOCK = w
     }, [txt])
 
     useMemo(() => {
@@ -224,8 +239,10 @@ export function useScroll(
         const scrollTopNow = (e.target as HTMLElement).scrollTop
         if (scrollTopNow === scrollTop) return
 
+        window.isScrolling = true
         clearTimeout(clear2)
         clear2 = setTimeout(() => {
+            window.isScrolling = false
             SET_scrollTop(scrollTopNow)
         }, 1) // todo clear
     }

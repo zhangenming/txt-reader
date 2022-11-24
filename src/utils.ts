@@ -178,7 +178,9 @@ background: linear-gradient(#000,#000);
 
         const first = getSelector('findIndex', 'find', 'indexOf', 0)
         const last = getSelector('findLastIndex', 'findLast', 'lastIndexOf', word.length - 1)
-        return first + '{box-shadow: -3px -3px 0px 0px #973636, -3px 3px 0px 0px #973636;position:relative}\n' + last + '{box-shadow: 3px -3px 0px 0px #973636, 3px 3px 0px 0px #973636;position:relative}'
+        return (
+            first + '{box-shadow: -3px -1px 0px 0px #973636, -3px 1px 0px 0px #973636;position:relative}\n' + last + '{box-shadow: 3px -1px 0px 0px #973636, 3px 1px 0px 0px #973636;position:relative}'
+        )
         function getSelector(findIdx: string, find: string, idxOf: string, offset: number) {
             const arr = config.BLOCK as any
             const BlockIdx = arr[findIdx]((e: string) => e.includes(word))
@@ -265,7 +267,7 @@ export function querySelectorAll(selector: string) {
     return document.querySelectorAll<HTMLElement>(selector)!
 }
 
-export function useEffectWrap(func: any = () => { }, deps?: any) {
+export function useEffectWrap(func: any = () => {}, deps?: any) {
     if (!0) {
         const name = new Error().stack!.split('\n')[3].split('(')[0].replaceAll('    at ', '')
 

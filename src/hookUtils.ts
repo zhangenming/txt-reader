@@ -105,15 +105,23 @@ export function useDidMountEffect(func: Function, deps: any[]) {
 
 const useKeyHoldRef: any = {}
 export function getHoldingKey(key?: string) {
+    console.log(useKeyHoldRef)
+
     return key ? useKeyHoldRef[key] : useKeyHoldRef
 }
 export function useKeyHold() {
     useEffect(() => {
         document.body.onkeydown = e => {
+            console.log('onkeydown', e.key)
+
             useKeyHoldRef[e.key] = true
         }
         document.body.onkeyup = e => {
-            useKeyHoldRef[e.key] = false
+            console.log('onkeyup', e.key)
+            // useKeyHoldRef[e.key] = false
+            for (const k in useKeyHoldRef) {
+                useKeyHoldRef[k] = false
+            }
         }
     }, [])
 }
